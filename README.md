@@ -13,4 +13,4 @@ Running Instructions:
 2. Select your MIDI file.
 3. Enjoy hearing the MIDI in Old School RuneScape sounds!
 
-I am hoping to add more functionality and helpful parts to the interface as it currently is extremely simple and straightforward in its' current stage.
+I am hoping to add more functionality and helpful parts to the interface as it currently is extremely simple and straightforward in the current stage.
