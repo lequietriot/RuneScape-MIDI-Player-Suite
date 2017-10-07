@@ -9,8 +9,8 @@ Note: If it isn't exactly named that way, it won't get recognized and no sound w
 4. You should be good to go after that, move onto "Running Instructions" below in the README.
 
 Running Instructions:
-1. Simply run the application (Main.java) and wait a few moments, a file chooser should pop up.
-2. Select your MIDI file.
+1. Simply run the application (Main.java).
+2. Press "Open MIDI" and choose your MIDI file.
 3. Enjoy hearing the MIDI in Old School RuneScape sounds!
 
 I am hoping to add more functionality and helpful parts to the interface as it currently is extremely simple and straightforward in the current stage.
