@@ -1,31 +1,28 @@
 package application;
 
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Receiver;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
-import javax.sound.midi.Transmitter;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.UIManager;
 
 public class Main extends JFrame {
-
+	
 	private static final long serialVersionUID = 1L;
 	
 	public static void main(String[] args) throws IOException {
@@ -34,27 +31,52 @@ public class Main extends JFrame {
 	}
 	public static void run() {
 		
-		Main frame = new Main();
+        JPanel mainPanel = new javax.swing.JPanel();
+        JButton OpenButton = new javax.swing.JButton();
+        JButton PlayButton = new javax.swing.JButton();
+        JButton StopButton = new javax.swing.JButton();
+		
+		JFrame mainframe;
 		
 		try {
 			JFrame.setDefaultLookAndFeelDecorated(true);
 			JDialog.setDefaultLookAndFeelDecorated(true);
+			
 			UIManager.setLookAndFeel("org.jvnet.substance.skin.SubstanceRavenGraphiteGlassLookAndFeel");
-			frame.setTitle("RuneScape MIDI Player");
-			frame.setVisible(true);
-
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setBounds(200, 200, 614, 454);
 			
-			JMenuBar menuBar = new JMenuBar();
-			frame.setJMenuBar(menuBar);
-
-			JMenu file_menu = new JMenu("File");
-			menuBar.add(file_menu);
+			mainframe = new JFrame();
+			mainframe.setSize(400, 400);
+			mainframe.setLayout(new GridLayout(10, 3));
+			mainframe.setVisible(true);
+			mainframe.add(OpenButton);
+			OpenButton.setText("Open MIDI");
+			OpenButton.setOpaque(true);
+			OpenButton.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					JMenuItem load_midi = new JMenuItem("Load MIDI");
+					ActionListener midi;
+					try {
+						midi = promptFolderChoose();
+						load_midi.addActionListener(midi);
+					} catch (MidiUnavailableException | InvalidMidiDataException | IOException e1) {
+						System.out.print("Error!");
+						e1.printStackTrace();
+					}
+					
+				}
+				
+			});
 			
-			JMenuItem load_midi = new JMenuItem("Load MIDI");
-			ActionListener midi = promptFolderChoose();
-			load_midi.addActionListener(midi);
+			PlayButton.setText("Play");
+			PlayButton.addActionListener(new java.awt.event.ActionListener() {
+	            public void actionPerformed(java.awt.event.ActionEvent evt) {
+	                PlayButtonActionPerformed(evt);
+	            }
+
+				public void PlayButtonActionPerformed(ActionEvent evt) {
+				
+				}
+			});
 			
 		} catch (Exception e) {
 			e.printStackTrace();
