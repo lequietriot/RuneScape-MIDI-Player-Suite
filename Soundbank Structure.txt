@@ -1,5 +1,6 @@
 Old School RuneScape uses the earliest soundbank known to RuneScape, which was implemented on March 6, 2007.
-It has a lower quality compared to the soundbank which got updated on February 5, 2008, which was expanded until July 22, 2013 (RSHD).
+It has a lower quality compared to the soundbank which got updated on February 5, 2008, 
+which was expanded until July 22, 2013 (RSHD).
 
 Without further ado, here's a quick documentation on how the OSRS soundbank is structured, note that it's mostly General MIDI:
 
