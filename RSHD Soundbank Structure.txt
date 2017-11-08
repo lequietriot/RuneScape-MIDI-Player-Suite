@@ -169,8 +169,8 @@ Bank 2 (Custom Instruments):
 19. Spring/Boing SFX 9
 20. Spring/Boing SFX 10
 21. Strings 2
-22. Choir Aahs 3
-23. Choir Eehs
+22. Choir Aahs 3 (-2 Octaves, to fix, bring all notes +2 octaves)
+23. Choir Eehs (-2 Octaves, to fix, bring all notes +2 octaves)
 24. Ambient Pad
 25. Ambient Pad 2
 26. Brass Section 2
