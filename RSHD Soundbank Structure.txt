@@ -169,8 +169,8 @@ Bank 2 (Custom Instruments):
 19. Spring/Boing SFX 9
 20. Spring/Boing SFX 10
 21. Strings 2
-22. Choir Aahs 3 (-2 Octaves, to fix, bring all notes +2 octaves)
-23. Choir Eehs (-2 Octaves, to fix, bring all notes +2 octaves)
+22. Choir Aahs 3 (-1 Octave/-12 notes, to fix, bring all notes +1 octave)
+23. Choir Eehs (-1 Octave/-12 notes, to fix, bring all notes +1 octave)
 24. Ambient Pad
 25. Ambient Pad 2
 26. Brass Section 2
@@ -186,3 +186,195 @@ Bank 2 (Custom Instruments):
 36. Overdriven Guitar 2
 37. Slow Strings 3
 38. Synth Bass 3
+39. Deathcon II (2011 Halloween Event)
+40. Record Scratch SFX
+41. One Piercing Note - Part 1
+42. Valerio's Song
+43. Citharede Requiem Vocals
+44. Tremolo Strings 3 (Barrows)
+45. Diamond Jubilee
+46. Drum Roll loops
+47. Varrock Saradominist Church
+
+Bank 3 (Custom Instruments/Loops):
+1. Dominion Tower - Part 1
+2. Dominion Tower - Part 2
+3. Dominion Tower - Part 3
+4. Traveller's Tale
+5. One Piercing Note - Part 2
+6. One Piercing Note - Part 3
+7. Troubadour Dance Fanfare
+8. Squeal of Fortune Fanfares?
+9. Masterwork Music Box
+10. Order of Ascension
+11. Vorago
+12. Bringing Home the Bacon
+
+Bank 4 (Custom Instruments/Loops):
+0. Wind/Outdoor SFX
+
+Bank 5 (Custom Instruments/Loops):
+1. Burthorpe/Taverley - Part 1
+2. Taverley Folk
+3. Burthorpe/Taverley - Part 2
+4. Burthorpe/Taverley - Part 3
+5. Burthorpe/Taverley - Part 4
+6. Burthorpe/Taverley - Part 5
+7. Burthorpe/Taverley - Part 6
+
+Bank 6 (Custom Instruments/Loops):
+0. Tzhaar City - Part 1
+1. Tzhaar Supremacy I
+2. Tzhaar City - Part 2
+3. Tzhaar Supremacy II & III
+4. Ga'al
+
+Bank 7 (Custom Instruments/Loops):
+0. Runespan - Part 1
+1. Runespan - Part 2
+2. Runespan - Part 3
+3. Runespan - Part 4
+4. Runespan - Part 5
+5. Runespan - Part 6 (Cymbal loops)
+6. Runespan - Part 7 (Synth Pad Crescendo & Decrescendo)
+7. Runespan - Part 8 (String Section loops)
+8. Runespan - Part 9 (Timpani loops)
+9. Runespan - Part 10 (String Section loops 2)
+10. Runespan - Part 11 (SFX)
+11. Runespan - Part 12 (SFX 2)
+12. Choir Oh
+13. Crystal 2
+14. Brass Section (Crescendo)
+15. Tremolo Synth
+16. Runespan - Part 13 (Clarinet loops)
+17. Runespan - Part 14 (Synth Bass loops)
+18. Runespan - Part 15 (Cymbal loops 2)
+19. Runespan - Part 16 (Drum Kick loops)
+20. Runespan - Part 17 (Harp loops)
+21. Runespan - Part 18 (Synth loops)
+22. Runespan - Part 19 (Flute loops)
+23. Runespan - Part 20 (Acoustic Bass loops)
+
+Bank 8 (Custom Instruments/Loops):
+1. Daemonheim Entrance & Fremenniks
+
+Bank 9 (Custom Instruments/Loops):
+1. Ambient SFX
+2. Song from the Depths - Part 1
+3. Song from the Depths - Part 2
+4. Song from the Depths - Part 3
+5. Awoken & Queen Black Dragon
+
+Bank 10 (Custom Instruments/Loops):
+1. SFX
+2. The Crucible - Part 1
+
+Bank 11 (Custom Instruments/Loops):
+1. 200M Accounts Celebration/Original Scape Bold
+
+Bank 12 (Custom Instruments/Loops):
+1. Carnillean Rising - Part 1
+2. Carnillean Rising - Part 2
+3. Carnillean Rising - Part 3
+
+Bank 13 (Custom Instruments/Loops):
+1. Gielinor Games - Part 1
+2. Gielinor Games - Part 2
+3. Gielinor Games - Part 3
+
+Bank 14 (Custom Instruments/Loops):
+1. Penguin Prison
+2. Sub Way
+3. Some Like It Cold - Quest Complete Fanfare
+4. Some Like It Cold - The Prison Escape
+5. Some Like It Cold - Making Noise
+
+Bank 15 (Custom Instruments/Loops):
+1. Big Chinchompa
+
+Bank 16 (Custom Instruments/Loops):
+1. A Song for Khnum
+2. Agents of Keli
+3. Breaking In
+4. Darkness In Misthalin
+5. Draynor Market
+6. Everything in its Right Palace
+7. Kharidian Bustle
+8. Palace
+9. Palace Above
+10. Rooftops
+11. Skullery Jam
+12. Stand-off
+13. The Stalker
+14. Violinsanity
+15. While We Sleep
+16. Worlds
+17. Above the City
+18. Dune
+19. Oasis
+20. Sands of Time
+21. Shantay Pass
+22. The Cave
+23. The Chozan One
+24. Quicksand!
+25. Kalphite Nursery
+26. Desert Fanfares - Part 1
+27. Final Showdown
+28. Desert Fanfares - Part 2
+29. Ozan Double Bill Quest - Fighting SFX
+
+Bank 17 (Custom Instruments/Loops):
+1. Royal Rumble
+
+Bank 18 (Custom Instruments/Loops):
+1. Tears of Guthix - Rework
+
+Bank 19 (Custom Instruments/Loops):
+1. Bloody Foundation
+2. Bloody Foundation II
+3. The Harmony of the Runes
+4. Blue Wizards
+5. The Ritual
+6. Inner Secret
+7. Forgotten Orders
+8. Vision - Rework
+
+Bank 20 (Custom Instruments/Loops):
+1. Sea Folk
+2. Sea Hear
+3. Sea You Late Oar
+4. Shanty Instrumental
+5. Stick Your Ale In
+6. Stick Your Oar In
+
+Bank 21 (Custom Instruments/Loops):
+1. King of the Desert
+2. Coleoptera
+3. Insect Queen - Rework
+
+Bank 22 (Custom Instruments/Loops):
+1. Desert Fanfares - Part 3
+
+Bank 23 (Custom Instruments/Loops):
+1. Temple of Guthix I
+2. Boulder and Brighter
+3. Guthix's Warning
+4. Defenders of Guthix I
+5. Defenders of Guthix II
+6. Invaders Must Die I
+7. Invaders Must Die II
+8. Invaders Must Die III
+9. End Song
+10. Memories of Guthix
+11. Chamber of Guthix
+12. Temple of Guthix II
+13. Bird of Prey
+
+Bank 24 (Custom Instruments/Loops):
+1. Castle Wars - Rework
+2. Castle Warz - Rework
+3. Castle Wars Fanfares - Rework
+
+Bank 25 (Custom Instruments/Loops):
+1. Duel Arena - Rework
+2. Duel Arena & Player Death Fanfares - Rework
