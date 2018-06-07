@@ -145,3 +145,8 @@ Bank 1 (Drum Kits):
 48. Orchestral Drum Kit
 56. SFX Drum Kit
 127. Custom Drum Kit
+
+Bank 2 (Custom Instruments):
+0. RuneScape HD Choir Aahs
+1. ?
+2. Lady Verzik's Voice
