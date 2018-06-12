@@ -140,7 +140,6 @@ Bank 1 (Drum Kits):
 16. Power Drum Kit
 24. Electronic Drum Kit
 25. Analog Drum Kit
-32. Jazz Drum Kit
 40. Brush Drum Kit
 48. Orchestral Drum Kit
 56. SFX Drum Kit
