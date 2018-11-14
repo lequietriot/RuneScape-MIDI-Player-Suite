@@ -122,7 +122,7 @@ Bank 0 (General Instruments):
 117. Melodic Toms
 118. Synth Drum
 119. Reverse Cymbal
-120. Wolf Howl SFX
+120. Guitar Fret Noise
 121. Breath Noise
 122. Seashore SFX
 123. Bird Tweet SFX
@@ -152,42 +152,42 @@ Bank 2 (Custom Instruments):
 2. Pizzicato Strings 2
 3. Taiko Drum 2
 4. Pan Flute 2
-5. Tremolo Strings 2
+5. Strings 2
 6. Slow Strings 2
 7. Acoustic Grand Piano 2
-8. Synth Strings 3
+8. New Age Pad 2
 9. Flute 2
-10. Choir Pad 2
-11. Spring/Boing SFX
-12. Spring/Boing SFX 2
-13. Spring/Boing SFX 3
-14. Spring/Boing SFX 4
-15. Spring/Boing SFX 5
-16. Spring/Boing SFX 6
-17. Spring/Boing SFX 7
-18. Spring/Boing SFX 8
-19. Spring/Boing SFX 9
-20. Spring/Boing SFX 10
-21. Strings 2
-22. Choir Aahs 3 (-1 Octave/-12 notes, to fix, bring all notes +1 octave)
-23. Choir Eehs (-1 Octave/-12 notes, to fix, bring all notes +1 octave)
-24. Ambient Pad
-25. Ambient Pad 2
+10. Choir Aahs 3
+11. Spring SFX
+12. Spring SFX 2
+13. Spring SFX 3
+14. Spring SFX 4
+15. Spring SFX 5
+16. Spring SFX 6
+17. Spring SFX 7
+18. Spring SFX 8
+19. Spring SFX 9
+20. Spring SFX 10
+21. Strings 3
+22. Choir Aahs 4 (-24 semitones than normal)
+23. Choir Eehs (-24 semitones than normal)
+24. Frozen Pad
+25. Abandoned Pad
 26. Brass Section 2
 27. Brass Section 3
 28. Brass Section 4
 29. Brass Section 5
 30. Brass Section 6
-31. Ambient Pad 3
-32. Ambient Pad 4
+31. Furnished Pad
+32. Warped Pad
 33. Dark Effects
 34. Ghost Oohs
 35. Black Zabeth Voice
 36. Overdriven Guitar 2
 37. Slow Strings 3
 38. Synth Bass 3
-39. Deathcon II (2011 Halloween Event)
-40. Record Scratch SFX
+39. Deathcon II - Part 1
+40. Deathcon II - Part 2
 41. One Piercing Note - Part 1
 42. Valerio's Song
 43. Citharede Requiem Vocals
@@ -197,6 +197,7 @@ Bank 2 (Custom Instruments):
 47. Varrock Saradominist Church
 
 Bank 3 (Custom Instruments/Loops):
+0. Pirate Shanty Vocals
 1. Dominion Tower - Part 1
 2. Dominion Tower - Part 2
 3. Dominion Tower - Part 3
