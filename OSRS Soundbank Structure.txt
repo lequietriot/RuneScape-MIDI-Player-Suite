@@ -148,4 +148,4 @@ Bank 1 (Drum Kits):
 Bank 2 (Custom Instruments):
 0. Choir Aahs 2 - Raise up 12 semitones when fixing
 1. Lady Verzik (Staccato) - Raise up 24 semitones when fixing
-2. Lady Verzik (Sustain) - Raise up 24 semitones when fixing
+2. Lady Verzik (Sustain) - Raise up 36 semitones when fixing
