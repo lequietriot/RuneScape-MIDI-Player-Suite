@@ -1,2 +1,0 @@
-Contained within this MIDI archive is a bunch of songs either dumped from RuneScape or transcribed into MIDI by me.
-RuneScape HD MIDI files (2008+) that use the custom soundbank implementation will be adjusted to sound normal.

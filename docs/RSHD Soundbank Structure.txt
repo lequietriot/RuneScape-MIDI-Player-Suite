@@ -1,0 +1,381 @@
+Following the OSRS Soundbank Structure, I decided to document instruments in the banks of Pre-RS3/RSHD.
+Here's some documentation on how the RSHD soundbank is structured:
+
+Bank 0 (General Instruments):
+0. Acoustic Grand Piano
+1. Bright Piano
+2. Electric Grand Piano
+3. Honky-tonk Piano
+4. Electric Piano 1
+5. Electric Piano 2
+6. Harpsichord
+7. Clavinet
+8. Celesta
+9. Glockenspiel
+10. Music Box
+11. Vibraphone
+12. Marimba
+13. Xylophone
+14. Tubular Bells
+15. Dulcimer
+16. Drawbar Organ
+17. Percussive Organ
+18. Rock Organ
+19. Church Organ
+20. Reed Organ
+21. Accordion
+22. Harmonica
+23. Tango Accordion
+24. Nylon Guitar
+25. Steel Guitar
+26. Jazz Guitar
+27. Clean Guitar
+28. Muted Guitar
+29. Overdriven Guitar
+30. Distortion Guitar
+31. Guitar Harmonics
+32. Acoustic Bass
+33. Fingered Bass
+34. Picked Bass
+35. Fretless Bass
+36. Slap Bass 1
+37. Slap Bass 2
+38. Synth Bass 1
+39. Synth Bass 2
+40. Violin
+41. Viola
+42. Cello
+43. Contrabass
+44. Tremolo Strings
+45. Pizzicato Strings
+46. Harp
+47. Timpani
+48. Strings (String Section 1)
+49. Slow Strings (String Section 2)
+50. Synth Strings 1
+51. Synth Strings 2
+52. Choir Aahs
+53. Voice Oohs
+54. Synth Voice
+55. Orchestra Hit
+56. Trumpet
+57. Trombone
+58. Tuba
+59. Muted Trumpet
+60. French Horn
+61. Brass Section
+62. Synth Brass 1
+63. Synth Brass 2
+64. Soprano Saxophone
+65. Alto Saxophone
+66. Tenor Saxophone
+67. Baritone Saxophone
+68. Oboe
+69. English Horn
+70. Bassoon
+71. Clarinet
+72. Piccolo
+73. Flute
+74. Recorder
+75. Pan Flute
+76. Blown Bottle
+77. Shakuhachi
+78. Whistle
+79. Ocarina
+80. Square Wave
+81. Sawtooth Wave
+82. Calliope
+83. Chiff
+84. Charang
+85. Voice Lead
+86. Fifths
+87. Bass and Lead
+88. New Age Pad
+89. Warm Pad
+90. Polysynth
+91. Choir Pad
+92. Bowed Pad
+93. Metallic Pad
+94. Halo Pad
+95. Sweep Pad
+96. Rain Synth
+97. Soundtrack
+98. Crystal
+99. Atmosphere
+100. Brightness
+101. Goblins
+102. Echo drops
+103. Sci-Fi Pad
+104. Sitar
+105. Banjo
+106. Shamisen
+107. Koto
+108. Kalimba
+109. Bagpipe
+110. Fiddle
+111. Shanai
+112. Tinkle Bell
+113. Agogo
+114. Steel Drums
+115. Woodblocks
+116. Taiko Drum
+117. Melodic Toms
+118. Synth Drum
+119. Reverse Cymbal
+120. Guitar Fret Noise
+121. Breath Noise
+122. Seashore SFX
+123. Bird Tweet SFX
+124. Telephone Ring SFX
+125. Helicopter SFX
+126. Applause SFX
+127. Gunshot SFX
+
+Bank 1 (Percussion):
+0. Standard Drum Kit
+1. Gongs
+8. Room Drum Kit
+16. Power Drum Kit
+24. Electronic Drum Kit
+25. Analog Drum Kit
+32. Jazz Drum Kit
+40. Brush Drum Kit
+48. Orchestral Drum Kit
+50. Ancient Drum Kit
+51. Ambient Drum Kit
+56. SFX Drum Kit
+127. Custom Drum Kit
+
+Bank 2 (Custom Instruments):
+0. Choir Aahs 2
+1. Warm Pad 2
+2. Pizzicato Strings 2
+3. Taiko Drum 2
+4. Pan Flute 2
+5. Strings 2
+6. Slow Strings 2
+7. Acoustic Grand Piano 2
+8. New Age Pad 2
+9. Flute 2
+10. Choir Aahs 3
+11. Spring SFX
+12. Spring SFX 2
+13. Spring SFX 3
+14. Spring SFX 4
+15. Spring SFX 5
+16. Spring SFX 6
+17. Spring SFX 7
+18. Spring SFX 8
+19. Spring SFX 9
+20. Spring SFX 10
+21. Strings 3
+22. Choir Aahs 4 (-24 semitones than normal)
+23. Choir Eehs (-24 semitones than normal)
+24. Frozen Pad
+25. Abandoned Pad
+26. Brass Section 2
+27. Brass Section 3
+28. Brass Section 4
+29. Brass Section 5
+30. Brass Section 6
+31. Furnished Pad
+32. Warped Pad
+33. Dark Effects
+34. Ghost Oohs
+35. Black Zabeth Voice
+36. Overdriven Guitar 2
+37. Slow Strings 3
+38. Synth Bass 3
+39. Deathcon II - Part 1
+40. Deathcon II - Part 2
+41. One Piercing Note - Part 1
+42. Valerio's Song
+43. Citharede Requiem Vocals
+44. Tremolo Strings 3 (Barrows)
+45. Diamond Jubilee
+46. Drum Roll loops
+47. Varrock Saradominist Church
+
+Bank 3 (Custom Instruments/Loops):
+0. Pirate Shanty Vocals
+1. Dominion Tower - Part 1
+2. Dominion Tower - Part 2
+3. Dominion Tower - Part 3
+4. Traveller's Tale
+5. One Piercing Note - Part 2
+6. One Piercing Note - Part 3
+7. Troubadour Dance Fanfare
+8. Squeal of Fortune Fanfares?
+9. Masterwork Music Box
+10. Order of Ascension
+11. Vorago
+12. Bringing Home the Bacon
+
+Bank 4 (Custom Instruments/Loops):
+0. Wind/Outdoor SFX
+
+Bank 5 (Custom Instruments/Loops):
+1. Burthorpe/Taverley - Part 1
+2. Taverley Folk
+3. Burthorpe/Taverley - Part 2
+4. Burthorpe/Taverley - Part 3
+5. Burthorpe/Taverley - Part 4
+6. Burthorpe/Taverley - Part 5
+7. Burthorpe/Taverley - Part 6
+
+Bank 6 (Custom Instruments/Loops):
+0. Tzhaar City - Part 1
+1. Tzhaar Supremacy I
+2. Tzhaar City - Part 2
+3. Tzhaar Supremacy II & III
+4. Ga'al
+
+Bank 7 (Custom Instruments/Loops):
+0. Runespan - Part 1
+1. Runespan - Part 2
+2. Runespan - Part 3
+3. Runespan - Part 4
+4. Runespan - Part 5
+5. Runespan - Part 6 (Cymbal loops)
+6. Runespan - Part 7 (Synth Pad Crescendo & Decrescendo)
+7. Runespan - Part 8 (String Section loops)
+8. Runespan - Part 9 (Timpani loops)
+9. Runespan - Part 10 (String Section loops 2)
+10. Runespan - Part 11 (SFX)
+11. Runespan - Part 12 (SFX 2)
+12. Choir Oh
+13. Crystal 2
+14. Brass Section (Crescendo)
+15. Tremolo Synth
+16. Runespan - Part 13 (Clarinet loops)
+17. Runespan - Part 14 (Synth Bass loops)
+18. Runespan - Part 15 (Cymbal loops 2)
+19. Runespan - Part 16 (Drum Kick loops)
+20. Runespan - Part 17 (Harp loops)
+21. Runespan - Part 18 (Synth loops)
+22. Runespan - Part 19 (Flute loops)
+23. Runespan - Part 20 (Acoustic Bass loops)
+
+Bank 8 (Custom Instruments/Loops):
+1. Daemonheim Entrance & Fremenniks
+
+Bank 9 (Custom Instruments/Loops):
+1. Ambient SFX
+2. Song from the Depths - Part 1
+3. Song from the Depths - Part 2
+4. Song from the Depths - Part 3
+5. Awoken & Queen Black Dragon
+
+Bank 10 (Custom Instruments/Loops):
+1. SFX
+2. The Crucible - Part 1
+
+Bank 11 (Custom Instruments/Loops):
+1. 200M Accounts Celebration/Original Scape Bold
+
+Bank 12 (Custom Instruments/Loops):
+1. Carnillean Rising - Part 1
+2. Carnillean Rising - Part 2
+3. Carnillean Rising - Part 3
+
+Bank 13 (Custom Instruments/Loops):
+1. Gielinor Games - Part 1
+2. Gielinor Games - Part 2
+3. Gielinor Games - Part 3
+
+Bank 14 (Custom Instruments/Loops):
+1. Penguin Prison
+2. Sub Way
+3. Some Like It Cold - Quest Complete Fanfare
+4. Some Like It Cold - The Prison Escape
+5. Some Like It Cold - Making Noise
+
+Bank 15 (Custom Instruments/Loops):
+1. Big Chinchompa
+
+Bank 16 (Custom Instruments/Loops):
+1. A Song for Khnum
+2. Agents of Keli
+3. Breaking In
+4. Darkness In Misthalin
+5. Draynor Market
+6. Everything in its Right Palace
+7. Kharidian Bustle
+8. Palace
+9. Palace Above
+10. Rooftops
+11. Skullery Jam
+12. Stand-off
+13. The Stalker
+14. Violinsanity
+15. While We Sleep
+16. Worlds
+17. Above the City
+18. Dune
+19. Oasis
+20. Sands of Time
+21. Shantay Pass
+22. The Cave
+23. The Chozan One
+24. Quicksand!
+25. Kalphite Nursery
+26. Desert Fanfares - Part 1
+27. Final Showdown
+28. Desert Fanfares - Part 2
+29. Ozan Double Bill Quest - Fighting SFX
+
+Bank 17 (Custom Instruments/Loops):
+1. Royal Rumble
+
+Bank 18 (Custom Instruments/Loops):
+1. Tears of Guthix - Rework
+
+Bank 19 (Custom Instruments/Loops):
+1. Bloody Foundation
+2. Bloody Foundation II
+3. The Harmony of the Runes
+4. Blue Wizards
+5. The Ritual
+6. Inner Secret
+7. Forgotten Orders
+8. Vision - Rework
+
+Bank 20 (Custom Instruments/Loops):
+1. Sea Folk
+2. Sea Hear
+3. Sea You Late Oar
+4. Shanty Instrumental
+5. Stick Your Ale In
+6. Stick Your Oar In
+
+Bank 21 (Custom Instruments/Loops):
+1. King of the Desert
+2. Coleoptera
+3. Insect Queen - Rework
+
+Bank 22 (Custom Instruments/Loops):
+1. Desert Fanfares - Part 3
+
+Bank 23 (Custom Instruments/Loops):
+1. Temple of Guthix I
+2. Boulder and Brighter
+3. Guthix's Warning
+4. Defenders of Guthix I
+5. Defenders of Guthix II
+6. Invaders Must Die I
+7. Invaders Must Die II
+8. Invaders Must Die III
+9. End Song
+10. Memories of Guthix
+11. Chamber of Guthix
+12. Temple of Guthix II
+13. Bird of Prey
+
+Bank 24 (Custom Instruments/Loops):
+1. Castle Wars - Rework
+2. Castle Warz - Rework
+3. Castle Wars Fanfares - Rework
+
+Bank 25 (Custom Instruments/Loops):
+1. Duel Arena - Rework
+2. Duel Arena & Player Death Fanfares - Rework
