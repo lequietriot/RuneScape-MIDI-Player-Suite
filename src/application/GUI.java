@@ -26,7 +26,6 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
-import javax.sound.sampled.SourceDataLine;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -35,7 +34,11 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.JTextPane;
+import javax.swing.Timer;
 import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 import application.utils.Midi2WavRender;
 
@@ -44,10 +47,6 @@ public class GUI {
 	File midiFile;
 	File soundsetFile;
 	
-	String midiUnsetError = "Please choose a MIDI to load!";
-	String midiUnsetTitleBar = "MIDI not loaded!";
-	String soundsUnsetError = "Please choose a Soundfont to load!";
-	String soundsUnsetTitleBar = "Soundfont not loaded!";
 	String defaultSoundfontPath;
 	
 	long pausedTime;
@@ -72,13 +71,12 @@ public class GUI {
 	JButton startButton;
 	JButton pauseButton;
 	JButton stopButton;
-	
 	JButton fixMIDIButton;
 	JButton renderMIDItoWavButton;
 	
 	JSlider songSlider;
 	
-	SourceDataLine sdl;
+	JTextPane songSliderInfo;
 	
 	@SuppressWarnings("static-access")
 	
@@ -89,7 +87,8 @@ public class GUI {
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setMinimumSize(new Dimension(600, 400));
 		panel = new JPanel(new BorderLayout());
-		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		panel.setLayout(null);
+		panel.setBorder(BorderFactory.createEmptyBorder());
 		frame.setContentPane(panel);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
@@ -183,19 +182,38 @@ public class GUI {
 		fixMIDIButton.setText("Fix MIDI (Unfinished)");
 		fixMIDIButton.setEnabled(false);
 		fixMIDIButton.setVisible(true);
-		
+
 		buttonsPanel.setVisible(true);
 		buttonsPanel.setBackground(Color.LIGHT_GRAY);
 		
 		songPanel = new JPanel();
 		songSlider = new JSlider();
+		songSliderInfo = new JTextPane();
 		
-		songSlider.setEnabled(false);
+		if (midiFile == null) {
+			songSlider.setEnabled(false);
+			songSlider.setToolTipText("MIDI file not loaded!");
+		}
+		
 		songSlider.setValue(0);
+		songSlider.addChangeListener(new SongSliderListener());
 		songPanel.add(songSlider);
-		songPanel.setBackground(Color.WHITE);
+		
+		if (midiFile == null) {
+			songSliderInfo.setText("Not playing anything! Try loading a MIDI?");
+		}
+		songSliderInfo.setBackground(Color.LIGHT_GRAY);
+		songSliderInfo.setSelectedTextColor(Color.BLACK);
+		songSliderInfo.setEnabled(true);
+		songSliderInfo.setEditable(false);
+		songSliderInfo.setVisible(true);
+		songPanel.add(songSliderInfo);
+		songPanel.setBackground(Color.LIGHT_GRAY);
+		songPanel.setAlignmentX(0);
+		songPanel.setAlignmentY(0);
 		songPanel.setVisible(true);
 		
+		buttonsPanel.setBounds(0, 0, frame.getWidth(), frame.getHeight());
 		buttonsPanel.add(songPanel);
 		frame.add(buttonsPanel);
 		frame.pack();
@@ -231,6 +249,32 @@ public class GUI {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			LoadMIDI(frame);
+			
+			if (midiFile.exists()) {
+				songSlider.setEnabled(true);
+				songSliderInfo.setText("Song loaded: " + midiFile.getName());
+			}
+		}
+	}
+	
+	public class SongSliderListener implements ChangeListener {
+
+		@Override
+		public void stateChanged(ChangeEvent e) {
+			int i = songSlider.getValue();
+			
+			if (sequence == null) {
+				try {
+					sequence = MidiSystem.getSequence(midiFile);
+				} catch (InvalidMidiDataException | IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+			
+			totalTime = sequence.getMicrosecondLength() / 1000000;
+			songSlider.setMinimum(0);
+			songSlider.setMaximum((int) totalTime);
+			songSlider.setToolTipText("Time: " + i + " / " + totalTime + " (In total seconds)");
 		}
 	}
 	
@@ -266,6 +310,10 @@ public class GUI {
 	}
 
 	public class StartButtonListener implements ActionListener {
+		
+		int bankLSBSelect;
+		int position = 0;
+		int drumChannel = 9;
 
 		public void actionPerformed(ActionEvent e) {
 			
@@ -284,7 +332,7 @@ public class GUI {
 				synth.loadAllInstruments(soundbank);
 				
 				sequencer.getTransmitter().setReceiver(synth.getReceiver());
-				sequencer.setSequence(sequence);
+				sequencer.setSequence(adjustForPlay(sequence));
 				
 				if (pausedTime == 0) {
 					sequencer.start();
@@ -292,8 +340,6 @@ public class GUI {
 					if (sequencer.isRunning()) {
 						startButton.setEnabled(false);
 						pauseButton.setEnabled(true);
-
-						totalTime = sequence.getMicrosecondLength();
 					}
 				}
 				
@@ -304,9 +350,12 @@ public class GUI {
 					if (sequencer.isRunning()) {
 						startButton.setEnabled(false);
 						pauseButton.setEnabled(true);
-						
-						totalTime = sequence.getMicrosecondLength();
 					}
+				}
+				
+				if (sequencer.isRunning()) {
+					Timer timer = new Timer(100, new TimerListener());
+					timer.start();
 				}
 				
 			} catch (MidiUnavailableException e1) {
@@ -316,6 +365,28 @@ public class GUI {
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
+		}
+
+		public Sequence adjustForPlay(Sequence sequence) throws InvalidMidiDataException {
+			for (Track track : sequence.getTracks()) {
+				for (int i = 0; i < track.size(); i++) {
+					MidiEvent midiEvent = track.get(i);
+					MidiMessage midiMessage = midiEvent.getMessage();
+					if (midiMessage instanceof ShortMessage) {
+						ShortMessage sm = (ShortMessage) midiMessage;
+						if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+							if (sm.getData1() == 32) {
+								bankLSBSelect = sm.getData2();
+							}
+							
+							if (sm.getData1() == 0) {
+								sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1(), bankLSBSelect);
+							}
+						}
+					}
+				}
+			}
+			return sequence;
 		}
 	}
 	
@@ -333,6 +404,11 @@ public class GUI {
 			if (sequencer.isRunning() == false) {
 				startButton.setEnabled(true);
 			}
+			
+			if (!sequencer.isRunning()) {
+				Timer timer = new Timer(100, new TimerListener());
+				timer.stop();
+			}
 		}
 	}
 	
@@ -347,10 +423,27 @@ public class GUI {
 				pauseButton.setEnabled(true);
 				startButton.setEnabled(true);
 			}
+			
+			if (!sequencer.isRunning()) {
+				Timer timer = new Timer(100, new TimerListener());
+				timer.stop();
+				songSlider.setValue(0);
+			}
+		}
+	}
+
+	public class TimerListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			int position = (int) (sequencer.getMicrosecondPosition() / 1000000);
+			songSlider.setValue(position);
 		}
 	}
 	
 	public class RenderMIDIProcess implements ActionListener {
+
+		int bankLSBSelect;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -358,11 +451,33 @@ public class GUI {
 			try {
 				soundbank = MidiSystem.getSoundbank(soundsetFile);
 				sequence = MidiSystem.getSequence(midiFile);
-				Midi2WavRender.render(soundbank, sequence, new File("./Rendered.wav/"));
-				System.out.print("Successfully rendered MIDI to Audio!");
+				Midi2WavRender.render(soundbank, adjustForRender(sequence), new File("./Rendered.wav/"));
+				System.out.println("Successfully rendered MIDI to Audio!");
 			} catch (InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
 			}
+		}
+
+		public Sequence adjustForRender(Sequence sequence) throws InvalidMidiDataException {
+			for (Track track : sequence.getTracks()) {
+				for (int i = 0; i < track.size(); i++) {
+					MidiEvent midiEvent = track.get(i);
+					MidiMessage midiMessage = midiEvent.getMessage();
+					if (midiMessage instanceof ShortMessage) {
+						ShortMessage sm = (ShortMessage) midiMessage;
+						if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+							if (sm.getData1() == 32) {
+								bankLSBSelect = sm.getData2();
+							}
+							
+							if (sm.getData1() == 0) {
+								sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1(), bankLSBSelect);
+							}
+						}
+					}
+				}
+			}
+			return sequence;
 		}
 	}
 	

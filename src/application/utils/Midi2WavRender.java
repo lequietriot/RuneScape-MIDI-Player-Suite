@@ -30,6 +30,8 @@ package application.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiDevice;
@@ -44,6 +46,7 @@ import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 import javax.sound.midi.MidiDevice.Info;
 import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 
@@ -91,7 +94,10 @@ public class Midi2WavRender {
 			}
 
 			// Open AudioStream from AudioSynthesizer.
-			AudioInputStream stream = synth.openStream(null, null);
+			Map<String,Object> info = new HashMap<String,Object>();
+			info.put("resamplerType", "sinc");
+			info.put("maxPolyphony", "1024");
+			AudioInputStream stream = synth.openStream(new AudioFormat(44100, 16, 2, true, false), info);
 
 			// Load user-selected Soundbank into AudioSynthesizer.
 			if (soundbank != null) {
