@@ -13,7 +13,6 @@ Since you set the preference for your soundfont, it should remember what you wan
 - Rendering a MIDI file to Waveform Audio was carried on from the previous versions into this new revamp.
 - A refined custom HQ soundfont based on the Old School RuneScape soundbanks is included.
 - The program can actually remember what soundfont you chose by writing the path to a text file and reading it on startup.
-- When rendering or playing back a MIDI song, it automatically attempts to "correct" the file by matching Bank LSB & MSB values (Used for custom instruments).
 - A time slider along with some hints and tooltips! You can now see where your position is in the song playback.
 - A feature that comes in the form of a check-box to enable fixing MIDI files when rendering and/or playing the song. **NOTE: This feature is intended to work on weird-sounding RuneScape MIDI files, when used on regular sounding ones they may sound weird.**
 - The ability to utilize the tools menu and save the loaded MIDI as an attempt to fix it.
