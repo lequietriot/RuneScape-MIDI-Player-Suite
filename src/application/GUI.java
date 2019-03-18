@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
@@ -28,6 +29,7 @@ import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -40,6 +42,7 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
+
 import application.utils.Midi2WavRender;
 
 public class GUI {
@@ -48,6 +51,8 @@ public class GUI {
 	File soundsetFile;
 	
 	String defaultSoundfontPath;
+	
+	boolean fixAttempting;
 	
 	long pausedTime;
 	long runningTime;
@@ -63,6 +68,7 @@ public class GUI {
 	JPanel songPanel;
 	JMenu fileMenu;
 	JMenu preferencesMenu;
+	JMenu utilityMenu;
 	
 	JFileChooser chooseMID;
 	JFileChooser chooseSf2;
@@ -71,12 +77,13 @@ public class GUI {
 	JButton startButton;
 	JButton pauseButton;
 	JButton stopButton;
-	JButton fixMIDIButton;
 	JButton renderMIDItoWavButton;
 	
 	JSlider songSlider;
 	
 	JTextPane songSliderInfo;
+	
+	JCheckBox fixAttempt;
 	
 	@SuppressWarnings("static-access")
 	
@@ -85,7 +92,7 @@ public class GUI {
 		frame.setDefaultLookAndFeelDecorated(true);
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		frame.setMinimumSize(new Dimension(600, 400));
+		frame.setMinimumSize(new Dimension(520, 200));
 		panel = new JPanel(new BorderLayout());
 		panel.setLayout(null);
 		panel.setBorder(BorderFactory.createEmptyBorder());
@@ -119,8 +126,16 @@ public class GUI {
 			
 			preferencesMenu.add("Set Default SoundFont").addActionListener(new DefaultSoundFontSetter());
 
+			utilityMenu = new JMenu();
+			utilityMenu.setText("Tools");
+			utilityMenu.setSize(100, 20);
+			utilityMenu.setVisible(true);
+			
+			utilityMenu.add("Fix MIDI File (OSRS)").addActionListener(new FixButtonListener());
+			
 			jMenuBar.add(fileMenu);
 			jMenuBar.add(preferencesMenu);
+			jMenuBar.add(utilityMenu);
 			
 			System.out.println("Application loaded successfully!");
 		}
@@ -159,12 +174,10 @@ public class GUI {
 		startButton = new JButton();
 		pauseButton = new JButton();
 		stopButton = new JButton();
-		fixMIDIButton = new JButton();
 		
 		startButton.addActionListener(new StartButtonListener());
 		pauseButton.addActionListener(new PauseButtonListener());
 		stopButton.addActionListener(new StopButtonListener());
-		fixMIDIButton.addActionListener(new FixButtonListener());
 		
 		buttonsPanel.add(startButton);
 		startButton.setText("Play");
@@ -177,11 +190,6 @@ public class GUI {
 		buttonsPanel.add(stopButton);
 		stopButton.setText("Stop");
 		stopButton.setVisible(true);
-		
-		buttonsPanel.add(fixMIDIButton);
-		fixMIDIButton.setText("Fix MIDI (Unfinished)");
-		fixMIDIButton.setEnabled(false);
-		fixMIDIButton.setVisible(true);
 
 		buttonsPanel.setVisible(true);
 		buttonsPanel.setBackground(Color.LIGHT_GRAY);
@@ -200,7 +208,7 @@ public class GUI {
 		songPanel.add(songSlider);
 		
 		if (midiFile == null) {
-			songSliderInfo.setText("Not playing anything! Try loading a MIDI?");
+			songSliderInfo.setText("We're not playing anything! Try loading a MIDI.");
 		}
 		songSliderInfo.setBackground(Color.LIGHT_GRAY);
 		songSliderInfo.setSelectedTextColor(Color.BLACK);
@@ -213,14 +221,20 @@ public class GUI {
 		songPanel.setAlignmentY(0);
 		songPanel.setVisible(true);
 		
+		fixAttempt = new JCheckBox();
+		fixAttempt.setText("Attempt to fix songs");
+		fixAttempt.addActionListener(new FixAttempter());
+		fixAttempt.setVisible(true);
+		
 		buttonsPanel.setBounds(0, 0, frame.getWidth(), frame.getHeight());
 		buttonsPanel.add(songPanel);
+		buttonsPanel.add(fixAttempt);
 		frame.add(buttonsPanel);
 		frame.pack();
 	}
 
 	public void LoadSoundFont(JFrame frame) {
-		chooseSf2 = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		chooseSf2 = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
 		chooseSf2.setSize(400, 200);
 		chooseSf2.setDialogTitle("Please choose a Soundfont File");
 		chooseSf2.setVisible(true);
@@ -233,7 +247,7 @@ public class GUI {
 	}
 
 	public void LoadMIDI(JFrame frame) {
-		chooseMID = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		chooseMID = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
 		chooseMID.setSize(400, 200);
 		chooseMID.setDialogTitle("Please choose a MIDI File");
 		chooseMID.setVisible(true);
@@ -313,6 +327,7 @@ public class GUI {
 		
 		int bankLSBSelect;
 		int position = 0;
+		int chPosition = 0;
 		int drumChannel = 9;
 
 		public void actionPerformed(ActionEvent e) {
@@ -332,7 +347,14 @@ public class GUI {
 				synth.loadAllInstruments(soundbank);
 				
 				sequencer.getTransmitter().setReceiver(synth.getReceiver());
-				sequencer.setSequence(adjustForPlay(sequence));
+				
+				if (fixAttempting == false) {
+					sequencer.setSequence(sequence);
+				}
+				
+				else if (fixAttempting == true) {
+					sequencer.setSequence(adjustForPlay(sequence));
+				}
 				
 				if (pausedTime == 0) {
 					sequencer.start();
@@ -367,26 +389,109 @@ public class GUI {
 			}
 		}
 
-		public Sequence adjustForPlay(Sequence sequence) throws InvalidMidiDataException {
+		public Sequence adjustForPlay(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
 					MidiEvent midiEvent = track.get(i);
 					MidiMessage midiMessage = midiEvent.getMessage();
+					
 					if (midiMessage instanceof ShortMessage) {
-						ShortMessage sm = (ShortMessage) midiMessage;
-						if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-							if (sm.getData1() == 32) {
-								bankLSBSelect = sm.getData2();
-							}
+						ShortMessage allShortMessages = (ShortMessage) midiMessage;
+						
+						if (chPosition != 16) {
 							
-							if (sm.getData1() == 0) {
-								sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1(), bankLSBSelect);
+							if (getBankLSB(midiEvent) == 1) {
+							
+								if (allShortMessages.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_ON) {
+									allShortMessages.setMessage(ShortMessage.NOTE_ON, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_OFF) {
+									allShortMessages.setMessage(ShortMessage.NOTE_OFF, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.PITCH_BEND) {
+									allShortMessages.setMessage(ShortMessage.PITCH_BEND, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.POLY_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+							}
+						
+							else if (getBankLSB(midiEvent) != 1) {
+							
+								if (allShortMessages.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_ON) {
+									allShortMessages.setMessage(ShortMessage.NOTE_ON, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_OFF) {
+									allShortMessages.setMessage(ShortMessage.NOTE_OFF, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.PITCH_BEND) {
+									allShortMessages.setMessage(ShortMessage.PITCH_BEND, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.POLY_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.POLY_PRESSURE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
 							}
 						}
 					}
-				}
+				}	
 			}
 			return sequence;
+		}
+
+		public int getBankLSB(MidiEvent midiEvent) throws InvalidMidiDataException {
+
+			MidiMessage midiMessage = midiEvent.getMessage();
+			
+			if (midiMessage instanceof ShortMessage) {
+				ShortMessage sm = (ShortMessage) midiMessage;
+				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+					if (sm.getData1() == 32) {
+						bankLSBSelect = sm.getData2();
+						
+						if (sm.getChannel() != 16) {
+							chPosition = sm.getChannel();
+							if (chPosition == 9 & bankLSBSelect != 1) {
+								chPosition--;
+							}
+						}
+					}
+					
+					if (sm.getData1() == 0) {
+						sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1(), bankLSBSelect);
+					}
+				}
+			}
+			return bankLSBSelect;
 		}
 	}
 	
@@ -441,9 +546,26 @@ public class GUI {
 		}
 	}
 	
+	public class FixAttempter implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (fixAttempt.isEnabled() == true) {
+				fixAttempting = true;
+			}
+			
+			else if (fixAttempt.isEnabled() == false) {
+				fixAttempting = false;
+			}
+		}
+	}
+	
 	public class RenderMIDIProcess implements ActionListener {
 
 		int bankLSBSelect;
+		int drumChannel = 9;
+		int position = 0;
+		int chPosition = 0;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -451,126 +573,249 @@ public class GUI {
 			try {
 				soundbank = MidiSystem.getSoundbank(soundsetFile);
 				sequence = MidiSystem.getSequence(midiFile);
-				Midi2WavRender.render(soundbank, adjustForRender(sequence), new File("./Rendered.wav/"));
+				
+				if (fixAttempting == false) {
+					Midi2WavRender.render(soundbank, sequence, new File("./Rendered.wav/"));
+				}
+				
+				else if (fixAttempting == true) {
+					Midi2WavRender.render(soundbank, adjustForRender(sequence), new File("./Rendered.wav/"));	
+				}
 				System.out.println("Successfully rendered MIDI to Audio!");
 			} catch (InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
 			}
 		}
 
-		public Sequence adjustForRender(Sequence sequence) throws InvalidMidiDataException {
+		public Sequence adjustForRender(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
 					MidiEvent midiEvent = track.get(i);
 					MidiMessage midiMessage = midiEvent.getMessage();
+					
 					if (midiMessage instanceof ShortMessage) {
-						ShortMessage sm = (ShortMessage) midiMessage;
-						if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-							if (sm.getData1() == 32) {
-								bankLSBSelect = sm.getData2();
-							}
+						ShortMessage allShortMessages = (ShortMessage) midiMessage;
+						
+						if (chPosition != 16) {
 							
-							if (sm.getData1() == 0) {
-								sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1(), bankLSBSelect);
+							if (getBankLSB(midiEvent) == 1) {
+							
+								if (allShortMessages.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_ON) {
+									allShortMessages.setMessage(ShortMessage.NOTE_ON, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_OFF) {
+									allShortMessages.setMessage(ShortMessage.NOTE_OFF, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.PITCH_BEND) {
+									allShortMessages.setMessage(ShortMessage.PITCH_BEND, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.POLY_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+							}
+						
+							else if (getBankLSB(midiEvent) != 1) {
+							
+								if (allShortMessages.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_ON) {
+									allShortMessages.setMessage(ShortMessage.NOTE_ON, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_OFF) {
+									allShortMessages.setMessage(ShortMessage.NOTE_OFF, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.PITCH_BEND) {
+									allShortMessages.setMessage(ShortMessage.PITCH_BEND, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.POLY_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.POLY_PRESSURE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
 							}
 						}
 					}
-				}
+				}	
 			}
 			return sequence;
+		}
+
+		public int getBankLSB(MidiEvent midiEvent) throws InvalidMidiDataException {
+
+			MidiMessage midiMessage = midiEvent.getMessage();
+			
+			if (midiMessage instanceof ShortMessage) {
+				ShortMessage sm = (ShortMessage) midiMessage;
+				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+					if (sm.getData1() == 32) {
+						bankLSBSelect = sm.getData2();
+						
+						if (sm.getChannel() != 16) {
+							chPosition = sm.getChannel();
+							if (chPosition == 9 & bankLSBSelect != 1) {
+								chPosition--;
+							}
+						}
+					}
+					
+					if (sm.getData1() == 0) {
+						sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1(), bankLSBSelect);
+					}
+				}
+			}
+			return bankLSBSelect;
 		}
 	}
 	
 	public class FixButtonListener implements ActionListener {
-		
-		int bankLSBValue;
-		int nextFreeChannel;
+
+		int bankLSBSelect;
+		int drumChannel = 9;
+		int position = 0;
+		int chPosition;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				saveFixedMIDI();
-			} catch (IOException e1) {
+				sequence = MidiSystem.getSequence(midiFile);
+				fixMIDI(sequence);
+				System.out.println("Sucessfully wrote fixed MIDI to file!");
+			} catch (InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
 			}
 		}
 
-		public void saveFixedMIDI() throws IOException {
-			saveRepatchedMIDI = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-			saveRepatchedMIDI.setSize(400, 200);
-			saveRepatchedMIDI.setDialogTitle("Please save the fixed MIDI");
-			saveRepatchedMIDI.setVisible(true);
-			frame.add(saveRepatchedMIDI);
-			int returnValue = saveRepatchedMIDI.showSaveDialog(null);
-			if (returnValue == JFileChooser.SAVE_DIALOG) {
-				String savedName = saveRepatchedMIDI.getName();
-				File fixedMIDI = new File(savedName);
-				FileOutputStream fos = new FileOutputStream(fixedMIDI);
-				MidiSystem.write(sequenceFixed, 0, fos);
-			}
-		}
-
-	public Sequence adjustMIDIforSequencer(Sequence sequence) throws InvalidMidiDataException {
-			
+		public Sequence fixMIDI(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
 					MidiEvent midiEvent = track.get(i);
 					MidiMessage midiMessage = midiEvent.getMessage();
+					
 					if (midiMessage instanceof ShortMessage) {
-						ShortMessage shortMessage = (ShortMessage) midiMessage;
+						ShortMessage allShortMessages = (ShortMessage) midiMessage;
 						
-						//Handle Control Change: Bank Select
-						if (shortMessage.getCommand() == ShortMessage.CONTROL_CHANGE) {
-							int channel = shortMessage.getChannel();
-							int bytes = shortMessage.getData1();
-							int value = shortMessage.getData2();
+						if (chPosition != 16) {
 							
-							//Bank LSB - Used in RuneScape to select a custom bank
-							if (bytes == 32) {
-								bankLSBValue = value;
+							if (getBankLSB(midiEvent) == 1) {
+							
+								if (allShortMessages.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_ON) {
+									allShortMessages.setMessage(ShortMessage.NOTE_ON, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_OFF) {
+									allShortMessages.setMessage(ShortMessage.NOTE_OFF, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.PITCH_BEND) {
+									allShortMessages.setMessage(ShortMessage.PITCH_BEND, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.POLY_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, allShortMessages.getData1(), allShortMessages.getData2());
+								}
 							}
+						
+							else if (getBankLSB(midiEvent) != 1) {
 							
-							if (bytes == 0) {
-								if (value != bankLSBValue) {
-									shortMessage.setMessage(ShortMessage.CONTROL_CHANGE, channel, bytes, bankLSBValue);
+								if (allShortMessages.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									allShortMessages.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_ON) {
+									allShortMessages.setMessage(ShortMessage.NOTE_ON, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.NOTE_OFF) {
+									allShortMessages.setMessage(ShortMessage.NOTE_OFF, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.PITCH_BEND) {
+									allShortMessages.setMessage(ShortMessage.PITCH_BEND, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
+								}
+								
+								if (allShortMessages.getCommand() == ShortMessage.POLY_PRESSURE) {
+									allShortMessages.setMessage(ShortMessage.POLY_PRESSURE, chPosition, allShortMessages.getData1(), allShortMessages.getData2());
 								}
 							}
 						}
-						
-						if (shortMessage.getChannel() != 9 && (shortMessage.getData1() == 32 && shortMessage.getData2() == 1)) {
-							
-							shortMessage.setMessage(ShortMessage.NOTE_ON, 9, shortMessage.getData1(), shortMessage.getData2());
-							shortMessage.setMessage(ShortMessage.NOTE_OFF, 9, shortMessage.getData1(), shortMessage.getData2());
-							shortMessage.setMessage(ShortMessage.CONTROL_CHANGE, 9, shortMessage.getData1(), shortMessage.getData2());
-							shortMessage.setMessage(ShortMessage.PROGRAM_CHANGE, 9, shortMessage.getData1(), shortMessage.getData2());
-							shortMessage.setMessage(ShortMessage.CHANNEL_PRESSURE, 9, shortMessage.getData1(), shortMessage.getData2());
-						}
-						
+					}
+				}	
+			}
+			MidiSystem.write(sequence, 1, new File("./FixedMIDI.mid/"));
+			return sequence;
+		}
 
-						else if (shortMessage.getChannel() == 9 & bankLSBValue != 1) {
+		public int getBankLSB(MidiEvent midiEvent) throws InvalidMidiDataException {
+
+			MidiMessage midiMessage = midiEvent.getMessage();
+			
+			if (midiMessage instanceof ShortMessage) {
+				ShortMessage sm = (ShortMessage) midiMessage;
+				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+					if (sm.getData1() == 32) {
+						bankLSBSelect = sm.getData2();
+						
+						if (sm.getChannel() != 16) {
+							chPosition = sm.getChannel();
 							
-							nextFreeChannel = 0;
-							
-							while (nextFreeChannel == i) {
-								nextFreeChannel++;
-								while (nextFreeChannel == 9) {
-									nextFreeChannel++;
-									if (nextFreeChannel != i && nextFreeChannel != 9) {
-										continue;
-									}
-								}
+							if (chPosition == 9 & bankLSBSelect != 1) {
+								chPosition--;
 							}
-							
-							shortMessage.setMessage(ShortMessage.NOTE_ON, nextFreeChannel, shortMessage.getData1(), shortMessage.getData2());
-							shortMessage.setMessage(ShortMessage.NOTE_OFF, nextFreeChannel, shortMessage.getData1(), shortMessage.getData2());
-							shortMessage.setMessage(ShortMessage.CONTROL_CHANGE, nextFreeChannel, shortMessage.getData1(), shortMessage.getData2());
-							shortMessage.setMessage(ShortMessage.PROGRAM_CHANGE, nextFreeChannel, shortMessage.getData1(), shortMessage.getData2());
-							shortMessage.setMessage(ShortMessage.CHANNEL_PRESSURE, nextFreeChannel, shortMessage.getData1(), shortMessage.getData2());
 						}
+					}
+					
+					if (sm.getData1() == 0) {
+						sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1(), bankLSBSelect);
 					}
 				}
 			}
-			return sequence;
+			return bankLSBSelect;
 		}
 	}
 }
