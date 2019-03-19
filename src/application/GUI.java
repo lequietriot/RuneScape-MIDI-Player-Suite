@@ -44,6 +44,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 
 import application.utils.Midi2WavRender;
+import application.utils.MidiFixerOSRS;
 
 public class GUI {
 	
@@ -131,7 +132,7 @@ public class GUI {
 			utilityMenu.setSize(100, 20);
 			utilityMenu.setVisible(true);
 			
-			utilityMenu.add("Fix MIDI File (OSRS)").addActionListener(new FixButtonListener());
+			utilityMenu.add("Fix MIDI File (OSRS Version)").addActionListener(new FixButtonListenerOSRS());
 			
 			jMenuBar.add(fileMenu);
 			jMenuBar.add(preferencesMenu);
@@ -693,7 +694,7 @@ public class GUI {
 		}
 	}
 	
-	public class FixButtonListener implements ActionListener {
+	public class FixButtonListenerOSRS implements ActionListener {
 
 		int bankLSBSelect;
 		int drumChannel = 9;
@@ -704,8 +705,11 @@ public class GUI {
 		public void actionPerformed(ActionEvent e) {
 			try {
 				sequence = MidiSystem.getSequence(midiFile);
-				fixMIDI(sequence);
-				System.out.println("Sucessfully wrote fixed MIDI to file!");
+				
+				MidiFixerOSRS.returnFixedMIDI(fixMIDI(sequence));
+				
+				System.out.println("Sucessfully wrote the fixed Old School RuneScape MIDI to file!");
+				
 			} catch (InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
 			}
@@ -787,7 +791,6 @@ public class GUI {
 					}
 				}	
 			}
-			MidiSystem.write(sequence, 1, new File("./FixedMIDI.mid/"));
 			return sequence;
 		}
 
