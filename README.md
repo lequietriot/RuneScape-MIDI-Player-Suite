@@ -21,4 +21,8 @@ Since you set the preference for your soundfont, it should remember what you wan
 - Possibly include sound tools
 - Automatic soundfont processing
 - Add more details to fixed MIDI files, such as helpful Meta Events
+<<<<<<< HEAD
 - Add playlists
+=======
+- Add playlists
+>>>>>>> 339d4b8b662358f779e77c2f8e0766a788d11951
