@@ -15,14 +15,9 @@ Since you set the preference for your soundfont, it should remember what you wan
 - A time slider along with some hints and tooltips! You can now see where your position is in the song playback.
 - The ability to utilize the tools menu and save the loaded MIDI as an attempt to fix it.
 - A feature that comes in the form of a check-box to enable fixing MIDI files when rendering and/or playing the song. **NOTE: This feature is intended to work on weird-sounding RuneScape MIDI files, when used on regular sounding ones they may sound weird.**
+- This program supports fixing and resaving Old School RuneScape MIDI files, handling and converting custom instruments to basic ones. The notes are corrected to the normal sound, and all tracks are labelled according to instrument used.
 
 # To do list (Ideas)
 - Add the MIDI dumper
 - Possibly include sound tools
 - Automatic soundfont processing
-- Add more details to fixed MIDI files, such as helpful Meta Events
-<<<<<<< HEAD
-- Add playlists
-=======
-- Add playlists
->>>>>>> 339d4b8b662358f779e77c2f8e0766a788d11951
