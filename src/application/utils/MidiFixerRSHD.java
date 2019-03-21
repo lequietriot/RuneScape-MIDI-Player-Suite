@@ -1,13 +1,11 @@
 package application.utils;
 
-import java.io.File;
 import java.io.IOException;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
-import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
@@ -368,6 +366,7 @@ public class MidiFixerRSHD {
 
 	static int bankLSB;
 
+	static int customBank0;
 	static int customBank1;
 	static int customBank2;
 	static int customBank3;
@@ -398,7 +397,7 @@ public class MidiFixerRSHD {
 	
 	static int trackName = 0x03;
 	
-	public static Sequence returnFixedMIDI(Sequence sequence, boolean write) throws InvalidMidiDataException, IOException {
+	public static Sequence returnFixedMIDI(Sequence sequence) throws InvalidMidiDataException, IOException {
 		
 		for (Track track : sequence.getTracks()) {
 			for (int i = 0; i < track.size(); i++) {
@@ -1015,7 +1014,7 @@ public class MidiFixerRSHD {
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 53, 0);
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 54, 0);
 							customBank2 = 35;
 							channelPosition = sm.getChannel();
 						}
@@ -1195,6 +1194,9 @@ public class MidiFixerRSHD {
 							metaMessage.setMessage(trackName, patch47.getBytes(), patch47.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+
+							customBank0 = 48;
+							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 48 & bankLSB == 0) {
@@ -1720,12 +1722,19 @@ public class MidiFixerRSHD {
 						}
 						
 						else if (channelPosition == sm.getChannel()) {
-							continue;
+							break;
 						}
 					}
 					
 					if (sm.getCommand() == ShortMessage.NOTE_ON & channelPosition == sm.getChannel()) {
 
+						//Bank 0
+						if (customBank0 == 48) {
+							if (sm.getData1() > 119) {
+								sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() - 72, sm.getData2());
+							}
+						}
+						
 						//Bank 1
 						if (customBank1 == 2) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), 57, sm.getData2());
@@ -1758,7 +1767,7 @@ public class MidiFixerRSHD {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
 						}
 						
-						continue;
+						break;
 					}
 
 					if (sm.getCommand() == ShortMessage.NOTE_OFF & channelPosition == sm.getChannel()) {
@@ -1794,13 +1803,11 @@ public class MidiFixerRSHD {
 						if (customBank2 == 24) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
 						}
-						continue;
+						
+						break;
 					}
 				}
 			}
-		}
-		if (write == true) {
-			MidiSystem.write(sequence, 1, new File("./FixedMIDI.mid/"));
 		}
 		return sequence;
 	}

@@ -1042,7 +1042,7 @@ public class MidiFixerOSRS {
 						}
 						
 						else if (channelPosition == sm.getChannel()) {
-							continue;
+							break;
 						}
 					}
 					
@@ -1080,6 +1080,7 @@ public class MidiFixerOSRS {
 				}
 			}
 		}
+		
 		if (write == true) {
 			MidiSystem.write(sequence, 1, new File("./FixedMIDI.mid/"));
 		}

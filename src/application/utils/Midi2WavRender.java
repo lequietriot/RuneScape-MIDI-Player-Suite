@@ -29,12 +29,13 @@ package application.utils;
  */
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.sound.midi.MetaMessage;
+import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiDevice;
+import javax.sound.midi.MidiDevice.Info;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiSystem;
@@ -44,7 +45,6 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
-import javax.sound.midi.MidiDevice.Info;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -53,32 +53,6 @@ import javax.sound.sampled.AudioSystem;
 import com.sun.media.sound.AudioSynthesizer;
 
 public class Midi2WavRender {
-
-	public static void main(String[] args) {
-		if (args.length >= 2)
-			try {
-				File midi_file = new File(args[0]);
-				if (!midi_file.exists())
-					throw new FileNotFoundException();
-				Sequence sequence = MidiSystem.getSequence(midi_file);
-				Soundbank soundbank = null;
-				if (args.length >= 3) {
-					File soundbank_file = new File(args[2]);
-					if (soundbank_file.exists())
-						soundbank = MidiSystem.getSoundbank(soundbank_file);
-				}
-				render(soundbank, sequence, new File(args[1]));
-				System.exit(0);
-
-			} catch (Exception e) {
-				System.out.println(e.toString());
-				System.out.println();
-			}
-		System.out.println("MIDI to WAVE Render: usages:");
-		System.out
-				.println("java Midi2WavRender <midi_file_in> <wave_file_out> <soundbank_file>");
-		System.exit(1);
-	}
 
 	/*
 	 * Render sequence using selected or default soundbank into wave audio file.
@@ -134,10 +108,20 @@ public class Midi2WavRender {
 		if (synth instanceof AudioSynthesizer)
 			return (AudioSynthesizer) synth;
 
-		// If default synhtesizer is not AudioSynthesizer, check others.
+		// If default synthesizer is not AudioSynthesizer, check others.
+		
+		double gain = 0.63;
+		
 		Info[] infos = MidiSystem.getMidiDeviceInfo();
+		MidiChannel[] channels = synth.getChannels();
+		
+		for (int i = 0; i < channels.length; i++) {
+			channels[i].controlChange(7, ((int) (gain * 127.0)));
+		}
+		
 		for (int i = 0; i < infos.length; i++) {
 			MidiDevice dev = MidiSystem.getMidiDevice(infos[i]);
+			
 			if (dev instanceof AudioSynthesizer)
 				return (AudioSynthesizer) dev;
 		}

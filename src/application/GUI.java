@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiSystem;
@@ -354,10 +355,20 @@ public class GUI {
 				synth = MidiSystem.getSynthesizer();
 				
 				sequencer.open();
+				
 				synth.open();
+				
 				synth.loadAllInstruments(soundbank);
 				
 				sequencer.getTransmitter().setReceiver(synth.getReceiver());
+				
+				double gain = 0.63;
+				
+				MidiChannel[] channels = synth.getChannels();
+				
+				for (int i = 0; i < channels.length; i++) {
+					channels[i].controlChange(7, ((int) (gain * 127.0)));
+				}
 				
 				if (fixAttemptingOS == false) {
 					sequencer.setSequence(sequence);
@@ -785,7 +796,7 @@ public class GUI {
 						}
 					}
 				}
-				return MidiFixerRSHD.returnFixedMIDI(sequence, false);
+				return MidiFixerRSHD.returnFixedMIDI(sequence);
 			}
 
 		public int getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
@@ -1301,7 +1312,7 @@ public class GUI {
 						}
 					}
 				}
-				return MidiFixerRSHD.returnFixedMIDI(sequence, false);
+				return MidiFixerRSHD.returnFixedMIDI(sequence);
 			}
 
 		public int getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
@@ -1768,7 +1779,7 @@ public class GUI {
 						}
 					}
 				}
-				MidiFixerRSHD.returnFixedMIDI(sequence, true);
+				MidiSystem.write(MidiFixerRSHD.returnFixedMIDI(sequence), 1, new File("./FixedMIDI.mid/"));
 			}
 
 		public int getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
