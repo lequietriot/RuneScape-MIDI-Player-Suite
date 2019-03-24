@@ -1,370 +1,372 @@
 package application.utils;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
+import javax.sound.midi.MidiSystem;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 
 public class MidiFixerRSHD {
 	
-	static String patch0 = "Acoustic Grand Piano";
-	static String patch1 = "Bright Piano";
-	static String patch2 = "Electric Grand Piano";
-	static String patch3 = "Honky-tonk Piano";
-	static String patch4 = "Electric Piano 1";
-	static String patch5 = "Electric Piano 2";
-	static String patch6 = "Harpsichord";
-	static String patch7 = "Clavinet";
-	static String patch8 = "Celesta";
-	static String patch9 = "Glockenspiel";
-	static String patch10 = "Music Box";
-	static String patch11 = "Vibraphone";
-	static String patch12 = "Marimba";
-	static String patch13 = "Xylophone";
-	static String patch14 = "Tubular Bells";
-	static String patch15 = "Dulcimer";
-	static String patch16 = "Drawbar Organ";
-	static String patch17 = "Percussive Organ";
-	static String patch18 = "Rock Organ";
-	static String patch19 = "Church Organ";
-	static String patch20 = "Reed Organ";
-	static String patch21 = "Accordion";
-	static String patch22 = "Harmonica";
-	static String patch23 = "Tango Accordion";
-	static String patch24 = "Nylon String Guitar";
-	static String patch25 = "Steel String Guitar";
-	static String patch26 = "Jazz Guitar";
-	static String patch27 = "Clean Guitar";
-	static String patch28 = "Muted Guitar";
-	static String patch29 = "Overdriven Guitar";
-	static String patch30 = "Distortion Guitar";
-	static String patch31 = "Guitar Harmonics";
-	static String patch32 = "Acoustic Bass";
-	static String patch33 = "Picked Bass";
-	static String patch34 = "Fingered Bass";
-	static String patch35 = "Fretless Bass";
-	static String patch36 = "Slap Bass 1";
-	static String patch37 = "Slap Bass 2";
-	static String patch38 = "Synth Bass 1";
-	static String patch39 = "Synth Bass 2";
-	static String patch40 = "Violin";
-	static String patch41 = "Viola";
-	static String patch42 = "Cello";
-	static String patch43 = "Contrabass";
-	static String patch44 = "Tremolo Strings";
-	static String patch45 = "Pizzicato Strings";
-	static String patch46 = "Harp";
-	static String patch47 = "Timpani";
-	static String patch48 = "Strings";
-	static String patch49 = "Slow Strings";
-	static String patch50 = "Synth Strings 1";
-	static String patch51 = "Synth Strings 2";
-	static String patch52 = "Choir Aahs";
-	static String patch53 = "Voice Oohs";
-	static String patch54 = "Synth Voice";
-	static String patch55 = "Orchestra Hit";
-	static String patch56 = "Trumpet";
-	static String patch57 = "Trombone";
-	static String patch58 = "Tuba";
-	static String patch59 = "Muted Trumpet";
-	static String patch60 = "French Horn";
-	static String patch61 = "Brass Section";
-	static String patch62 = "Synth Brass 1";
-	static String patch63 = "Synth Brass 2";
-	static String patch64 = "Soprano Saxophone";
-	static String patch65 = "Alto Saxophone";
-	static String patch66 = "Tenor Saxophone";
-	static String patch67 = "Baritone Saxophone";
-	static String patch68 = "Oboe";
-	static String patch69 = "English Horn";
-	static String patch70 = "Bassoon";
-	static String patch71 = "Clarinet";
-	static String patch72 = "Piccolo";
-	static String patch73 = "Flute";
-	static String patch74 = "Recorder";
-	static String patch75 = "Pan Flute";
-	static String patch76 = "Blown Bottle";
-	static String patch77 = "Shakuhachi";
-	static String patch78 = "Whistle";
-	static String patch79 = "Ocarina";
-	static String patch80 = "Square Wave";
-	static String patch81 = "Sawtooth Wave";
-	static String patch82 = "Calliope Synth";
-	static String patch83 = "Chiffer Synth";
-	static String patch84 = "Charang Synth";
-	static String patch85 = "Synth Voice Lead";
-	static String patch86 = "Sawtooth Fifths";
-	static String patch87 = "Bass and Lead Synth";
-	static String patch88 = "New Age Pad";
-	static String patch89 = "Warm Pad";
-	static String patch90 = "Polysynth";
-	static String patch91 = "Choir Pad";
-	static String patch92 = "Bowed Pad";
-	static String patch93 = "Metallic Pad";
-	static String patch94 = "Halo Pad";
-	static String patch95 = "Sweep Pad";
-	static String patch96 = "Rain Pad";
-	static String patch97 = "Soundtrack Pad";
-	static String patch98 = "Crystal";
-	static String patch99 = "Atmosphere";
-	static String patch100 = "Brightness";
-	static String patch101 = "Goblins";
-	static String patch102 = "Echo Drops";
-	static String patch103 = "Sci-Fi Pad";
-	static String patch104 = "Sitar";
-	static String patch105 = "Banjo";
-	static String patch106 = "Shamisen";
-	static String patch107 = "Koto";
-	static String patch108 = "Kalimba";
-	static String patch109 = "Bagpipes";
-	static String patch110 = "Fiddle";
-	static String patch111 = "Shanai";
-	static String patch112 = "Tinkle Bell";
-	static String patch113 = "Agogo";
-	static String patch114 = "Steel Drums";
-	static String patch115 = "Woodblocks";
-	static String patch116 = "Taiko Drums";
-	static String patch117 = "Melodic Toms";
-	static String patch118 = "Synth Drum";
-	static String patch119 = "Reverse Cymbal";
-	static String patch120 = "Guitar Fret Noise";
-	static String patch121 = "Breath Noise";
-	static String patch122 = "Seashore SFX";
-	static String patch123 = "Bird Tweet SFX";
-	static String patch124 = "Telephone Ring SFX";
-	static String patch125 = "Helicopter SFX";
-	static String patch126 = "Applause SFX";
-	static String patch127 = "Gunshot SFX";
+	final static String patch0 = "Acoustic Grand Piano";
+	final static String patch1 = "Bright Piano";
+	final static String patch2 = "Electric Grand Piano";
+	final static String patch3 = "Honky-tonk Piano";
+	final static String patch4 = "Electric Piano 1";
+	final static String patch5 = "Electric Piano 2";
+	final static String patch6 = "Harpsichord";
+	final static String patch7 = "Clavinet";
+	final static String patch8 = "Celesta";
+	final static String patch9 = "Glockenspiel";
+	final static String patch10 = "Music Box";
+	final static String patch11 = "Vibraphone";
+	final static String patch12 = "Marimba";
+	final static String patch13 = "Xylophone";
+	final static String patch14 = "Tubular Bells";
+	final static String patch15 = "Dulcimer";
+	final static String patch16 = "Drawbar Organ";
+	final static String patch17 = "Percussive Organ";
+	final static String patch18 = "Rock Organ";
+	final static String patch19 = "Church Organ";
+	final static String patch20 = "Reed Organ";
+	final static String patch21 = "Accordion";
+	final static String patch22 = "Harmonica";
+	final static String patch23 = "Tango Accordion";
+	final static String patch24 = "Nylon String Guitar";
+	final static String patch25 = "Steel String Guitar";
+	final static String patch26 = "Jazz Guitar";
+	final static String patch27 = "Clean Guitar";
+	final static String patch28 = "Muted Guitar";
+	final static String patch29 = "Overdriven Guitar";
+	final static String patch30 = "Distortion Guitar";
+	final static String patch31 = "Guitar Harmonics";
+	final static String patch32 = "Acoustic Bass";
+	final static String patch33 = "Fingered Bass";
+	final static String patch34 = "Picked Bass";
+	final static String patch35 = "Fretless Bass";
+	final static String patch36 = "Slap Bass 1";
+	final static String patch37 = "Slap Bass 2";
+	final static String patch38 = "Synth Bass 1";
+	final static String patch39 = "Synth Bass 2";
+	final static String patch40 = "Violin";
+	final static String patch41 = "Viola";
+	final static String patch42 = "Cello";
+	final static String patch43 = "Contrabass";
+	final static String patch44 = "Tremolo Strings";
+	final static String patch45 = "Pizzicato Strings";
+	final static String patch46 = "Harp";
+	final static String patch47 = "Timpani";
+	final static String patch48 = "Strings";
+	final static String patch49 = "Slow Strings";
+	final static String patch50 = "Synth Strings 1";
+	final static String patch51 = "Synth Strings 2";
+	final static String patch52 = "Choir Aahs";
+	final static String patch53 = "Voice Oohs";
+	final static String patch54 = "Synth Voice";
+	final static String patch55 = "Orchestra Hit";
+	final static String patch56 = "Trumpet";
+	final static String patch57 = "Trombone";
+	final static String patch58 = "Tuba";
+	final static String patch59 = "Muted Trumpet";
+	final static String patch60 = "French Horn";
+	final static String patch61 = "Brass Section";
+	final static String patch62 = "Synth Brass 1";
+	final static String patch63 = "Synth Brass 2";
+	final static String patch64 = "Soprano Saxophone";
+	final static String patch65 = "Alto Saxophone";
+	final static String patch66 = "Tenor Saxophone";
+	final static String patch67 = "Baritone Saxophone";
+	final static String patch68 = "Oboe";
+	final static String patch69 = "English Horn";
+	final static String patch70 = "Bassoon";
+	final static String patch71 = "Clarinet";
+	final static String patch72 = "Piccolo";
+	final static String patch73 = "Flute";
+	final static String patch74 = "Recorder";
+	final static String patch75 = "Pan Flute";
+	final static String patch76 = "Blown Bottle";
+	final static String patch77 = "Shakuhachi";
+	final static String patch78 = "Whistle";
+	final static String patch79 = "Ocarina";
+	final static String patch80 = "Square Wave";
+	final static String patch81 = "Sawtooth Wave";
+	final static String patch82 = "Calliope Synth";
+	final static String patch83 = "Chiffer Synth";
+	final static String patch84 = "Charang Synth";
+	final static String patch85 = "Synth Voice Lead";
+	final static String patch86 = "Sawtooth Fifths";
+	final static String patch87 = "Bass and Lead Synth";
+	final static String patch88 = "New Age Pad";
+	final static String patch89 = "Warm Pad";
+	final static String patch90 = "Polysynth";
+	final static String patch91 = "Choir Pad";
+	final static String patch92 = "Bowed Pad";
+	final static String patch93 = "Metallic Pad";
+	final static String patch94 = "Halo Pad";
+	final static String patch95 = "Sweep Pad";
+	final static String patch96 = "Rain Pad";
+	final static String patch97 = "Soundtrack Pad";
+	final static String patch98 = "Crystal";
+	final static String patch99 = "Atmosphere";
+	final static String patch100 = "Brightness";
+	final static String patch101 = "Goblins";
+	final static String patch102 = "Echo Drops";
+	final static String patch103 = "Sci-Fi Pad";
+	final static String patch104 = "Sitar";
+	final static String patch105 = "Banjo";
+	final static String patch106 = "Shamisen";
+	final static String patch107 = "Koto";
+	final static String patch108 = "Kalimba";
+	final static String patch109 = "Bagpipes";
+	final static String patch110 = "Fiddle";
+	final static String patch111 = "Shanai";
+	final static String patch112 = "Tinkle Bell";
+	final static String patch113 = "Agogo";
+	final static String patch114 = "Steel Drums";
+	final static String patch115 = "Woodblocks";
+	final static String patch116 = "Taiko Drums";
+	final static String patch117 = "Melodic Toms";
+	final static String patch118 = "Synth Drum";
+	final static String patch119 = "Reverse Cymbal";
+	final static String patch120 = "Guitar Fret Noise";
+	final static String patch121 = "Breath Noise";
+	final static String patch122 = "Seashore SFX";
+	final static String patch123 = "Bird Tweet SFX";
+	final static String patch124 = "Telephone Ring SFX";
+	final static String patch125 = "Helicopter SFX";
+	final static String patch126 = "Applause SFX";
+	final static String patch127 = "Gunshot SFX";
 	
-	static String patch128 = "Standard Drum Kit";
-	static String patch129 = "Gong Percussion"; // Custom Percussion
-	static String patch136 = "Room Drum Kit";
-	static String patch144 = "Power Drum Kit";
-	static String patch152 = "Electronic Drum Kit";
-	static String patch153 = "Analog Drum Kit";
-	static String patch168 = "Brush Drum Kit";
-	static String patch176 = "Orchestral Drum Kit";
-	static String patch178 = "Ancient Drum Kit"; // Custom Percussion
-	static String patch179 = "Ambient Drum Kit"; // Custom Percussion
-	static String patch184 = "Special Effects Drum Kit";
-	static String patch255 = "Standard Drum Kit";
+	final static String patch128 = "Standard Drum Kit";
+	final static String patch129 = "Gong Percussion"; // Custom Percussion
+	final static String patch136 = "Room Drum Kit";
+	final static String patch144 = "Power Drum Kit";
+	final static String patch152 = "Electronic Drum Kit";
+	final static String patch153 = "Analog Drum Kit";
+	final static String patch168 = "Brush Drum Kit";
+	final static String patch176 = "Orchestral Drum Kit";
+	final static String patch178 = "Ancient Drum Kit"; // Custom Percussion
+	final static String patch179 = "Ambient Drum Kit"; // Custom Percussion
+	final static String patch184 = "Special Effects Drum Kit";
+	final static String patch255 = "Standard Drum Kit";
 	
-	static String patch256 = "Choir Aahs (2)"; //This patch is transposed down 12 notes.
-	static String patch257 = "Warm Pad (2)";
-	static String patch258 = "Pizzicato Strings (2)";
-	static String patch259 = "Taiko Drum (2)";
-	static String patch260 = "Pan Flute (2)"; // This patch is transposed up 12 notes.
-	static String patch261 = "Strings Marcato";
-	static String patch262 = "Slow Strings (2)";
-	static String patch263 = "Acoustic Grand Piano (2)";
-	static String patch264 = "New Age Pad (2)";
-	static String patch265 = "Synth Flute";
-	static String patch266 = "Choir Aahs (3)";
-	static String patch267 = "Spring SFX 1";
-	static String patch268 = "Spring SFX 2";
-	static String patch269 = "Spring SFX 3";
-	static String patch270 = "Spring SFX 4";
-	static String patch271 = "Spring SFX 5";
-	static String patch272 = "Spring SFX 6";
-	static String patch273 = "Spring SFX 7";
-	static String patch274 = "Spring SFX 8";
-	static String patch275 = "Spring SFX 9";
-	static String patch276 = "Spring SFX 10";
-	static String patch277 = "Strings (2)";
-	static String patch278 = "Choir Aahs (4)"; // This patch is transposed down 24 notes.
-	static String patch279 = "Choir Eehs"; // This patch is transposed down 24 notes.
-	static String patch280 = "Frozen Ambient Pad";
-	static String patch281 = "Abandoned Ambient Pad";
-	static String patch282 = "Brass Section (2)";
-	static String patch283 = "Brass Section (3)";
-	static String patch284 = "Brass Section (4)";
-	static String patch285 = "Brass Section (5)";
-	static String patch286 = "Brass Section (6)";
-	static String patch287 = "Furnished Ambient Pad";
-	static String patch288 = "Warped Ambient Pad";
-	static String patch289 = "Paranormal SFX";
-	static String patch290 = "Ghost Voice Oohs";
-	static String patch291 = "Black Zabeth Vocals";
-	static String patch292 = "Overdriven Guitar (2)";
-	static String patch293 = "Slow Tremolo Strings";
-	static String patch294 = "Synth Bass 3";
-	static String patch295 = "Deathcon II, Part 1";
-	static String patch296 = "Deathcon II, Part 2";
-	static String patch297 = "One Piercing Note, Part 1";
-	static String patch298 = "Valerio's Song";
-	static String patch299 = "Citharede Requiem Vocals";
-	static String patch300 = "Tremolo Strings (2)";
-	static String patch301 = "Diamond Jubilee";
-	static String patch302 = "Percussion Loops";
-	static String patch303 = "Varrock Saradominist Church";
+	final static String patch256 = "Choir Aahs (2)"; //This patch is transposed down 12 notes.
+	final static String patch257 = "Warm Pad (2)";
+	final static String patch258 = "Pizzicato Strings (2)";
+	final static String patch259 = "Taiko Drum (2)";
+	final static String patch260 = "Pan Flute (2)"; // This patch is transposed up 12 notes.
+	final static String patch261 = "Strings Marcato";
+	final static String patch262 = "Slow Strings (2)";
+	final static String patch263 = "Acoustic Grand Piano (2)";
+	final static String patch264 = "New Age Pad (2)";
+	final static String patch265 = "Synth Flute";
+	final static String patch266 = "Choir Aahs (3)";
+	final static String patch267 = "Spring SFX 1";
+	final static String patch268 = "Spring SFX 2";
+	final static String patch269 = "Spring SFX 3";
+	final static String patch270 = "Spring SFX 4";
+	final static String patch271 = "Spring SFX 5";
+	final static String patch272 = "Spring SFX 6";
+	final static String patch273 = "Spring SFX 7";
+	final static String patch274 = "Spring SFX 8";
+	final static String patch275 = "Spring SFX 9";
+	final static String patch276 = "Spring SFX 10";
+	final static String patch277 = "Strings (2)";
+	final static String patch278 = "Choir Aahs (4)"; // This patch is transposed down 24 notes.
+	final static String patch279 = "Choir Eehs"; // This patch is transposed down 24 notes.
+	final static String patch280 = "Frozen Ambient Pad";
+	final static String patch281 = "Abandoned Ambient Pad";
+	final static String patch282 = "Brass Section (2)";
+	final static String patch283 = "Brass Section (3)";
+	final static String patch284 = "Brass Section (4)";
+	final static String patch285 = "Brass Section (5)";
+	final static String patch286 = "Brass Section (6)";
+	final static String patch287 = "Furnished Ambient Pad";
+	final static String patch288 = "Warped Ambient Pad";
+	final static String patch289 = "Paranormal SFX";
+	final static String patch290 = "Ghost Voice Oohs";
+	final static String patch291 = "Black Zabeth Vocals";
+	final static String patch292 = "Overdriven Guitar (2)";
+	final static String patch293 = "Slow Tremolo Strings";
+	final static String patch294 = "Synth Bass 3";
+	final static String patch295 = "Deathcon II, Part 1";
+	final static String patch296 = "Deathcon II, Part 2";
+	final static String patch297 = "One Piercing Note, Part 1";
+	final static String patch298 = "Valerio's Song";
+	final static String patch299 = "Citharede Requiem Vocals";
+	final static String patch300 = "Tremolo Strings (2)"; // This patch is transposed down 48 notes. (?)
+	final static String patch301 = "Diamond Jubilee";
+	final static String patch302 = "Percussion Loops";
+	final static String patch303 = "Varrock Saradominist Church";
 	
-	static String patch384 = "Pirate Shanty Vocals";
-	static String patch385 = "Dominion Tower, Part 1";
-	static String patch386 = "Dominion Tower, Part 2";
-	static String patch387 = "Dominion Tower, Part 3";
-	static String patch388 = "Traveller's Tale";
-	static String patch389 = "One Piercing Note, Part 2";
-	static String patch390 = "One Piercing Note, Part 3";
-	static String patch391 = "One Piercing Note - Quest Complete";
-	static String patch392 = "Squeal of Fortune";
-	static String patch393 = "Masterwork Music Box";
-	static String patch394 = "Order of Ascension";
-	static String patch395 = "Vorago";
-	static String patch396 = "Bringing Home the Bacon";
+	final static String patch384 = "Pirate Shanty Vocals";
+	final static String patch385 = "Dominion Tower, Part 1";
+	final static String patch386 = "Dominion Tower, Part 2";
+	final static String patch387 = "Dominion Tower, Part 3";
+	final static String patch388 = "Traveller's Tale";
+	final static String patch389 = "One Piercing Note, Part 2";
+	final static String patch390 = "One Piercing Note, Part 3";
+	final static String patch391 = "One Piercing Note - Quest Complete";
+	final static String patch392 = "Squeal of Fortune";
+	final static String patch393 = "Masterwork Music Box";
+	final static String patch394 = "Order of Ascension";
+	final static String patch395 = "Vorago";
+	final static String patch396 = "Bringing Home the Bacon";
 	
-	static String patch512 = "Wind SFX";
+	final static String patch512 = "Wind SFX";
 
-	static String patch641 = "Burthorpe and Taverley, Part 1";
-	static String patch642 = "Taverley Folk";
-	static String patch643 = "Burthorpe and Taverley, Part 2";
-	static String patch644 = "Burthorpe and Taverley, Part 3";
-	static String patch645 = "Burthorpe and Taverley, Part 4";
-	static String patch646 = "Burthorpe and Taverley, Part 5";
-	static String patch647 = "Burthorpe and Taverley, Part 6";
+	final static String patch641 = "Burthorpe and Taverley, Part 1";
+	final static String patch642 = "Taverley Folk";
+	final static String patch643 = "Burthorpe and Taverley, Part 2";
+	final static String patch644 = "Burthorpe and Taverley, Part 3";
+	final static String patch645 = "Burthorpe and Taverley, Part 4";
+	final static String patch646 = "Burthorpe and Taverley, Part 5";
+	final static String patch647 = "Burthorpe and Taverley, Part 6";
 
-	static String patch768 = "TzHaar City, Part 1";
-	static String patch769 = "TzHaar Supremacy I";
-	static String patch770 = "TzHaar City, Part 2";
-	static String patch771 = "TzHaar Supremacy II and III";
-	static String patch773 = "Ga'al";
+	final static String patch768 = "TzHaar City, Part 1";
+	final static String patch769 = "TzHaar Supremacy I";
+	final static String patch770 = "TzHaar City, Part 2";
+	final static String patch771 = "TzHaar Supremacy II and III";
+	final static String patch773 = "Ga'al";
 	
-	static String patch896 = "RuneSpan, Part 1";
-	static String patch897 = "RuneSpan, Part 2";
-	static String patch898 = "RuneSpan, Part 3";
-	static String patch899 = "RuneSpan, Part 4";
-	static String patch900 = "RuneSpan, Part 5";
-	static String patch901 = "RuneSpan, Part 6";
-	static String patch902 = "RuneSpan, Part 7";
-	static String patch903 = "RuneSpan, Part 8";
-	static String patch904 = "RuneSpan, Part 9";
-	static String patch905 = "RuneSpan, Part 10";
-	static String patch906 = "RuneSpan, Part 11";
-	static String patch907 = "RuneSpan, Part 12";
-	static String patch908 = "Choir Oohs";
-	static String patch909 = "Crystal (2)";
-	static String patch910 = "Brass Section Crescendo";
-	static String patch911 = "Tremolo Synthesizer";
-	static String patch912 = "RuneSpan, Part 13";
-	static String patch913 = "RuneSpan, Part 14";
-	static String patch914 = "RuneSpan, Part 15";
-	static String patch915 = "RuneSpan, Part 16";
-	static String patch916 = "RuneSpan, Part 17";
-	static String patch917 = "RuneSpan, Part 18";
-	static String patch918 = "RuneSpan, Part 19";
-	static String patch919 = "RuneSpan, Part 20";
+	final static String patch896 = "RuneSpan, Part 1";
+	final static String patch897 = "RuneSpan, Part 2";
+	final static String patch898 = "RuneSpan, Part 3";
+	final static String patch899 = "RuneSpan, Part 4";
+	final static String patch900 = "RuneSpan, Part 5";
+	final static String patch901 = "RuneSpan, Part 6";
+	final static String patch902 = "RuneSpan, Part 7";
+	final static String patch903 = "RuneSpan, Part 8";
+	final static String patch904 = "RuneSpan, Part 9";
+	final static String patch905 = "RuneSpan, Part 10";
+	final static String patch906 = "RuneSpan, Part 11";
+	final static String patch907 = "RuneSpan, Part 12";
+	final static String patch908 = "Choir Oohs";
+	final static String patch909 = "Crystal (2)";
+	final static String patch910 = "Brass Section Crescendo";
+	final static String patch911 = "Tremolo Synthesizer";
+	final static String patch912 = "RuneSpan, Part 13";
+	final static String patch913 = "RuneSpan, Part 14";
+	final static String patch914 = "RuneSpan, Part 15";
+	final static String patch915 = "RuneSpan, Part 16";
+	final static String patch916 = "RuneSpan, Part 17";
+	final static String patch917 = "RuneSpan, Part 18";
+	final static String patch918 = "RuneSpan, Part 19";
+	final static String patch919 = "RuneSpan, Part 20";
 
-	static String patch1025 = "Daemonheim";
+	final static String patch1025 = "Daemonheim";
 
-	static String patch1153 = "Grotworm Ambience";
-	static String patch1154 = "Song from the Depths, Part 1";
-	static String patch1155 = "Song from the Depths, Part 2";
-	static String patch1156 = "Song from the Depths, Part 3";
-	static String patch1157 = "Queen Black Dragon";
+	final static String patch1153 = "Grotworm Ambience";
+	final static String patch1154 = "Song from the Depths, Part 1";
+	final static String patch1155 = "Song from the Depths, Part 2";
+	final static String patch1156 = "Song from the Depths, Part 3";
+	final static String patch1157 = "Queen Black Dragon";
 
-	static String patch1281 = "The Crucible Ambience";
-	static String patch1282 = "The Crucible, Part 1";
+	final static String patch1281 = "The Crucible Ambience";
+	final static String patch1282 = "The Crucible, Part 1";
 
-	static String patch1409 = "Old Scape Bold (200M Accounts Celebration)";
+	final static String patch1409 = "Old Scape Bold (200M Accounts Celebration)";
 
-	static String patch1537 = "Carnillean Rising, Part 1";
-	static String patch1538 = "Carnillean Rising, Part 2";
-	static String patch1539 = "Carnillean Rising, Part 3";
+	final static String patch1537 = "Carnillean Rising, Part 1";
+	final static String patch1538 = "Carnillean Rising, Part 2";
+	final static String patch1539 = "Carnillean Rising, Part 3";
 	
-	static String patch1665 = "Gielinor Games, Part 1";
-	static String patch1666 = "Gielinor Games, Part 2";
-	static String patch1667 = "Gielinor Games, Part 3";
+	final static String patch1665 = "Gielinor Games, Part 1";
+	final static String patch1666 = "Gielinor Games, Part 2";
+	final static String patch1667 = "Gielinor Games, Part 3";
 
-	static String patch1793 = "Penguin Prison";
-	static String patch1794 = "Sub Way";
-	static String patch1795 = "Some Like It Cold - Quest Complete";
-	static String patch1796 = "Some Like It Cold - The Prison Escape";
-	static String patch1797 = "Some Like It Cold - Making Noise";
+	final static String patch1793 = "Penguin Prison";
+	final static String patch1794 = "Sub Way";
+	final static String patch1795 = "Some Like It Cold - Quest Complete";
+	final static String patch1796 = "Some Like It Cold - The Prison Escape";
+	final static String patch1797 = "Some Like It Cold - Making Noise";
 
-	static String patch1921 = "Big Chinchompa";
+	final static String patch1921 = "Big Chinchompa";
 
-	static String patch2049 = "A Song For Khnum";
-	static String patch2050 = "Agents of Keli";
-	static String patch2051 = "Breaking In";
-	static String patch2052 = "Darkness In Misthalin";
-	static String patch2053 = "Draynor Market";
-	static String patch2054 = "Everything in its Right Palace";
-	static String patch2055 = "Kharidian Bustle";
-	static String patch2056 = "Palace";
-	static String patch2057 = "Palace Above";
-	static String patch2058 = "Rooftops";
-	static String patch2059 = "Skullery Jam";
-	static String patch2060 = "Stand-off";
-	static String patch2061 = "The Stalker";
-	static String patch2062 = "Violinsanity";
-	static String patch2063 = "While We Sleep";
-	static String patch2064 = "Worlds";
-	static String patch2065 = "Above the City";
-	static String patch2066 = "Dune";
-	static String patch2067 = "Oasis";
-	static String patch2068 = "Sands of Time";
-	static String patch2069 = "Shantay Pass";
-	static String patch2070 = "The Cave";
-	static String patch2071 = "The Chozan One";
-	static String patch2072 = "Quicksand!";
-	static String patch2073 = "Kalphite Nursery Ambience";
-	static String patch2074 = "Desert Fanfares, Part 1";
-	static String patch2075 = "Final Showdown";
-	static String patch2076 = "Desert Fanfares, Part 2";
-	static String patch2077 = "Ozan Quest Cutscene SFX";
+	final static String patch2049 = "A Song For Khnum";
+	final static String patch2050 = "Agents of Keli";
+	final static String patch2051 = "Breaking In";
+	final static String patch2052 = "Darkness In Misthalin";
+	final static String patch2053 = "Draynor Market";
+	final static String patch2054 = "Everything in its Right Palace";
+	final static String patch2055 = "Kharidian Bustle";
+	final static String patch2056 = "Palace";
+	final static String patch2057 = "Palace Above";
+	final static String patch2058 = "Rooftops";
+	final static String patch2059 = "Skullery Jam";
+	final static String patch2060 = "Stand-off";
+	final static String patch2061 = "The Stalker";
+	final static String patch2062 = "Violinsanity";
+	final static String patch2063 = "While We Sleep";
+	final static String patch2064 = "Worlds";
+	final static String patch2065 = "Above the City";
+	final static String patch2066 = "Dune";
+	final static String patch2067 = "Oasis";
+	final static String patch2068 = "Sands of Time";
+	final static String patch2069 = "Shantay Pass";
+	final static String patch2070 = "The Cave";
+	final static String patch2071 = "The Chozan One";
+	final static String patch2072 = "Quicksand!";
+	final static String patch2073 = "Kalphite Nursery Ambience";
+	final static String patch2074 = "Desert Fanfares, Part 1";
+	final static String patch2075 = "Final Showdown";
+	final static String patch2076 = "Desert Fanfares, Part 2";
+	final static String patch2077 = "Ozan Quest Cutscene SFX";
 
-	static String patch2177 = "Royal Rumble";
+	final static String patch2177 = "Royal Rumble";
 	
-	static String patch2305 = "Tears of Guthix Rework";
+	final static String patch2305 = "Tears of Guthix Rework";
 	
-	static String patch2433 = "Bloody Foundation";
-	static String patch2434 = "Bloody Foundation II";
-	static String patch2435 = "The Harmony of the Runes";
-	static String patch2436 = "Blue Wizards";
-	static String patch2437 = "The Ritual";
-	static String patch2438 = "Inner Secret";
-	static String patch2439 = "Forgotten Orders";
-	static String patch2440 = "Vision Rework";
+	final static String patch2433 = "Bloody Foundation";
+	final static String patch2434 = "Bloody Foundation II";
+	final static String patch2435 = "The Harmony of the Runes";
+	final static String patch2436 = "Blue Wizards";
+	final static String patch2437 = "The Ritual";
+	final static String patch2438 = "Inner Secret";
+	final static String patch2439 = "Forgotten Orders";
+	final static String patch2440 = "Vision Rework";
 
-	static String patch2561 = "Sea Folk";
-	static String patch2562 = "Sea Hear";
-	static String patch2563 = "Sea You Late Oar";
-	static String patch2564 = "Shanty Instrumental";
-	static String patch2565 = "Stick Your Ale In";
-	static String patch2566 = "Stick Your Oar In";
+	final static String patch2561 = "Sea Folk";
+	final static String patch2562 = "Sea Hear";
+	final static String patch2563 = "Sea You Late Oar";
+	final static String patch2564 = "Shanty Instrumental";
+	final static String patch2565 = "Stick Your Ale In";
+	final static String patch2566 = "Stick Your Oar In";
 
-	static String patch2689 = "King of the Desert";
-	static String patch2690 = "Coleoptera";
-	static String patch2691 = "Insect Queen Rework";
+	final static String patch2689 = "King of the Desert";
+	final static String patch2690 = "Coleoptera";
+	final static String patch2691 = "Insect Queen Rework";
 
-	static String patch2817 = "Desert Fanfares, Part 3";
+	final static String patch2817 = "Desert Fanfares, Part 3";
 	
-	static String patch2945 = "Temple of Guthix I";
-	static String patch2946 = "Boulder and Brighter";
-	static String patch2947 = "Guthix's Warning";
-	static String patch2948 = "Defenders of Guthix I";
-	static String patch2949 = "Defenders of Guthix II";
-	static String patch2950 = "Invaders Must Die I";
-	static String patch2951 = "Invaders Must Die II";
-	static String patch2952 = "Invaders Must Die III";
-	static String patch2953 = "End Song";
-	static String patch2954 = "Memories of Guthix";
-	static String patch2955 = "Chamber of Guthix";
-	static String patch2956 = "Temple of Guthix II";
-	static String patch2957 = "Bird of Prey";
+	final static String patch2945 = "Temple of Guthix I";
+	final static String patch2946 = "Boulder and Brighter";
+	final static String patch2947 = "Guthix's Warning";
+	final static String patch2948 = "Defenders of Guthix I";
+	final static String patch2949 = "Defenders of Guthix II";
+	final static String patch2950 = "Invaders Must Die I";
+	final static String patch2951 = "Invaders Must Die II";
+	final static String patch2952 = "Invaders Must Die III";
+	final static String patch2953 = "End Song";
+	final static String patch2954 = "Memories of Guthix";
+	final static String patch2955 = "Chamber of Guthix";
+	final static String patch2956 = "Temple of Guthix II";
+	final static String patch2957 = "Bird of Prey";
 
-	static String patch3073 = "Castle Wars Rework";
-	static String patch3074 = "Castle Warz Rework";
-	static String patch3075 = "Castle Wars Fanfares Rework";
+	final static String patch3073 = "Castle Wars Rework";
+	final static String patch3074 = "Castle Warz Rework";
+	final static String patch3075 = "Castle Wars Fanfares Rework";
 
-	static String patch3201 = "Duel Arena Rework";
-	static String patch3202 = "Duel Arena and Combat Fanfares Rework";
+	final static String patch3201 = "Duel Arena Rework";
+	final static String patch3202 = "Duel Arena and Combat Fanfares Rework";
 
-	static int bankLSB;
+	static int bankLSB = 0;
 
 	static int customBank0;
 	static int customBank1;
@@ -393,11 +395,13 @@ public class MidiFixerRSHD {
 	static int customBank24;
 	static int customBank25;
 	
-	static int channelPosition;
-	
 	static int trackName = 0x03;
 	
-	public static Sequence returnFixedMIDI(Sequence sequence) throws InvalidMidiDataException, IOException {
+	static int chPosition;
+	
+	static boolean customBank;
+	
+	public static Sequence returnFixedMIDI(Sequence sequence, boolean write, boolean customBank) throws InvalidMidiDataException, IOException {
 		
 		for (Track track : sequence.getTracks()) {
 			for (int i = 0; i < track.size(); i++) {
@@ -405,19 +409,35 @@ public class MidiFixerRSHD {
 				MidiMessage midiMessage = midiEvent.getMessage();
 				if (midiMessage instanceof ShortMessage) {
 					ShortMessage sm = (ShortMessage) midiMessage;
+					MetaMessage metaMessage = new MetaMessage();
 					
 					if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-						if (sm.getData1() == 32) {
-							bankLSB = sm.getData2();
+						
+						if (customBank == true) {
+						
+							if (sm.getData1() == 32) {
+								bankLSB = sm.getData2();
+							}
 							continue;
 						}
-						continue;
+						
+						else if (customBank == false) {
+							
+							if (sm.getChannel() == 9) {
+								bankLSB = 1;
+							}
+							
+							if (sm.getChannel() != 9) {
+								bankLSB = 0;
+							}
+							continue;
+						}
+						break;
 					}
 					
 					if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-					
+						
 						int program = sm.getData1();
-						MetaMessage metaMessage = new MetaMessage();
 						
 						if (program == 0 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch0.getBytes(), patch0.length());
@@ -438,7 +458,6 @@ public class MidiFixerRSHD {
 							
 							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
 							customBank2 = 1;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 1 & bankLSB == 0) {
@@ -447,24 +466,13 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 1 & bankLSB == 1) {
-							metaMessage.setMessage(trackName, patch1.getBytes(), patch1.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 0, 0);
-							customBank1 = 2;
-							channelPosition = sm.getChannel();
-						}
-
 						if (program == 1 & bankLSB == 2) {
 							metaMessage.setMessage(trackName, patch257.getBytes(), patch257.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 89, 0);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
 							customBank2 = 2;
-							channelPosition = sm.getChannel();
 						}
 
 						if (program == 2 & bankLSB == 0) {
@@ -477,10 +485,9 @@ public class MidiFixerRSHD {
 							metaMessage.setMessage(trackName, patch258.getBytes(), patch258.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 45, 0);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
 							customBank2 = 3;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 3 & bankLSB == 0) {
@@ -489,30 +496,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 3 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch259.getBytes(), patch259.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 116, 0);
-							customBank2 = 4;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 4 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch4.getBytes(), patch4.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 4 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch260.getBytes(), patch260.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 75, 0);
-							customBank2 = 5;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 5 & bankLSB == 0) {
@@ -521,46 +508,16 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 5 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch261.getBytes(), patch261.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 48, 0);
-							customBank2 = 6;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 6 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch6.getBytes(), patch6.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 						}
 						
-						if (program == 6 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch262.getBytes(), patch262.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 49, 0);
-							customBank2 = 7;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 7 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch7.getBytes(), patch7.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 7 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch263.getBytes(), patch263.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 0, 0);
-							customBank2 = 8;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 8 & bankLSB == 0) {
@@ -575,30 +532,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 8 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch264.getBytes(), patch264.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 88, 0);
-							customBank2 = 9;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 9 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch9.getBytes(), patch9.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 9 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch265.getBytes(), patch265.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 73, 0);
-							customBank2 = 10;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 10 & bankLSB == 0) {
@@ -607,30 +544,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 10 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch266.getBytes(), patch266.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
-							customBank2 = 11;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 11 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch11.getBytes(), patch11.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 11 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch267.getBytes(), patch267.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 12;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 12 & bankLSB == 0) {
@@ -639,30 +556,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 12 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch268.getBytes(), patch268.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 13;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 13 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch13.getBytes(), patch13.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 13 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch269.getBytes(), patch269.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 14;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 14 & bankLSB == 0) {
@@ -671,30 +568,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 14 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch270.getBytes(), patch270.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 15;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 15 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch15.getBytes(), patch15.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 15 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch271.getBytes(), patch271.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 16;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 16 & bankLSB == 0) {
@@ -709,30 +586,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 16 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch272.getBytes(), patch272.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 17;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 17 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch17.getBytes(), patch17.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 17 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch273.getBytes(), patch273.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 18;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 18 & bankLSB == 0) {
@@ -741,30 +598,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 18 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch274.getBytes(), patch274.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 19;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 19 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch19.getBytes(), patch19.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 19 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch275.getBytes(), patch275.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 20;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 20 & bankLSB == 0) {
@@ -773,30 +610,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 20 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch276.getBytes(), patch276.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
-							customBank2 = 21;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 21 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch21.getBytes(), patch21.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 21 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch277.getBytes(), patch277.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 48, 0);
-							customBank2 = 22;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 22 & bankLSB == 0) {
@@ -805,30 +622,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 22 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch278.getBytes(), patch278.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
-							customBank2 = 23;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 23 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch23.getBytes(), patch23.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 23 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch279.getBytes(), patch279.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
-							customBank2 = 24;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 24 & bankLSB == 0) {
@@ -843,16 +640,6 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 24 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch280.getBytes(), patch280.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 97, 0);
-							customBank2 = 25;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 25 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch25.getBytes(), patch25.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
@@ -865,30 +652,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 25 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch281.getBytes(), patch281.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 97, 0);
-							customBank2 = 26;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 26 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch26.getBytes(), patch26.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 26 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch282.getBytes(), patch282.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
-							customBank2 = 27;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 27 & bankLSB == 0) {
@@ -897,30 +664,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 27 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch283.getBytes(), patch283.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
-							customBank2 = 28;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 28 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch28.getBytes(), patch28.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 28 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch284.getBytes(), patch284.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
-							customBank2 = 29;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 29 & bankLSB == 0) {
@@ -929,30 +676,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 29 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch285.getBytes(), patch285.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
-							customBank2 = 30;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 30 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch30.getBytes(), patch30.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 30 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch286.getBytes(), patch286.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
-							customBank2 = 31;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 31 & bankLSB == 0) {
@@ -961,30 +688,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 31 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch287.getBytes(), patch287.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 97, 0);
-							customBank2 = 32;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 32 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch32.getBytes(), patch32.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 32 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch288.getBytes(), patch288.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 97, 0);
-							customBank2 = 33;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 33 & bankLSB == 0) {
@@ -993,30 +700,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 33 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch289.getBytes(), patch289.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 126, 0);
-							customBank2 = 34;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 34 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch34.getBytes(), patch34.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 34 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch290.getBytes(), patch290.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 54, 0);
-							customBank2 = 35;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 35 & bankLSB == 0) {
@@ -1025,29 +712,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 35 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch291.getBytes(), patch291.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							customBank2 = 36;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 36 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch36.getBytes(), patch36.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 36 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch292.getBytes(), patch292.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 29, 0);
-							customBank2 = 37;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 37 & bankLSB == 0) {
@@ -1056,45 +724,16 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 37 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch293.getBytes(), patch293.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 44, 0);
-							customBank2 = 38;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 38 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch38.getBytes(), patch38.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 						}
 						
-						if (program == 38 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch294.getBytes(), patch294.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 38, 0);
-							customBank2 = 39;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 39 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch39.getBytes(), patch39.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 39 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch295.getBytes(), patch295.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							customBank2 = 40;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 40 & bankLSB == 0) {
@@ -1109,28 +748,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 40 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch296.getBytes(), patch296.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							customBank2 = 41;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 41 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch41.getBytes(), patch41.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 41 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch297.getBytes(), patch297.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							customBank2 = 42;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 42 & bankLSB == 0) {
@@ -1139,43 +760,16 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 42 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch298.getBytes(), patch298.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							customBank2 = 43;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 43 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch43.getBytes(), patch43.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 						}
 						
-						if (program == 43 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch299.getBytes(), patch299.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							customBank2 = 44;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 44 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch44.getBytes(), patch44.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 44 & bankLSB == 2) {
-							metaMessage.setMessage(trackName, patch300.getBytes(), patch300.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							customBank2 = 45;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 45 & bankLSB == 0) {
@@ -1194,9 +788,6 @@ public class MidiFixerRSHD {
 							metaMessage.setMessage(trackName, patch47.getBytes(), patch47.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-
-							customBank0 = 48;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 48 & bankLSB == 0) {
@@ -1223,30 +814,10 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
-						if (program == 50 & bankLSB == 1) {
-							metaMessage.setMessage(trackName, patch178.getBytes(), patch178.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 48, 0);
-							customBank1 = 51;
-							channelPosition = sm.getChannel();
-						}
-						
 						if (program == 51 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch51.getBytes(), patch51.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
-						}
-						
-						if (program == 51 & bankLSB == 1) {
-							metaMessage.setMessage(trackName, patch179.getBytes(), patch179.length());
-							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
-							track.add(metaEvent);
-
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 48, 0);
-							customBank1 = 52;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 52 & bankLSB == 0) {
@@ -1716,99 +1287,49 @@ public class MidiFixerRSHD {
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 						}
-						
-						if (channelPosition != sm.getChannel()) {
-							break;
-						}
-						
-						else if (channelPosition == sm.getChannel()) {
-							break;
-						}
+						break;
 					}
 					
-					if (sm.getCommand() == ShortMessage.NOTE_ON & channelPosition == sm.getChannel()) {
-
-						//Bank 0
-						if (customBank0 == 48) {
-							if (sm.getData1() > 119) {
-								sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() - 72, sm.getData2());
-							}
-						}
+					if (sm.getCommand() == ShortMessage.NOTE_ON) {
 						
-						//Bank 1
-						if (customBank1 == 2) {
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 57, sm.getData2());
-						}
-						
-						if (customBank1 == 51) {
-							break;
-							//TODO: Add range of event handlers
-						}
-						
-						if (customBank1 == 52) {
-							break;
-							//TODO: Add range of event handlers
-						}
-						
-						//Bank 2
 						if (customBank2 == 1) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 12, sm.getData2());
 						}
 						
-						if (customBank2 == 5) {
-							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() - 12, sm.getData2());
-						}
-
-						if (customBank2 == 23) {
-							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
-						}
-
-						if (customBank2 == 24) {
+						if (customBank2 == 2) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
 						}
 						
-						break;
+						if (customBank2 == 3) {
+							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 36, sm.getData2());
+						}
+						continue;
 					}
 
-					if (sm.getCommand() == ShortMessage.NOTE_OFF & channelPosition == sm.getChannel()) {
-
-						//Bank 1
-						if (customBank1 == 2) {
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 57, sm.getData2());
-						}
+					if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 						
-						if (customBank1 == 51) {
-							break;
-							//TODO: Add range of event handlers
-						}
-						
-						if (customBank1 == 52) {
-							break;
-							//TODO: Add range of event handlers
-						}
-						
-						//Bank 2
 						if (customBank2 == 1) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 12, sm.getData2());
 						}
 						
-						if (customBank2 == 5) {
-							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() - 12, sm.getData2());
-						}
-
-						if (customBank2 == 23) {
-							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
-						}
-
-						if (customBank2 == 24) {
+						if (customBank2 == 2) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
 						}
 						
-						break;
+						if (customBank2 == 3) {
+							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 36, sm.getData2());
+						}
+						continue;
 					}
+					//TODO: Add RSHD handling instead of using OSRS handling here.
 				}
 			}
 		}
+		
+		if (write == true) {
+			MidiSystem.write(sequence, 1, new File("./FixedMIDI.mid/"));
+		}
+		
 		return sequence;
 	}
 }

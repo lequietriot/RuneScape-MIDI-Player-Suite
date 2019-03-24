@@ -14,158 +14,156 @@ import javax.sound.midi.Track;
 
 public class MidiFixerOSRS {
 	
-	static String patch0 = "Acoustic Grand Piano";
-	static String patch1 = "Bright Piano";
-	static String patch2 = "Electric Grand Piano";
-	static String patch3 = "Honky-tonk Piano";
-	static String patch4 = "Electric Piano 1";
-	static String patch5 = "Electric Piano 2";
-	static String patch6 = "Harpsichord";
-	static String patch7 = "Clavinet";
-	static String patch8 = "Celesta";
-	static String patch9 = "Glockenspiel";
-	static String patch10 = "Music Box";
-	static String patch11 = "Vibraphone";
-	static String patch12 = "Marimba";
-	static String patch13 = "Xylophone";
-	static String patch14 = "Tubular Bells";
-	static String patch15 = "Dulcimer";
-	static String patch16 = "Drawbar Organ";
-	static String patch17 = "Percussive Organ";
-	static String patch18 = "Rock Organ";
-	static String patch19 = "Church Organ";
-	static String patch20 = "Reed Organ";
-	static String patch21 = "Accordion";
-	static String patch22 = "Harmonica";
-	static String patch23 = "Tango Accordion";
-	static String patch24 = "Nylon String Guitar";
-	static String patch25 = "Steel String Guitar";
-	static String patch26 = "Jazz Guitar";
-	static String patch27 = "Clean Guitar";
-	static String patch28 = "Muted Guitar";
-	static String patch29 = "Overdriven Guitar";
-	static String patch30 = "Distortion Guitar";
-	static String patch31 = "Guitar Harmonics";
-	static String patch32 = "Acoustic Bass";
-	static String patch33 = "Picked Bass";
-	static String patch34 = "Fingered Bass";
-	static String patch35 = "Fretless Bass";
-	static String patch36 = "Slap Bass 1";
-	static String patch37 = "Slap Bass 2";
-	static String patch38 = "Synth Bass 1";
-	static String patch39 = "Synth Bass 2";
-	static String patch40 = "Violin";
-	static String patch41 = "Viola";
-	static String patch42 = "Cello";
-	static String patch43 = "Contrabass";
-	static String patch44 = "Tremolo Strings";
-	static String patch45 = "Pizzicato Strings";
-	static String patch46 = "Harp";
-	static String patch47 = "Timpani";
-	static String patch48 = "Strings";
-	static String patch49 = "Slow Strings";
-	static String patch50 = "Synth Strings 1";
-	static String patch51 = "Synth Strings 2";
-	static String patch52 = "Choir Aahs";
-	static String patch53 = "Voice Oohs";
-	static String patch54 = "Synth Voice";
-	static String patch55 = "Orchestra Hit";
-	static String patch56 = "Trumpet";
-	static String patch57 = "Trombone";
-	static String patch58 = "Tuba";
-	static String patch59 = "Muted Trumpet";
-	static String patch60 = "French Horn";
-	static String patch61 = "Brass Section";
-	static String patch62 = "Synth Brass 1";
-	static String patch63 = "Synth Brass 2";
-	static String patch64 = "Soprano Saxophone";
-	static String patch65 = "Alto Saxophone";
-	static String patch66 = "Tenor Saxophone";
-	static String patch67 = "Baritone Saxophone";
-	static String patch68 = "Oboe";
-	static String patch69 = "English Horn";
-	static String patch70 = "Bassoon";
-	static String patch71 = "Clarinet";
-	static String patch72 = "Piccolo";
-	static String patch73 = "Flute";
-	static String patch74 = "Recorder";
-	static String patch75 = "Pan Flute";
-	static String patch76 = "Blown Bottle";
-	static String patch77 = "Shakuhachi";
-	static String patch78 = "Whistle";
-	static String patch79 = "Ocarina";
-	static String patch80 = "Square Wave";
-	static String patch81 = "Sawtooth Wave";
-	static String patch82 = "Calliope Synth";
-	static String patch83 = "Chiffer Synth";
-	static String patch84 = "Charang Synth";
-	static String patch85 = "Synth Voice Lead";
-	static String patch86 = "Sawtooth Fifths";
-	static String patch87 = "Bass and Lead Synth";
-	static String patch88 = "New Age Pad";
-	static String patch89 = "Warm Pad";
-	static String patch90 = "Polysynth";
-	static String patch91 = "Choir Pad";
-	static String patch92 = "Bowed Pad";
-	static String patch93 = "Metallic Pad";
-	static String patch94 = "Halo Pad";
-	static String patch95 = "Sweep Pad";
-	static String patch96 = "Rain Pad";
-	static String patch97 = "Soundtrack Pad";
-	static String patch98 = "Crystal";
-	static String patch99 = "Atmosphere";
-	static String patch100 = "Brightness";
-	static String patch101 = "Goblins";
-	static String patch102 = "Echo Drops";
-	static String patch103 = "Sci-Fi Pad";
-	static String patch104 = "Sitar";
-	static String patch105 = "Banjo";
-	static String patch106 = "Shamisen";
-	static String patch107 = "Koto";
-	static String patch108 = "Kalimba";
-	static String patch109 = "Bagpipes";
-	static String patch110 = "Fiddle";
-	static String patch111 = "Shanai";
-	static String patch112 = "Tinkle Bell";
-	static String patch113 = "Agogo";
-	static String patch114 = "Steel Drums";
-	static String patch115 = "Woodblocks";
-	static String patch116 = "Taiko Drums";
-	static String patch117 = "Melodic Toms";
-	static String patch118 = "Synth Drum";
-	static String patch119 = "Reverse Cymbal";
-	static String patch120 = "Guitar Fret Noise";
-	static String patch121 = "Breath Noise";
-	static String patch122 = "Seashore SFX";
-	static String patch123 = "Bird Tweet SFX";
-	static String patch124 = "Telephone Ring SFX";
-	static String patch125 = "Helicopter SFX";
-	static String patch126 = "Applause SFX";
-	static String patch127 = "Gunshot SFX";
+	final static String patch0 = "Acoustic Grand Piano";
+	final static String patch1 = "Bright Piano";
+	final static String patch2 = "Electric Grand Piano";
+	final static String patch3 = "Honky-tonk Piano";
+	final static String patch4 = "Electric Piano 1";
+	final static String patch5 = "Electric Piano 2";
+	final static String patch6 = "Harpsichord";
+	final static String patch7 = "Clavinet";
+	final static String patch8 = "Celesta";
+	final static String patch9 = "Glockenspiel";
+	final static String patch10 = "Music Box";
+	final static String patch11 = "Vibraphone";
+	final static String patch12 = "Marimba";
+	final static String patch13 = "Xylophone";
+	final static String patch14 = "Tubular Bells";
+	final static String patch15 = "Dulcimer";
+	final static String patch16 = "Drawbar Organ";
+	final static String patch17 = "Percussive Organ";
+	final static String patch18 = "Rock Organ";
+	final static String patch19 = "Church Organ";
+	final static String patch20 = "Reed Organ";
+	final static String patch21 = "Accordion";
+	final static String patch22 = "Harmonica";
+	final static String patch23 = "Tango Accordion";
+	final static String patch24 = "Nylon String Guitar";
+	final static String patch25 = "Steel String Guitar";
+	final static String patch26 = "Jazz Guitar";
+	final static String patch27 = "Clean Guitar";
+	final static String patch28 = "Muted Guitar";
+	final static String patch29 = "Overdriven Guitar";
+	final static String patch30 = "Distortion Guitar";
+	final static String patch31 = "Guitar Harmonics";
+	final static String patch32 = "Acoustic Bass";
+	final static String patch33 = "Fingered Bass";
+	final static String patch34 = "Picked Bass";
+	final static String patch35 = "Fretless Bass";
+	final static String patch36 = "Slap Bass 1";
+	final static String patch37 = "Slap Bass 2";
+	final static String patch38 = "Synth Bass 1";
+	final static String patch39 = "Synth Bass 2";
+	final static String patch40 = "Violin";
+	final static String patch41 = "Viola";
+	final static String patch42 = "Cello";
+	final static String patch43 = "Contrabass";
+	final static String patch44 = "Tremolo Strings";
+	final static String patch45 = "Pizzicato Strings";
+	final static String patch46 = "Harp";
+	final static String patch47 = "Timpani";
+	final static String patch48 = "Strings";
+	final static String patch49 = "Slow Strings";
+	final static String patch50 = "Synth Strings 1";
+	final static String patch51 = "Synth Strings 2";
+	final static String patch52 = "Choir Aahs";
+	final static String patch53 = "Voice Oohs";
+	final static String patch54 = "Synth Voice";
+	final static String patch55 = "Orchestra Hit";
+	final static String patch56 = "Trumpet";
+	final static String patch57 = "Trombone";
+	final static String patch58 = "Tuba";
+	final static String patch59 = "Muted Trumpet";
+	final static String patch60 = "French Horn";
+	final static String patch61 = "Brass Section";
+	final static String patch62 = "Synth Brass 1";
+	final static String patch63 = "Synth Brass 2";
+	final static String patch64 = "Soprano Saxophone";
+	final static String patch65 = "Alto Saxophone";
+	final static String patch66 = "Tenor Saxophone";
+	final static String patch67 = "Baritone Saxophone";
+	final static String patch68 = "Oboe";
+	final static String patch69 = "English Horn";
+	final static String patch70 = "Bassoon";
+	final static String patch71 = "Clarinet";
+	final static String patch72 = "Piccolo";
+	final static String patch73 = "Flute";
+	final static String patch74 = "Recorder";
+	final static String patch75 = "Pan Flute";
+	final static String patch76 = "Blown Bottle";
+	final static String patch77 = "Shakuhachi";
+	final static String patch78 = "Whistle";
+	final static String patch79 = "Ocarina";
+	final static String patch80 = "Square Wave";
+	final static String patch81 = "Sawtooth Wave";
+	final static String patch82 = "Calliope Synth";
+	final static String patch83 = "Chiffer Synth";
+	final static String patch84 = "Charang Synth";
+	final static String patch85 = "Synth Voice Lead";
+	final static String patch86 = "Sawtooth Fifths";
+	final static String patch87 = "Bass and Lead Synth";
+	final static String patch88 = "New Age Pad";
+	final static String patch89 = "Warm Pad";
+	final static String patch90 = "Polysynth";
+	final static String patch91 = "Choir Pad";
+	final static String patch92 = "Bowed Pad";
+	final static String patch93 = "Metallic Pad";
+	final static String patch94 = "Halo Pad";
+	final static String patch95 = "Sweep Pad";
+	final static String patch96 = "Rain Pad";
+	final static String patch97 = "Soundtrack Pad";
+	final static String patch98 = "Crystal";
+	final static String patch99 = "Atmosphere";
+	final static String patch100 = "Brightness";
+	final static String patch101 = "Goblins";
+	final static String patch102 = "Echo Drops";
+	final static String patch103 = "Sci-Fi Pad";
+	final static String patch104 = "Sitar";
+	final static String patch105 = "Banjo";
+	final static String patch106 = "Shamisen";
+	final static String patch107 = "Koto";
+	final static String patch108 = "Kalimba";
+	final static String patch109 = "Bagpipes";
+	final static String patch110 = "Fiddle";
+	final static String patch111 = "Shanai";
+	final static String patch112 = "Tinkle Bell";
+	final static String patch113 = "Agogo";
+	final static String patch114 = "Steel Drums";
+	final static String patch115 = "Woodblocks";
+	final static String patch116 = "Taiko Drums";
+	final static String patch117 = "Melodic Toms";
+	final static String patch118 = "Synth Drum";
+	final static String patch119 = "Reverse Cymbal";
+	final static String patch120 = "Guitar Fret Noise";
+	final static String patch121 = "Breath Noise";
+	final static String patch122 = "Seashore SFX";
+	final static String patch123 = "Bird Tweet SFX";
+	final static String patch124 = "Telephone Ring SFX";
+	final static String patch125 = "Helicopter SFX";
+	final static String patch126 = "Applause SFX";
+	final static String patch127 = "Gunshot SFX";
 	
-	static String patch128 = "Standard Drum Kit";
-	static String patch136 = "Room Drum Kit";
-	static String patch144 = "Power Drum Kit";
-	static String patch152 = "Electronic Drum Kit";
-	static String patch153 = "Analog Drum Kit";
-	static String patch168 = "Brush Drum Kit";
-	static String patch176 = "Orchestral Drum Kit";
-	static String patch184 = "Special Effects Drum Kit";
-	static String patch255 = "Standard Drum Kit";
+	final static String patch128 = "Standard Drum Kit";
+	final static String patch136 = "Room Drum Kit";
+	final static String patch144 = "Power Drum Kit";
+	final static String patch152 = "Electronic Drum Kit";
+	final static String patch153 = "Analog Drum Kit";
+	final static String patch168 = "Brush Drum Kit";
+	final static String patch176 = "Orchestral Drum Kit";
+	final static String patch184 = "Special Effects Drum Kit";
+	final static String patch255 = "Standard Drum Kit";
 	
-	static String patch256 = "Choir Aahs (2)"; //This patch is transposed down 12 notes.
-	static String patch257 = "Voice (Staccato)"; //This patch is transposed down 24 notes.
-	static String patch258 = "Voice (Sustained)"; //This patch is transposed down 36 notes.
+	final static String patch256 = "Choir Aahs (2)"; //This patch is transposed down 12 notes.
+	final static String patch257 = "Voice (Staccato)"; //This patch is transposed down 24 notes.
+	final static String patch258 = "Voice (Sustained)"; //This patch is transposed down 36 notes.
 
-	static int bankLSB;
+	static int bankLSB = 0;
 	
 	static int customBank2;
 	
-	static int channelPosition;
-	
 	static int trackName = 0x03;
 	
-	public static Sequence returnFixedMIDI(Sequence sequence, boolean write) throws InvalidMidiDataException, IOException {
+	public static Sequence returnFixedMIDI(Sequence sequence, boolean write, boolean customBank) throws InvalidMidiDataException, IOException {
 		
 		for (Track track : sequence.getTracks()) {
 			for (int i = 0; i < track.size(); i++) {
@@ -173,17 +171,35 @@ public class MidiFixerOSRS {
 				MidiMessage midiMessage = midiEvent.getMessage();
 				if (midiMessage instanceof ShortMessage) {
 					ShortMessage sm = (ShortMessage) midiMessage;
+					MetaMessage metaMessage = new MetaMessage();
 					
 					if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-						if (sm.getData1() == 32) {
-							bankLSB = sm.getData2();
+						
+						if (customBank == true) {
+						
+							if (sm.getData1() == 32) {
+								bankLSB = sm.getData2();
+							}
+							continue;
 						}
+						
+						else if (customBank == false) {
+							
+							if (sm.getChannel() == 9) {
+								bankLSB = 1;
+							}
+							
+							if (sm.getChannel() != 9) {
+								bankLSB = 0;
+							}
+							continue;
+						}
+						break;
 					}
 					
 					if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 						
 						int program = sm.getData1();
-						MetaMessage metaMessage = new MetaMessage();
 						
 						if (program == 0 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch0.getBytes(), patch0.length());
@@ -204,7 +220,6 @@ public class MidiFixerOSRS {
 							
 							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
 							customBank2 = 1;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 1 & bankLSB == 0) {
@@ -220,7 +235,6 @@ public class MidiFixerOSRS {
 							
 							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
 							customBank2 = 2;
-							channelPosition = sm.getChannel();
 						}
 
 						if (program == 2 & bankLSB == 0) {
@@ -236,7 +250,6 @@ public class MidiFixerOSRS {
 							
 							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
 							customBank2 = 3;
-							channelPosition = sm.getChannel();
 						}
 						
 						if (program == 3 & bankLSB == 0) {
@@ -1036,17 +1049,10 @@ public class MidiFixerOSRS {
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 						}
-						
-						if (channelPosition != sm.getChannel()) {
-							break;
-						}
-						
-						else if (channelPosition == sm.getChannel()) {
-							break;
-						}
+						break;
 					}
 					
-					if (sm.getCommand() == ShortMessage.NOTE_ON & channelPosition == sm.getChannel()) {
+					if (sm.getCommand() == ShortMessage.NOTE_ON) {
 						
 						if (customBank2 == 1) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 12, sm.getData2());
@@ -1062,7 +1068,7 @@ public class MidiFixerOSRS {
 						continue;
 					}
 
-					if (sm.getCommand() == ShortMessage.NOTE_OFF & channelPosition == sm.getChannel()) {
+					if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 						
 						if (customBank2 == 1) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 12, sm.getData2());
@@ -1084,6 +1090,7 @@ public class MidiFixerOSRS {
 		if (write == true) {
 			MidiSystem.write(sequence, 1, new File("./FixedMIDI.mid/"));
 		}
+		
 		return sequence;
 	}
 }

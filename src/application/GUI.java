@@ -338,9 +338,11 @@ public class GUI {
 	public class StartButtonListener implements ActionListener {
 		
 		int bankLSB;
-		
-		int chPosition = -1;
+
 		int drumChannel = 9;
+		int chPosition = -1;
+
+		boolean customBank;
 
 		public void actionPerformed(ActionEvent e) {
 			
@@ -367,6 +369,7 @@ public class GUI {
 				MidiChannel[] channels = synth.getChannels();
 				
 				for (int i = 0; i < channels.length; i++) {
+					channels[i].controlChange(1, ((int) (gain * 20.0)));
 					channels[i].controlChange(7, ((int) (gain * 127.0)));
 				}
 				
@@ -430,183 +433,110 @@ public class GUI {
 						if (midiMessage instanceof ShortMessage) {
 							
 							ShortMessage sm = (ShortMessage) midiMessage;
-							
-							bankLSB = getBankLSB(sm);
-							
-							if (sm.getChannel() == 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								
+							if (sm.getChannel() < 16) {
+								getBankLSB(sm);
+								
+								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
+									chPosition++;
+									if (chPosition == 9) {
+										chPosition = 10;
 									}
 								}
 								
-								else if (bankLSB != 1) {
-
-									if (chPosition == 9) {
-										chPosition++;
+								if (customBank == false) {
+									
+									if (sm.getChannel() == 9) {
+										bankLSB = 1;
 									}
 									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+									if (sm.getChannel() != 9) {
+										bankLSB = 0;
 									}
 								}
 							}
-
 							
-							else if (sm.getChannel() != 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
+							if (bankLSB == 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
 								
-								else if (bankLSB != 1) {
-									
-									if (chPosition == 9) {
-										chPosition++;
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+							}
+							
+							else if (bankLSB != 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
 				}
-				return MidiFixerOSRS.returnFixedMIDI(sequence, false);
+				return MidiFixerOSRS.returnFixedMIDI(sequence, false, customBank);
 			}
 
 		public Sequence adjustForPlayHD(Sequence sequence) throws InvalidMidiDataException, IOException {
@@ -620,204 +550,123 @@ public class GUI {
 						if (midiMessage instanceof ShortMessage) {
 							
 							ShortMessage sm = (ShortMessage) midiMessage;
-							
-							bankLSB = getBankLSB(sm);
-							
-							if (sm.getChannel() == 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								
+							if (sm.getChannel() < 16) {
+								getBankLSB(sm);
+								
+								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
+									chPosition++;
+									if (chPosition == 9) {
+										chPosition = 10;
 									}
 								}
 								
-								else if (bankLSB != 1) {
-
-									if (chPosition == 9) {
-										chPosition++;
+								if (customBank == false) {
+									
+									if (sm.getChannel() == 9) {
+										bankLSB = 1;
 									}
 									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+									if (sm.getChannel() != 9) {
+										bankLSB = 0;
 									}
 								}
 							}
-
 							
-							else if (sm.getChannel() != 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
+							if (bankLSB == 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
 								
-								else if (bankLSB != 1) {
-									
-									if (chPosition == 9) {
-										chPosition++;
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+							}
+							
+							else if (bankLSB != 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
 				}
-				return MidiFixerRSHD.returnFixedMIDI(sequence);
+				return MidiFixerRSHD.returnFixedMIDI(sequence, false, customBank);
 			}
 
-		public int getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
+		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
 			
-			if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-				
-				if (sm.getData1() == 32) {
-					bankLSB = sm.getData2();
+				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 					
-					if (bankLSB != 1) {
-						chPosition++;
+					if (sm.getData1() == 32) {
+						bankLSB = sm.getData2();
+						customBank = true;
 					}
 				}
-				
-				if (sm.getData1() == 0) {
-					sm.setMessage(sm.getCommand(), chPosition, 0, bankLSB);
-				}
 			}
-			return bankLSB;
 		}
-	}
 	
 	public class PauseButtonListener implements ActionListener {
 
@@ -905,6 +754,8 @@ public class GUI {
 		int drumChannel = 9;
 		int chPosition = -1;
 
+		boolean customBank;
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Soundbank soundbank;
@@ -946,183 +797,110 @@ public class GUI {
 						if (midiMessage instanceof ShortMessage) {
 							
 							ShortMessage sm = (ShortMessage) midiMessage;
-							
-							bankLSB = getBankLSB(sm);
-							
-							if (sm.getChannel() == 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								
+							if (sm.getChannel() < 16) {
+								getBankLSB(sm);
+								
+								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
+									chPosition++;
+									if (chPosition == 9) {
+										chPosition = 10;
 									}
 								}
 								
-								else if (bankLSB != 1) {
-
-									if (chPosition == 9) {
-										chPosition++;
+								if (customBank == false) {
+									
+									if (sm.getChannel() == 9) {
+										bankLSB = 1;
 									}
 									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+									if (sm.getChannel() != 9) {
+										bankLSB = 0;
 									}
 								}
 							}
-
 							
-							else if (sm.getChannel() != 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
+							if (bankLSB == 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
 								
-								else if (bankLSB != 1) {
-									
-									if (chPosition == 9) {
-										chPosition++;
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+							}
+							
+							else if (bankLSB != 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
-				}
-				return MidiFixerOSRS.returnFixedMIDI(sequence, false);
+				}		
+				return MidiFixerOSRS.returnFixedMIDI(sequence, false, customBank);
 			}
 
 		public Sequence adjustForRenderHD(Sequence sequence) throws InvalidMidiDataException, IOException {
@@ -1136,208 +914,129 @@ public class GUI {
 						if (midiMessage instanceof ShortMessage) {
 							
 							ShortMessage sm = (ShortMessage) midiMessage;
-							
-							bankLSB = getBankLSB(sm);
-							
-							if (sm.getChannel() == 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								
+							if (sm.getChannel() < 16) {
+								getBankLSB(sm);
+								
+								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
+									chPosition++;
+									if (chPosition == 9) {
+										chPosition = 10;
 									}
 								}
 								
-								else if (bankLSB != 1) {
-
-									if (chPosition == 9) {
-										chPosition++;
+								if (customBank == false) {
+									
+									if (sm.getChannel() == 9) {
+										bankLSB = 1;
 									}
 									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+									if (sm.getChannel() != 9) {
+										bankLSB = 0;
 									}
 								}
 							}
-
 							
-							else if (sm.getChannel() != 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
+							if (bankLSB == 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
 								
-								else if (bankLSB != 1) {
-									
-									if (chPosition == 9) {
-										chPosition++;
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+							}
+							
+							else if (bankLSB != 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
-				}
-				return MidiFixerRSHD.returnFixedMIDI(sequence);
+				}	
+				return MidiFixerRSHD.returnFixedMIDI(sequence, false, customBank);
 			}
 
-		public int getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
+		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
 			
-			if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-				
-				if (sm.getData1() == 32) {
-					bankLSB = sm.getData2();
+				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 					
-					if (bankLSB != 1) {
-						chPosition++;
+					if (sm.getData1() == 32) {
+						bankLSB = sm.getData2();
+						customBank = true;
 					}
 				}
-				
-				if (sm.getData1() == 0) {
-					sm.setMessage(sm.getCommand(), chPosition, 0, bankLSB);
-				}
 			}
-			return bankLSB;
 		}
-	}
 	
 	public class FixButtonListenerOSRS implements ActionListener {
 
-		int bankLSB;
+		boolean customBank = false;
+		
+		int bankLSB = 0;
 		
 		int drumChannel = 9;
 		int chPosition = -1;
@@ -1369,209 +1068,129 @@ public class GUI {
 						if (midiMessage instanceof ShortMessage) {
 							
 							ShortMessage sm = (ShortMessage) midiMessage;
-							
-							bankLSB = getBankLSB(sm);
-							
-							if (sm.getChannel() == 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								
+							if (sm.getChannel() < 16) {
+								getBankLSB(sm);
+								
+								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
+									chPosition++;
+									if (chPosition == 9) {
+										chPosition = 10;
 									}
 								}
 								
-								else if (bankLSB != 1) {
-
-									if (chPosition == 9) {
-										chPosition++;
+								if (customBank == false) {
+									
+									if (sm.getChannel() == 9) {
+										bankLSB = 1;
 									}
 									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+									if (sm.getChannel() != 9) {
+										bankLSB = 0;
 									}
 								}
 							}
-
 							
-							else if (sm.getChannel() != 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
+							if (bankLSB == 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
 								
-								else if (bankLSB != 1) {
-									
-									if (chPosition == 9) {
-										chPosition++;
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+							}
+							
+							else if (bankLSB != 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
-				}
-				MidiFixerOSRS.returnFixedMIDI(sequence, true);
+				}		
+				MidiFixerOSRS.returnFixedMIDI(sequence, true, customBank);
 			}
 
-		public int getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
-				
+		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
+			
 				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 					
 					if (sm.getData1() == 32) {
 						bankLSB = sm.getData2();
-						
-						if (bankLSB != 1) {
-							chPosition++;
-						}
+						customBank = true;
 					}
-					
-					if (sm.getData1() == 0) {
-						sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1(), bankLSB);
-					}
-					
 				}
-				return bankLSB;
 			}
 		}
 	
 	public class FixButtonListenerRSHD implements ActionListener {
 
-		int bankLSB;
+		boolean customBank = false;
+		
+		int bankLSB = 0;
 		
 		int drumChannel = 9;
 		int chPosition = -1;
@@ -1603,202 +1222,121 @@ public class GUI {
 						if (midiMessage instanceof ShortMessage) {
 							
 							ShortMessage sm = (ShortMessage) midiMessage;
-							
-							bankLSB = getBankLSB(sm);
-							
-							if (sm.getChannel() == 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								
+							if (sm.getChannel() < 16) {
+								getBankLSB(sm);
+								
+								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
+									chPosition++;
+									if (chPosition == 9) {
+										chPosition = 10;
 									}
 								}
 								
-								else if (bankLSB != 1) {
-
-									if (chPosition == 9) {
-										chPosition++;
+								if (customBank == false) {
+									
+									if (sm.getChannel() == 9) {
+										bankLSB = 1;
 									}
 									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+									if (sm.getChannel() != 9) {
+										bankLSB = 0;
 									}
 								}
 							}
-
 							
-							else if (sm.getChannel() != 9) {
-							
-								if (bankLSB == 1) {
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-									}
+							if (bankLSB == 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
 								
-								else if (bankLSB != 1) {
-									
-									if (chPosition == 9) {
-										chPosition++;
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-										sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.NOTE_ON) {
-										sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-										sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-										sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-										sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-										sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
-									
-									if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-										sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-									}
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								}
+							}
+							
+							else if (bankLSB != 1) {
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.NOTE_ON) {
+									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+								}
+								
+								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
-				}
-				MidiSystem.write(MidiFixerRSHD.returnFixedMIDI(sequence), 1, new File("./FixedMIDI.mid/"));
+				}		
+				MidiFixerOSRS.returnFixedMIDI(sequence, true, customBank);
 			}
 
-		public int getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
-				
+		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
+			
 				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 					
 					if (sm.getData1() == 32) {
 						bankLSB = sm.getData2();
-						
-						if (bankLSB != 1) {
-							chPosition++;
-						}
-					}
-					
-					if (sm.getData1() == 0) {
-						sm.setMessage(sm.getCommand(), chPosition, 0, bankLSB);
+						customBank = true;
 					}
 				}
-				return bankLSB;
 			}
 		}
 	}
