@@ -16,8 +16,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import javax.sound.midi.ControllerEventListener;
 import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiMessage;
 import javax.sound.midi.MidiSystem;
@@ -48,7 +48,7 @@ import application.utils.Midi2WavRender;
 import application.utils.MidiFixerOSRS;
 import application.utils.MidiFixerRSHD;
 
-public class GUI {
+public class GUI implements ControllerEventListener {
 	
 	File midiFile;
 	File soundsetFile;
@@ -89,6 +89,11 @@ public class GUI {
 	
 	JCheckBox fixAttemptOS;
 	JCheckBox fixAttemptHD;
+	
+	public ControllerEventListener volumeListener;
+	public ControllerEventListener retriggerListener;
+	public boolean retriggerEffect = false;
+	public int retriggerValue;
 	
 	@SuppressWarnings("static-access")
 	
@@ -269,6 +274,25 @@ public class GUI {
 			midiFile = chooseMID.getSelectedFile();
 		}
 	}
+
+	@Override
+	public void controlChange(ShortMessage event) {
+		
+		if (retriggerEffect == false) {
+		
+			if (event.getData1() == 81 & event.getData2() >= 64) {
+				retriggerEffect = true;
+			}
+			
+			else {
+				retriggerEffect = false;
+			}
+		}
+		
+		if (event.getData1() == 17 & retriggerEffect == true) {
+			retriggerValue = (int) (2097152.0D * Math.pow(2.0D, 5.4931640625E-4D * event.getData2()) + 0.5D);
+		}
+	}
 	
 	public class MIDILoader implements ActionListener {
 
@@ -343,7 +367,7 @@ public class GUI {
 		int chPosition = -1;
 
 		boolean customBank;
-
+		
 		public void actionPerformed(ActionEvent e) {
 			
 			if (sequencer == null) {
@@ -351,28 +375,22 @@ public class GUI {
 			}
 			
 			try {
+				
+				//TODO: Finish custom sequencer, stop using Java's
+				
 				Soundbank soundbank = MidiSystem.getSoundbank(soundsetFile);
 				sequencer = MidiSystem.getSequencer(false);
 				sequence = MidiSystem.getSequence(midiFile);
 				synth = MidiSystem.getSynthesizer();
 				
 				sequencer.open();
-				
+						
 				synth.open();
 				
 				synth.loadAllInstruments(soundbank);
 				
 				sequencer.getTransmitter().setReceiver(synth.getReceiver());
-				
-				double gain = 0.63;
-				
-				MidiChannel[] channels = synth.getChannels();
-				
-				for (int i = 0; i < channels.length; i++) {
-					channels[i].controlChange(1, ((int) (gain * 20.0)));
-					channels[i].controlChange(7, ((int) (gain * 127.0)));
-				}
-				
+		
 				if (fixAttemptingOS == false) {
 					sequencer.setSequence(sequence);
 				}
@@ -412,7 +430,6 @@ public class GUI {
 					Timer timer = new Timer(100, new TimerListener());
 					timer.start();
 				}
-				
 			} catch (MidiUnavailableException e1) {
 				e1.printStackTrace();
 			} catch (InvalidMidiDataException e1) {
@@ -1325,7 +1342,7 @@ public class GUI {
 						}
 					}
 				}		
-				MidiFixerOSRS.returnFixedMIDI(sequence, true, customBank);
+				MidiFixerRSHD.returnFixedMIDI(sequence, true, customBank);
 			}
 
 		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {

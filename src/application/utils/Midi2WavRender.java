@@ -63,7 +63,7 @@ public class Midi2WavRender {
 			// Find available AudioSynthesizer.
 			AudioSynthesizer synth = findAudioSynthesizer();
 			if (synth == null) {
-				System.out.println("No AudioSynthesizer was found!");
+				System.out.println("No Audio Synthesizer was found!");
 				System.exit(1);
 			}
 
@@ -110,13 +110,13 @@ public class Midi2WavRender {
 
 		// If default synthesizer is not AudioSynthesizer, check others.
 		
-		double gain = 0.63;
+		double gain = 0.8D;
 		
 		Info[] infos = MidiSystem.getMidiDeviceInfo();
 		MidiChannel[] channels = synth.getChannels();
 		
 		for (int i = 0; i < channels.length; i++) {
-			channels[i].controlChange(7, ((int) (gain * 127.0)));
+			channels[i].controlChange(7, ((int) (channels[i].getController(7) * gain)));
 		}
 		
 		for (int i = 0; i < infos.length; i++) {

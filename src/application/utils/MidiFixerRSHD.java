@@ -458,6 +458,7 @@ public class MidiFixerRSHD {
 							
 							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
 							customBank2 = 1;
+							chPosition = sm.getChannel();
 						}
 						
 						if (program == 1 & bankLSB == 0) {
@@ -471,8 +472,7 @@ public class MidiFixerRSHD {
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 							
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
-							customBank2 = 2;
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 89, 0);
 						}
 
 						if (program == 2 & bankLSB == 0) {
@@ -486,8 +486,7 @@ public class MidiFixerRSHD {
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 							
-							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
-							customBank2 = 3;
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 45, 0);
 						}
 						
 						if (program == 3 & bankLSB == 0) {
@@ -496,10 +495,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 3 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch259.getBytes(), patch259.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 116, 0);
+						}
+						
 						if (program == 4 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch4.getBytes(), patch4.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 4 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch260.getBytes(), patch260.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 75, 0);
 						}
 						
 						if (program == 5 & bankLSB == 0) {
@@ -508,16 +523,40 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 5 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch261.getBytes(), patch261.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 48, 0);
+						}
+						
 						if (program == 6 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch6.getBytes(), patch6.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 						}
 						
+						if (program == 6 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch262.getBytes(), patch262.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 49, 0);
+						}
+						
 						if (program == 7 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch7.getBytes(), patch7.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 7 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch263.getBytes(), patch263.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 0, 0);
 						}
 						
 						if (program == 8 & bankLSB == 0) {
@@ -532,10 +571,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 8 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch264.getBytes(), patch264.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 88, 0);
+						}
+						
 						if (program == 9 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch9.getBytes(), patch9.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 9 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch265.getBytes(), patch265.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 73, 0);
 						}
 						
 						if (program == 10 & bankLSB == 0) {
@@ -544,10 +599,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 10 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch266.getBytes(), patch266.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
+						}
+						
 						if (program == 11 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch11.getBytes(), patch11.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 11 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch267.getBytes(), patch267.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
 						}
 						
 						if (program == 12 & bankLSB == 0) {
@@ -556,10 +627,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 12 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch268.getBytes(), patch268.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
+						}
+						
 						if (program == 13 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch13.getBytes(), patch13.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 13 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch269.getBytes(), patch269.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
 						}
 						
 						if (program == 14 & bankLSB == 0) {
@@ -568,10 +655,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 14 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch270.getBytes(), patch270.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
+						}
+						
 						if (program == 15 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch15.getBytes(), patch15.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 15 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch271.getBytes(), patch271.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
 						}
 						
 						if (program == 16 & bankLSB == 0) {
@@ -586,10 +689,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 16 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch272.getBytes(), patch272.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
+						}
+						
 						if (program == 17 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch17.getBytes(), patch17.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 17 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch273.getBytes(), patch273.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
 						}
 						
 						if (program == 18 & bankLSB == 0) {
@@ -598,10 +717,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 18 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch274.getBytes(), patch274.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
+						}
+						
 						if (program == 19 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch19.getBytes(), patch19.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 19 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch275.getBytes(), patch275.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
 						}
 						
 						if (program == 20 & bankLSB == 0) {
@@ -610,10 +745,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 20 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch276.getBytes(), patch276.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 120, 0);
+						}
+						
 						if (program == 21 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch21.getBytes(), patch21.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 21 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch277.getBytes(), patch277.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 48, 0);
 						}
 						
 						if (program == 22 & bankLSB == 0) {
@@ -622,10 +773,30 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 22 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch278.getBytes(), patch278.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
+							customBank2 = 23;
+							chPosition = sm.getChannel();
+						}
+						
 						if (program == 23 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch23.getBytes(), patch23.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 23 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch279.getBytes(), patch279.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 52, 0);
+							customBank2 = 24;
+							chPosition = sm.getChannel();
 						}
 						
 						if (program == 24 & bankLSB == 0) {
@@ -640,6 +811,14 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 24 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch280.getBytes(), patch280.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 97, 0);
+						}
+						
 						if (program == 25 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch25.getBytes(), patch25.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
@@ -652,10 +831,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 25 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch281.getBytes(), patch281.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 97, 0);
+						}
+						
 						if (program == 26 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch26.getBytes(), patch26.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 26 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch282.getBytes(), patch282.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
 						}
 						
 						if (program == 27 & bankLSB == 0) {
@@ -664,10 +859,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 27 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch283.getBytes(), patch283.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
+						}
+						
 						if (program == 28 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch28.getBytes(), patch28.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 28 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch284.getBytes(), patch284.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
 						}
 						
 						if (program == 29 & bankLSB == 0) {
@@ -676,10 +887,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 29 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch285.getBytes(), patch285.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
+						}
+						
 						if (program == 30 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch30.getBytes(), patch30.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 30 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch286.getBytes(), patch286.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 61, 0);
 						}
 						
 						if (program == 31 & bankLSB == 0) {
@@ -688,10 +915,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 31 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch287.getBytes(), patch287.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 97, 0);
+						}
+						
 						if (program == 32 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch32.getBytes(), patch32.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 32 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch288.getBytes(), patch288.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 97, 0);
 						}
 						
 						if (program == 33 & bankLSB == 0) {
@@ -700,10 +943,26 @@ public class MidiFixerRSHD {
 							track.add(metaEvent);
 						}
 						
+						if (program == 33 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch289.getBytes(), patch289.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 126, 0);
+						}
+						
 						if (program == 34 & bankLSB == 0) {
 							metaMessage.setMessage(trackName, patch34.getBytes(), patch34.length());
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
+						}
+						
+						if (program == 34 & bankLSB == 2) {
+							metaMessage.setMessage(trackName, patch290.getBytes(), patch290.length());
+							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
+							track.add(metaEvent);
+							
+							sm.setMessage(sm.getCommand(), sm.getChannel(), 53, 0);
 						}
 						
 						if (program == 35 & bankLSB == 0) {
@@ -1287,40 +1546,42 @@ public class MidiFixerRSHD {
 							MidiEvent metaEvent = new MidiEvent(metaMessage, (long) 0);
 							track.add(metaEvent);
 						}
-						break;
 					}
 					
 					if (sm.getCommand() == ShortMessage.NOTE_ON) {
 						
-						if (customBank2 == 1) {
+						if (customBank2 == 1 & chPosition == sm.getChannel()) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 12, sm.getData2());
 						}
 						
-						if (customBank2 == 2) {
+						if (customBank2 == 23 & chPosition == sm.getChannel()) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
 						}
+
 						
-						if (customBank2 == 3) {
-							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 36, sm.getData2());
+						if (customBank2 == 24 & chPosition == sm.getChannel()) {
+							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
 						}
-						continue;
+						break;
 					}
 
 					if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 						
-						if (customBank2 == 1) {
+						if (customBank2 == 1 & chPosition == sm.getChannel()) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 12, sm.getData2());
 						}
 						
-						if (customBank2 == 2) {
+						if (customBank2 == 23 & chPosition == sm.getChannel()) {
 							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
 						}
+
 						
-						if (customBank2 == 3) {
-							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 36, sm.getData2());
+						if (customBank2 == 24 & chPosition == sm.getChannel()) {
+							sm.setMessage(sm.getCommand(), sm.getChannel(), sm.getData1() + 24, sm.getData2());
 						}
-						continue;
+						break;
 					}
+					break;
 					//TODO: Add RSHD handling instead of using OSRS handling here.
 				}
 			}
