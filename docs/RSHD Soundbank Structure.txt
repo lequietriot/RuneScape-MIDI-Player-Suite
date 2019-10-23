@@ -155,7 +155,7 @@ Bank 2 (Custom Instruments):
 5. Strings 2
 6. Slow Strings 2
 7. Acoustic Grand Piano 2
-8. New Age Pad 2
+8. New Age Pad 2 (-12 notes than normal)
 9. Flute 2
 10. Choir Aahs 3
 11. Spring SFX
@@ -169,8 +169,8 @@ Bank 2 (Custom Instruments):
 19. Spring SFX 9
 20. Spring SFX 10
 21. Strings 3
-22. Choir Aahs 4 (-24 semitones than normal)
-23. Choir Eehs (-24 semitones than normal)
+22. Choir Aahs 4 (-24 notes than normal)
+23. Choir Eehs (-24 notes than normal)
 24. Frozen Pad
 25. Abandoned Pad
 26. Brass Section 2
