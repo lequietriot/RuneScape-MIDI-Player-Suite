@@ -50,56 +50,67 @@ import application.utils.MidiFixerRSHD;
 
 public class GUI implements ControllerEventListener {
 	
-	File midiFile;
-	File soundsetFile;
-	
-	String defaultSoundfontPath;
+	private File midiFile;
+	private File soundsetFile;
 
-	boolean fixAttemptingOS;	
-	boolean fixAttemptingHD;
-	
-	long pausedTime;
-	long runningTime;
-	long totalTime;
-	
-	Sequencer sequencer;
-	Sequence sequence;
-	Synthesizer synth;
-	Sequence sequenceFixed;
-	
-	JFrame frame;
-	JPanel panel;
-	JPanel songPanel;
-	JMenu fileMenu;
-	JMenu preferencesMenu;
-	JMenu utilityMenu;
-	
-	JFileChooser chooseMID;
-	JFileChooser chooseSf2;
-	JFileChooser saveRepatchedMIDI;
-	
-	JButton startButton;
-	JButton pauseButton;
-	JButton stopButton;
-	JButton renderMIDItoWavButton;
-	
-	JSlider songSlider;
-	
-	JTextPane songSliderInfo;
-	
-	JCheckBox fixAttemptOS;
-	JCheckBox fixAttemptHD;
-	
-	public ControllerEventListener volumeListener;
-	public ControllerEventListener retriggerListener;
-	public boolean retriggerEffect = false;
-	public int retriggerValue;
-	
-	@SuppressWarnings("static-access")
-	
-	public GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException, InterruptedException {
+	private String defaultSoundfontPath;
+
+	private boolean fixAttemptingOS;
+	private boolean fixAttemptingHD;
+
+	private long pausedTime;
+	private long runningTime;
+	private long totalTime;
+
+	private Sequence sequence;
+
+	private Sequencer sequencer1;
+	private Sequencer sequencer2;
+	private Sequencer sequencer3;
+	private Sequencer sequencer4;
+	private Sequencer sequencer5;
+	private Sequencer sequencer6;
+
+	private Synthesizer synth1;
+	private Synthesizer synth2;
+	private Synthesizer synth3;
+	private Synthesizer synth4;
+	private Synthesizer synth5;
+	private Synthesizer synth6;
+
+	private Sequence sequenceFixed;
+
+	private JFrame frame;
+	private JPanel panel;
+	private JPanel songPanel;
+	private JMenu fileMenu;
+	private JMenu preferencesMenu;
+	private JMenu utilityMenu;
+
+	private JFileChooser chooseMID;
+	private JFileChooser chooseSf2;
+	private JFileChooser saveRepatchedMIDI;
+
+	private JButton startButton;
+	private JButton pauseButton;
+	private JButton stopButton;
+	private JButton renderMIDItoWavButton;
+
+	private JSlider songSlider;
+
+	private JTextPane songSliderInfo;
+
+	private JCheckBox fixAttemptOS;
+	private JCheckBox fixAttemptHD;
+
+	private ControllerEventListener volumeListener;
+	private ControllerEventListener retriggerListener;
+	private boolean retriggerEffect = false;
+	private int retriggerValue;
+
+	GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException {
 		frame = new JFrame("RuneScape MIDI Player");
-		frame.setDefaultLookAndFeelDecorated(true);
+		JFrame.setDefaultLookAndFeelDecorated(true);
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		frame.setMinimumSize(new Dimension(520, 200));
@@ -141,8 +152,8 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.setSize(100, 20);
 			utilityMenu.setVisible(true);
 			
-			utilityMenu.add("Fix MIDI File (OSRS Version)").addActionListener(new FixButtonListenerOSRS());
-			utilityMenu.add("Fix MIDI File (RSHD Version)").addActionListener(new FixButtonListenerRSHD());
+			utilityMenu.add("Fix MIDI File (OS Version)").addActionListener(new FixButtonListenerOSRS());
+			utilityMenu.add("Fix MIDI File (HD Version)").addActionListener(new FixButtonListenerRSHD());
 			
 			jMenuBar.add(fileMenu);
 			jMenuBar.add(preferencesMenu);
@@ -155,20 +166,21 @@ public class GUI implements ControllerEventListener {
 			
 			Path sf2PrefFile = Paths.get("./DefaultSoundfontPath.txt/");
 			
-			if (sf2PrefFile.toFile().exists() == true) {
+			if (sf2PrefFile.toFile().exists()) {
 				List<String> prefString = Files.readAllLines(sf2PrefFile);
 				
 				for (int s = 0; s < prefString.size(); s++) {
-				String pathString = prefString.get(s).toString();
+				String pathString = prefString.get(s);
 				System.out.println("Automatically set Soundfont to " + prefString);
 				soundsetFile = new File(pathString);
-				if (soundsetFile == null) {
+
+				if (!soundsetFile.exists()) {
 					frame.add(new PopupMenu("The default SoundFont is either not set or was moved!"));
 				}
 			}
 		}
 			
-			else if (sf2PrefFile.toFile().exists() == false) {
+			else if (!sf2PrefFile.toFile().exists()) {
 				FileOutputStream fos = new FileOutputStream("./DefaultSoundfontPath.txt/");
 				DataOutputStream dos = new DataOutputStream(fos);
 				dos.write(0);
@@ -176,11 +188,12 @@ public class GUI implements ControllerEventListener {
 				dos.close();
 			}
 
-			Init(buttonsPanel);
+			init(buttonsPanel);
+			initSynthesizers();
 		}
 	}
 
-	public void Init(JPanel buttonsPanel) throws MidiUnavailableException, InvalidMidiDataException, IOException {
+	private void init(JPanel buttonsPanel) {
 		
 		startButton = new JButton();
 		pauseButton = new JButton();
@@ -250,20 +263,69 @@ public class GUI implements ControllerEventListener {
 		frame.pack();
 	}
 
-	public void LoadSoundFont(JFrame frame) {
+	private void LoadSoundFont(JFrame frame) {
 		chooseSf2 = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
 		chooseSf2.setSize(400, 200);
-		chooseSf2.setDialogTitle("Please choose a Soundfont File");
+		chooseSf2.setDialogTitle("Please choose a SoundFont File");
 		chooseSf2.setVisible(true);
 		frame.add(chooseSf2);
 		int returnValue = chooseSf2.showOpenDialog(null);
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
 			soundsetFile = chooseSf2.getSelectedFile();
 			defaultSoundfontPath = chooseSf2.getSelectedFile().getPath();
+			try {
+				initSynthesizers();
+			} catch (MidiUnavailableException | InvalidMidiDataException | IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
-	public void LoadMIDI(JFrame frame) {
+	private void initSynthesizers() throws MidiUnavailableException, InvalidMidiDataException, IOException {
+
+		System.out.println("Initializing Synthesizers, please wait...");
+
+		if (soundsetFile.exists()) {
+
+			synth1 = MidiSystem.getSynthesizer();
+			synth1.open();
+			synth1.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+
+			System.out.println("Loaded Synthesizer 1!");
+
+			synth2 = MidiSystem.getSynthesizer();
+			synth2.open();
+			synth2.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+
+			System.out.println("Loaded Synthesizer 2!");
+
+			synth3 = MidiSystem.getSynthesizer();
+			synth3.open();
+			synth3.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+
+			System.out.println("Loaded Synthesizer 3!");
+
+			synth4 = MidiSystem.getSynthesizer();
+			synth4.open();
+			synth4.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+
+			System.out.println("Loaded Synthesizer 4!");
+
+			synth5 = MidiSystem.getSynthesizer();
+			synth5.open();
+			synth5.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+
+			System.out.println("Loaded Synthesizer 5!");
+
+			synth6 = MidiSystem.getSynthesizer();
+			synth6.open();
+			synth6.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+
+			System.out.println("Loaded Synthesizer 6!");
+		}
+	}
+
+	private void LoadMIDI(JFrame frame) {
 		chooseMID = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
 		chooseMID.setSize(400, 200);
 		chooseMID.setDialogTitle("Please choose a MIDI File");
@@ -278,7 +340,7 @@ public class GUI implements ControllerEventListener {
 	@Override
 	public void controlChange(ShortMessage event) {
 		
-		if (retriggerEffect == false) {
+		if (!retriggerEffect) {
 		
 			if (event.getData1() == 81 & event.getData2() >= 64) {
 				retriggerEffect = true;
@@ -289,7 +351,7 @@ public class GUI implements ControllerEventListener {
 			}
 		}
 		
-		if (event.getData1() == 17 & retriggerEffect == true) {
+		if (event.getData1() == 17 & retriggerEffect) {
 			retriggerValue = (int) (2097152.0D * Math.pow(2.0D, 5.4931640625E-4D * event.getData2()) + 0.5D);
 		}
 	}
@@ -351,8 +413,11 @@ public class GUI implements ControllerEventListener {
 				dos.writeBytes(defaultSoundfontPath);
 				dos.flush();
 				dos.close();
-			} catch (FileNotFoundException e1) {
-				e1.printStackTrace();
+				try {
+					initSynthesizers();
+				} catch (MidiUnavailableException | InvalidMidiDataException ex) {
+					ex.printStackTrace();
+				}
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
@@ -370,72 +435,457 @@ public class GUI implements ControllerEventListener {
 		
 		public void actionPerformed(ActionEvent e) {
 			
-			if (sequencer == null) {
+			if (sequencer1 == null) {
 				startButton.setEnabled(true);
 			}
 			
 			try {
-				
-				//TODO: Finish custom sequencer, stop using Java's
-				
-				Soundbank soundbank = MidiSystem.getSoundbank(soundsetFile);
-				sequencer = MidiSystem.getSequencer(false);
+
 				sequence = MidiSystem.getSequence(midiFile);
-				synth = MidiSystem.getSynthesizer();
-				
-				sequencer.open();
-						
-				synth.open();
-				
-				synth.loadAllInstruments(soundbank);
-				
-				sequencer.getTransmitter().setReceiver(synth.getReceiver());
-		
-				if (fixAttemptingOS == false) {
-					sequencer.setSequence(sequence);
+
+				sequencer1 = MidiSystem.getSequencer(false);
+				sequencer1.open();
+				sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+				sequencer2 = MidiSystem.getSequencer(false);
+				sequencer2.open();
+				sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+				sequencer3 = MidiSystem.getSequencer(false);
+				sequencer3.open();
+				sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+				sequencer4 = MidiSystem.getSequencer(false);
+				sequencer4.open();
+				sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+				sequencer5 = MidiSystem.getSequencer(false);
+				sequencer5.open();
+				sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+
+				sequencer6 = MidiSystem.getSequencer(false);
+				sequencer6.open();
+				sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
+
+				setSequencerSolo(sequence.getTracks().length);
+
+				if (!fixAttemptingOS) {
+					sequencer1.setSequence(sequence);
+					sequencer2.setSequence(sequence);
+					sequencer3.setSequence(sequence);
+					sequencer4.setSequence(sequence);
+					sequencer5.setSequence(sequence);
+					sequencer6.setSequence(sequence);
+
+					setSequencerSolo(sequence.getTracks().length);
 				}
 				
-				else if (fixAttemptingOS == true) {
-					sequencer.setSequence(adjustForPlayOS(sequence));
+				else {
+					sequencer1.setSequence(adjustForPlayOS(sequence));
+					sequencer2.setSequence(adjustForPlayOS(sequence));
+					sequencer3.setSequence(adjustForPlayOS(sequence));
+					sequencer4.setSequence(adjustForPlayOS(sequence));
+					sequencer5.setSequence(adjustForPlayOS(sequence));
+					sequencer6.setSequence(adjustForPlayOS(sequence));
+
+					setSequencerSolo(sequence.getTracks().length);
 				}
 				
-				if (fixAttemptingHD == false) {
-					sequencer.setSequence(sequence);
+				if (!fixAttemptingHD) {
+					sequencer1.setSequence(sequence);
+					sequencer2.setSequence(sequence);
+					sequencer3.setSequence(sequence);
+					sequencer4.setSequence(sequence);
+					sequencer5.setSequence(sequence);
+					sequencer6.setSequence(sequence);
+
+					setSequencerSolo(sequence.getTracks().length);
 				}
 				
-				else if (fixAttemptingHD == true) {
-					sequencer.setSequence(adjustForPlayHD(sequence));
+				else {
+					sequencer1.setSequence(adjustForPlayHD(sequence));
+					sequencer2.setSequence(adjustForPlayHD(sequence));
+					sequencer3.setSequence(adjustForPlayHD(sequence));
+					sequencer4.setSequence(adjustForPlayHD(sequence));
+					sequencer5.setSequence(adjustForPlayHD(sequence));
+					sequencer6.setSequence(adjustForPlayHD(sequence));
+
+					setSequencerSolo(sequence.getTracks().length);
 				}
 				
 				if (pausedTime == 0) {
-					sequencer.start();
+					sequencer1.start();
+					sequencer2.start();
+					sequencer3.start();
+					sequencer4.start();
+					sequencer5.start();
+					sequencer6.start();
 
-					if (sequencer.isRunning()) {
+					if (sequencer1.isRunning()) {
 						startButton.setEnabled(false);
 						pauseButton.setEnabled(true);
 					}
 				}
 				
-				else if (pausedTime != 0) {
-					sequencer.setMicrosecondPosition(pausedTime);
-					sequencer.start();
+				else {
+					sequencer1.setMicrosecondPosition(pausedTime);
+					sequencer2.setMicrosecondPosition(pausedTime);
+					sequencer3.setMicrosecondPosition(pausedTime);
+					sequencer4.setMicrosecondPosition(pausedTime);
+					sequencer5.setMicrosecondPosition(pausedTime);
+					sequencer6.setMicrosecondPosition(pausedTime);
 
-					if (sequencer.isRunning()) {
+					sequencer1.start();
+					sequencer2.start();
+					sequencer3.start();
+					sequencer4.start();
+					sequencer5.start();
+					sequencer6.start();
+
+					if (sequencer1.isRunning()) {
 						startButton.setEnabled(false);
 						pauseButton.setEnabled(true);
 					}
 				}
 				
-				if (sequencer.isRunning()) {
+				if (sequencer1.isRunning()) {
 					Timer timer = new Timer(100, new TimerListener());
 					timer.start();
 				}
-			} catch (MidiUnavailableException e1) {
+			} catch (MidiUnavailableException | InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
-			} catch (InvalidMidiDataException e1) {
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			}
+		}
+
+		private void setSequencerSolo(int trackCount) {
+
+			switch (trackCount) {
+				case 0:
+					System.out.println("Track count is 0 or invalid MIDI file.");
+				case 1:
+					sequencer1.setTrackSolo(0, true);
+				case 2:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+				case 3:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+				case 4:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+				case 5:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+				case 6:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+				case 7:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+				case 8:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+				case 9:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+				case 10:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+				case 11:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+				case 12:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+				case 13:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+				case 14:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+				case 15:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+				case 16:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+				case 17:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+					sequencer5.setTrackSolo(16, true);
+				case 18:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+					sequencer5.setTrackSolo(16, true);
+					sequencer5.setTrackSolo(17, true);
+				case 19:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+					sequencer5.setTrackSolo(16, true);
+					sequencer5.setTrackSolo(17, true);
+					sequencer5.setTrackSolo(18, true);
+				case 20:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+					sequencer5.setTrackSolo(16, true);
+					sequencer5.setTrackSolo(17, true);
+					sequencer5.setTrackSolo(18, true);
+					sequencer5.setTrackSolo(19, true);
+				case 21:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+					sequencer5.setTrackSolo(16, true);
+					sequencer5.setTrackSolo(17, true);
+					sequencer5.setTrackSolo(18, true);
+					sequencer5.setTrackSolo(19, true);
+					sequencer6.setTrackSolo(20, true);
+				case 22:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+					sequencer5.setTrackSolo(16, true);
+					sequencer5.setTrackSolo(17, true);
+					sequencer5.setTrackSolo(18, true);
+					sequencer5.setTrackSolo(19, true);
+					sequencer6.setTrackSolo(20, true);
+					sequencer6.setTrackSolo(21, true);
+				case 23:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+					sequencer5.setTrackSolo(16, true);
+					sequencer5.setTrackSolo(17, true);
+					sequencer5.setTrackSolo(18, true);
+					sequencer5.setTrackSolo(19, true);
+					sequencer6.setTrackSolo(20, true);
+					sequencer6.setTrackSolo(21, true);
+					sequencer6.setTrackSolo(22, true);
+				case 24:
+					sequencer1.setTrackSolo(0, true);
+					sequencer1.setTrackSolo(1, true);
+					sequencer1.setTrackSolo(2, true);
+					sequencer1.setTrackSolo(3, true);
+					sequencer2.setTrackSolo(4, true);
+					sequencer2.setTrackSolo(5, true);
+					sequencer2.setTrackSolo(6, true);
+					sequencer2.setTrackSolo(7, true);
+					sequencer3.setTrackSolo(8, true);
+					sequencer3.setTrackSolo(9, true);
+					sequencer3.setTrackSolo(10, true);
+					sequencer3.setTrackSolo(11, true);
+					sequencer4.setTrackSolo(12, true);
+					sequencer4.setTrackSolo(13, true);
+					sequencer4.setTrackSolo(14, true);
+					sequencer4.setTrackSolo(15, true);
+					sequencer5.setTrackSolo(16, true);
+					sequencer5.setTrackSolo(17, true);
+					sequencer5.setTrackSolo(18, true);
+					sequencer5.setTrackSolo(19, true);
+					sequencer6.setTrackSolo(20, true);
+					sequencer6.setTrackSolo(21, true);
+					sequencer6.setTrackSolo(22, true);
+					sequencer6.setTrackSolo(23, true);
 			}
 		}
 
@@ -673,7 +1123,7 @@ public class GUI implements ControllerEventListener {
 				return MidiFixerRSHD.returnFixedMIDI(sequence, false, customBank);
 			}
 
-		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
+		public void getBankLSB(ShortMessage sm) {
 			
 				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 					
@@ -689,19 +1139,24 @@ public class GUI implements ControllerEventListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			pausedTime = sequencer.getMicrosecondPosition();
-			sequencer.stop();
+			pausedTime = sequencer1.getMicrosecondPosition();
+			sequencer1.stop();
+			sequencer2.stop();
+			sequencer3.stop();
+			sequencer4.stop();
+			sequencer5.stop();
+			sequencer6.stop();
 			
 			if (pausedTime != 0) {
 				pauseButton.setEnabled(false);
 			}
 			
-			if (sequencer.isRunning() == false) {
+			if (!sequencer1.isRunning()) {
 				startButton.setEnabled(true);
 			}
 			
-			if (!sequencer.isRunning()) {
-				Timer timer = new Timer(100, new TimerListener());
+			if (!sequencer1.isRunning()) {
+				Timer timer = new Timer(0, new TimerListener());
 				timer.stop();
 			}
 		}
@@ -712,14 +1167,19 @@ public class GUI implements ControllerEventListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			pausedTime = 0;
-			sequencer.stop();
+			sequencer1.stop();
+			sequencer2.stop();
+			sequencer3.stop();
+			sequencer4.stop();
+			sequencer5.stop();
+			sequencer6.stop();
 			
-			if (sequencer.isRunning() == false) {
+			if (!sequencer1.isRunning()) {
 				pauseButton.setEnabled(true);
 				startButton.setEnabled(true);
 			}
 			
-			if (!sequencer.isRunning()) {
+			if (!sequencer1.isRunning()) {
 				Timer timer = new Timer(100, new TimerListener());
 				timer.stop();
 				songSlider.setValue(0);
@@ -731,7 +1191,7 @@ public class GUI implements ControllerEventListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			int position = (int) (sequencer.getMicrosecondPosition() / 1000000);
+			int position = (int) (sequencer1.getMicrosecondPosition() / 1000000);
 			songSlider.setValue(position);
 		}
 	}
@@ -740,11 +1200,11 @@ public class GUI implements ControllerEventListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (fixAttemptOS.isEnabled() == true) {
+			if (fixAttemptOS.isEnabled()) {
 				fixAttemptingOS = true;
 			}
 			
-			else if (fixAttemptOS.isEnabled() == false) {
+			else if (!fixAttemptOS.isEnabled()) {
 				fixAttemptingOS = false;
 			}
 		}
@@ -754,11 +1214,11 @@ public class GUI implements ControllerEventListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (fixAttemptOS.isEnabled() == true) {
+			if (fixAttemptOS.isEnabled()) {
 				fixAttemptingHD = true;
 			}
 			
-			else if (fixAttemptOS.isEnabled() == false) {
+			else if (!fixAttemptOS.isEnabled()) {
 				fixAttemptingHD = false;
 			}
 		}

@@ -58,7 +58,7 @@ public class Midi2WavRender {
 	 * Render sequence using selected or default soundbank into wave audio file.
 	 */
 	public static void render(Soundbank soundbank, Sequence sequence,
-			File audio_file) {
+							  File audio_file) {
 		try {
 			// Find available AudioSynthesizer.
 			AudioSynthesizer synth = findAudioSynthesizer();
@@ -109,19 +109,19 @@ public class Midi2WavRender {
 			return (AudioSynthesizer) synth;
 
 		// If default synthesizer is not AudioSynthesizer, check others.
-		
+
 		double gain = 0.8D;
-		
+
 		Info[] infos = MidiSystem.getMidiDeviceInfo();
 		MidiChannel[] channels = synth.getChannels();
-		
+
 		for (int i = 0; i < channels.length; i++) {
 			channels[i].controlChange(7, ((int) (channels[i].getController(7) * gain)));
 		}
-		
+
 		for (int i = 0; i < infos.length; i++) {
 			MidiDevice dev = MidiSystem.getMidiDevice(infos[i]);
-			
+
 			if (dev instanceof AudioSynthesizer)
 				return (AudioSynthesizer) dev;
 		}

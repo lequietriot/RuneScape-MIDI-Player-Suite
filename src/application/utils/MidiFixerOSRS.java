@@ -153,7 +153,7 @@ public class MidiFixerOSRS {
 	final static String patch184 = "Special Effects Drum Kit";
 	final static String patch255 = "Standard Drum Kit";
 	
-	final static String patch256 = "Choir Aahs (2)"; //This patch is transposed down 12 notes.
+	final static String patch256 = "Slow Choir Oh"; //This patch is transposed down 12 notes.
 	final static String patch257 = "Voice (Staccato)"; //This patch is transposed down 24 notes.
 	final static String patch258 = "Voice (Sustained)"; //This patch is transposed down 36 notes.
 
