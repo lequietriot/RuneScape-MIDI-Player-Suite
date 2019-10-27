@@ -16,18 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import javax.sound.midi.ControllerEventListener;
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MidiEvent;
-import javax.sound.midi.MidiMessage;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Sequence;
-import javax.sound.midi.Sequencer;
-import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Soundbank;
-import javax.sound.midi.Synthesizer;
-import javax.sound.midi.Track;
+import javax.sound.midi.*;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -94,6 +83,7 @@ public class GUI implements ControllerEventListener {
 	private JButton startButton;
 	private JButton pauseButton;
 	private JButton stopButton;
+	private JButton loopButton;
 	private JButton renderMIDItoWavButton;
 
 	private JSlider songSlider;
@@ -107,13 +97,14 @@ public class GUI implements ControllerEventListener {
 	private ControllerEventListener retriggerListener;
 	private boolean retriggerEffect = false;
 	private int retriggerValue;
+	private boolean loopMode = false;
 
 	GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException {
 		frame = new JFrame("RuneScape MIDI Player");
 		JFrame.setDefaultLookAndFeelDecorated(true);
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		frame.setMinimumSize(new Dimension(520, 200));
+		frame.setMinimumSize(new Dimension(700, 240));
 		panel = new JPanel(new BorderLayout());
 		panel.setLayout(null);
 		panel.setBorder(BorderFactory.createEmptyBorder());
@@ -198,10 +189,12 @@ public class GUI implements ControllerEventListener {
 		startButton = new JButton();
 		pauseButton = new JButton();
 		stopButton = new JButton();
+		loopButton = new JButton();
 		
 		startButton.addActionListener(new StartButtonListener());
 		pauseButton.addActionListener(new PauseButtonListener());
 		stopButton.addActionListener(new StopButtonListener());
+		loopButton.addActionListener(new LoopButtonListener());
 		
 		buttonsPanel.add(startButton);
 		startButton.setText("Play");
@@ -214,6 +207,17 @@ public class GUI implements ControllerEventListener {
 		buttonsPanel.add(stopButton);
 		stopButton.setText("Stop");
 		stopButton.setVisible(true);
+
+		buttonsPanel.add(loopButton);
+
+		if (loopMode) {
+			loopButton.setText("Loop Mode: On");
+		}
+		else {
+			loopButton.setText("Loop Mode: Off");
+		}
+
+		loopButton.setVisible(true);
 
 		buttonsPanel.setVisible(true);
 		buttonsPanel.setBackground(Color.LIGHT_GRAY);
@@ -382,11 +386,13 @@ public class GUI implements ControllerEventListener {
 					e1.printStackTrace();
 				}
 			}
-			
-			totalTime = sequence.getMicrosecondLength() / 1000000;
-			songSlider.setMinimum(0);
-			songSlider.setMaximum((int) totalTime);
-			songSlider.setToolTipText("Time: " + i + " / " + totalTime + " (In total seconds)");
+
+			else {
+				totalTime = sequence.getMicrosecondLength() / 1000000;
+				songSlider.setMinimum(0);
+				songSlider.setMaximum((int) totalTime);
+				songSlider.setToolTipText("Time: " + i + " / " + totalTime + " (In total seconds)");
+			}
 		}
 	}
 	
@@ -413,11 +419,6 @@ public class GUI implements ControllerEventListener {
 				dos.writeBytes(defaultSoundfontPath);
 				dos.flush();
 				dos.close();
-				try {
-					initSynthesizers();
-				} catch (MidiUnavailableException | InvalidMidiDataException ex) {
-					ex.printStackTrace();
-				}
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
@@ -432,7 +433,10 @@ public class GUI implements ControllerEventListener {
 		int chPosition = -1;
 
 		boolean customBank;
-		
+		long loopStart = 0;
+		long loopEnd = 0;
+		StringBuilder loopMarker;
+
 		public void actionPerformed(ActionEvent e) {
 			
 			if (sequencer1 == null) {
@@ -478,6 +482,10 @@ public class GUI implements ControllerEventListener {
 					sequencer6.setSequence(sequence);
 
 					setSequencerSolo(sequence.getTracks().length);
+
+					if (loopMode) {
+						setLoop();
+					}
 				}
 				
 				else {
@@ -489,6 +497,10 @@ public class GUI implements ControllerEventListener {
 					sequencer6.setSequence(adjustForPlayOS(sequence));
 
 					setSequencerSolo(sequence.getTracks().length);
+
+					if (loopMode) {
+						setLoop();
+					}
 				}
 				
 				if (!fixAttemptingHD) {
@@ -500,6 +512,10 @@ public class GUI implements ControllerEventListener {
 					sequencer6.setSequence(sequence);
 
 					setSequencerSolo(sequence.getTracks().length);
+
+					if (loopMode) {
+						setLoop();
+					}
 				}
 				
 				else {
@@ -511,6 +527,10 @@ public class GUI implements ControllerEventListener {
 					sequencer6.setSequence(adjustForPlayHD(sequence));
 
 					setSequencerSolo(sequence.getTracks().length);
+
+					if (loopMode) {
+						setLoop();
+					}
 				}
 				
 				if (pausedTime == 0) {
@@ -889,6 +909,384 @@ public class GUI implements ControllerEventListener {
 			}
 		}
 
+		void setLoop() {
+
+			loopMarker = new StringBuilder();
+
+			int trackCount = sequence.getTracks().length;
+
+			for (Track track : sequence.getTracks()) {
+				for (int index = 0; index < track.size(); index++) {
+					MidiEvent midiEvent = track.get(index);
+					MidiMessage midiMessage = midiEvent.getMessage();
+
+					if (midiMessage instanceof MetaMessage) {
+						MetaMessage mm = (MetaMessage) midiMessage;
+
+						if (mm.getType() == 0x06) {
+							for (int i = 0; i < mm.getData().length; i++) {
+								if (i < mm.getData().length) {
+									loopMarker.append((char) mm.getData()[i]);
+								}
+
+								if (loopMarker.toString().contains("loopStart")) {
+
+									loopStart = (int) midiEvent.getTick();
+									System.out.println("loopStart = " + midiEvent.getTick());
+									loopMarker = new StringBuilder();
+									continue;
+
+								}
+
+								if (loopMarker.toString().contains("loopEnd")) {
+
+									loopEnd = (int) midiEvent.getTick();
+									System.out.println("loopEnd = " + midiEvent.getTick());
+									break;
+								}
+
+								else {
+
+									if (loopEnd == 0) {
+										loopStart = 0;
+										loopEnd = (int) sequence.getTickLength();
+									}
+								}
+							}
+						}
+					}
+				}
+
+				if (trackCount == 0) {
+					return;
+				}
+
+				if (trackCount == 1) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 2) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 3) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 4) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 5) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 6) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 7) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 8) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 9) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 10) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 11) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 12) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 13) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 14) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 15) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 16) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 17) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer5.setLoopStartPoint(loopStart);
+					sequencer5.setLoopEndPoint(loopEnd);
+					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 18) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer5.setLoopStartPoint(loopStart);
+					sequencer5.setLoopEndPoint(loopEnd);
+					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 19) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer5.setLoopStartPoint(loopStart);
+					sequencer5.setLoopEndPoint(loopEnd);
+					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 20) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer5.setLoopStartPoint(loopStart);
+					sequencer5.setLoopEndPoint(loopEnd);
+					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 21) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer5.setLoopStartPoint(loopStart);
+					sequencer5.setLoopEndPoint(loopEnd);
+					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer6.setLoopStartPoint(loopStart);
+					sequencer6.setLoopEndPoint(loopEnd);
+					sequencer6.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 22) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer5.setLoopStartPoint(loopStart);
+					sequencer5.setLoopEndPoint(loopEnd);
+					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer6.setLoopStartPoint(loopStart);
+					sequencer6.setLoopEndPoint(loopEnd);
+					sequencer6.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 23) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer5.setLoopStartPoint(loopStart);
+					sequencer5.setLoopEndPoint(loopEnd);
+					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer6.setLoopStartPoint(loopStart);
+					sequencer6.setLoopEndPoint(loopEnd);
+					sequencer6.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+
+				if (trackCount == 24) {
+					sequencer1.setLoopStartPoint(loopStart);
+					sequencer1.setLoopEndPoint(loopEnd);
+					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer2.setLoopStartPoint(loopStart);
+					sequencer2.setLoopEndPoint(loopEnd);
+					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer3.setLoopStartPoint(loopStart);
+					sequencer3.setLoopEndPoint(loopEnd);
+					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer4.setLoopStartPoint(loopStart);
+					sequencer4.setLoopEndPoint(loopEnd);
+					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer5.setLoopStartPoint(loopStart);
+					sequencer5.setLoopEndPoint(loopEnd);
+					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+					sequencer6.setLoopStartPoint(loopStart);
+					sequencer6.setLoopEndPoint(loopEnd);
+					sequencer6.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+				}
+			}
+		}
+
 		public Sequence adjustForPlayOS(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
@@ -1183,6 +1581,21 @@ public class GUI implements ControllerEventListener {
 				Timer timer = new Timer(100, new TimerListener());
 				timer.stop();
 				songSlider.setValue(0);
+			}
+		}
+	}
+
+	private class LoopButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			loopMode = !loopMode;
+
+			if (loopMode) {
+				loopButton.setText("Loop Mode: On");
+			}
+			else {
+				loopButton.setText("Loop Mode: Off");
 			}
 		}
 	}
@@ -1816,4 +2229,4 @@ public class GUI implements ControllerEventListener {
 				}
 			}
 		}
-	}
+}
