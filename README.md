@@ -8,6 +8,7 @@ Setup instructions:
 Since you set the preference for your soundfont, it should remember what you wanted when you re-open the application!
 
 # Features
+- Loop Mode button to easily loop your songs. If the MIDI has metadata messages named "loopStart" & "loopEnd", it will loop from those positions.
 - The program now supports pausing, and stopping instead of just playing. 
 - Rendering a MIDI file to Waveform Audio was carried on from the previous versions into this new revamp.
 - A refined custom HQ soundfont based on the Old School RuneScape soundbanks is included.
