@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="OSRS-MIDI-Player:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/OSRS_MIDI_Player_jar</output-path>
+    <root id="archive" name="OSRS-MIDI-Player.jar">
+      <element id="module-output" name="OSRS-MIDI-Player" />
+    </root>
+  </artifact>
+</component>

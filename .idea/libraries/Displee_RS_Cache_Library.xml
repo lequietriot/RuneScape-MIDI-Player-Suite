@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Displee-RS-Cache-Library">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libs/Displee-RS-Cache-Library.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

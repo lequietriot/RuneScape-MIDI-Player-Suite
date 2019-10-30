@@ -1,46 +1,30 @@
 package application;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.PopupMenu;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
 import javax.sound.midi.*;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.JTextPane;
-import javax.swing.Timer;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 
-import application.utils.Midi2WavRender;
-import application.utils.MidiFixerOSRS;
-import application.utils.MidiFixerRSHD;
+import application.utils.*;
+import org.displee.CacheLibrary;
 
 public class GUI implements ControllerEventListener {
 	
 	private File midiFile;
 	private File soundsetFile;
+
+    private CacheLibrary cacheLibrary;
 
 	private String defaultSoundfontPath;
 
@@ -70,14 +54,18 @@ public class GUI implements ControllerEventListener {
 	private Sequence sequenceFixed;
 
 	private JFrame frame;
+	private JFrame cacheFrame;
+
 	private JPanel panel;
 	private JPanel songPanel;
+
 	private JMenu fileMenu;
 	private JMenu preferencesMenu;
 	private JMenu utilityMenu;
 
 	private JFileChooser chooseMID;
 	private JFileChooser chooseSf2;
+    private JFileChooser chooseCache;
 	private JFileChooser saveRepatchedMIDI;
 
 	private JButton startButton;
@@ -99,7 +87,8 @@ public class GUI implements ControllerEventListener {
 	private int retriggerValue;
 	private boolean loopMode = false;
 
-	GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException {
+    GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException {
+
 		frame = new JFrame("RuneScape MIDI Player");
 		JFrame.setDefaultLookAndFeelDecorated(true);
 		frame.setResizable(false);
@@ -129,6 +118,7 @@ public class GUI implements ControllerEventListener {
 			
 			fileMenu.add("Load MIDI File").addActionListener(new MIDILoader());
 			fileMenu.add("Load SoundFont File").addActionListener(new SF2Loader());
+			fileMenu.add("Load RuneScape Cache").addActionListener(new CacheLoader());
 			fileMenu.add("Render MIDI to Audio File").addActionListener(new RenderMIDIProcess());
 			
 			preferencesMenu = new JMenu();
@@ -142,7 +132,13 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.setText("Tools");
 			utilityMenu.setSize(100, 20);
 			utilityMenu.setVisible(true);
-			
+
+			utilityMenu.add("Encode Data - Music...").addActionListener(new MidiEncoder());
+
+			utilityMenu.add("Dump Data - Music...").addActionListener(new MidiDumper());
+			//utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
+            //utilityMenu.add("Dump Data - Sound Bank Samples...").addActionListener(new MusicSampleDumper());
+
 			utilityMenu.add("Fix MIDI File (OS Version)").addActionListener(new FixButtonListenerOSRS());
 			utilityMenu.add("Fix MIDI File (HD Version)").addActionListener(new FixButtonListenerRSHD());
 			
@@ -154,8 +150,9 @@ public class GUI implements ControllerEventListener {
 		}
 		
 		finally {
-			
+
 			Path sf2PrefFile = Paths.get("./DefaultSoundfontPath.txt/");
+            Path cachePrefFile = Paths.get("./DefaultCachePath.txt/");
 			
 			if (sf2PrefFile.toFile().exists()) {
 				List<String> prefString = Files.readAllLines(sf2PrefFile);
@@ -170,6 +167,15 @@ public class GUI implements ControllerEventListener {
 				}
 			}
 		}
+			if (cachePrefFile.toFile().exists()) {
+                List<String> cachePrefString = Files.readAllLines(cachePrefFile);
+
+                for (int s = 0; s < cachePrefString.size(); s++) {
+                    String pathString = cachePrefString.get(s);
+                    System.out.println("Automatically set Cache path to " + pathString);
+                    cacheLibrary = new CacheLibrary(pathString);
+                }
+            }
 			
 			else if (!sf2PrefFile.toFile().exists()) {
 				FileOutputStream fos = new FileOutputStream("./DefaultSoundfontPath.txt/");
@@ -345,14 +351,8 @@ public class GUI implements ControllerEventListener {
 	public void controlChange(ShortMessage event) {
 		
 		if (!retriggerEffect) {
-		
-			if (event.getData1() == 81 & event.getData2() >= 64) {
-				retriggerEffect = true;
-			}
-			
-			else {
-				retriggerEffect = false;
-			}
+
+			retriggerEffect = event.getData1() == 81 & event.getData2() >= 64;
 		}
 		
 		if (event.getData1() == 17 & retriggerEffect) {
@@ -2229,4 +2229,247 @@ public class GUI implements ControllerEventListener {
 				}
 			}
 		}
+
+    private class CacheLoader implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                loadCache(frame);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        private void loadCache(JFrame frame) throws IOException {
+            chooseCache = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
+            chooseCache.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            chooseCache.setSize(400, 200);
+            chooseCache.setDialogTitle("Please choose a RuneScape Cache Directory.");
+            chooseCache.setVisible(true);
+            frame.add(chooseCache);
+            int returnValue = chooseCache.showOpenDialog(null);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                cacheLibrary = new CacheLibrary(chooseCache.getSelectedFile().getPath());
+
+                File preferences = new File("./DefaultCachePath.txt/");
+                FileOutputStream fos;
+
+                try {
+                    fos = new FileOutputStream(preferences);
+                    DataOutputStream dos = new DataOutputStream(fos);
+                    dos.writeBytes(chooseCache.getSelectedFile().getPath());
+                    dos.flush();
+                    dos.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+    }
+
+	private class MidiDumper implements ActionListener {
+
+		private JTextField cacheMidiTextField1;
+		private JTextField cacheMidiTextField2;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			try {
+
+				if (cacheMidiTextField1 == null && cacheMidiTextField2 == null) {
+					chooseCacheMidi();
+				}
+
+				else {
+					checkForInput1(cacheMidiTextField1);
+					checkForInput2(cacheMidiTextField2);
+				}
+
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		private void chooseCacheMidi() {
+
+			cacheFrame = new JFrame("MIDI File Decoding Tool");
+
+			JPanel cachePanel = new JPanel();
+			cachePanel.setVisible(true);
+
+			JLabel cacheMidiLabelField1 = new JLabel("Choose a Music File (or type 'All' to dump them all!) - ");
+			cacheMidiLabelField1.setVisible(true);
+
+			JLabel cacheMidiLabelField2 = new JLabel("Choose a Fanfare File (or type 'All' to dump them all!) - ");
+			cacheMidiLabelField2.setVisible(true);
+
+			cacheMidiTextField1 = new JTextField("Enter ID here (Index 6)... ");
+			cacheMidiTextField1.setVisible(true);
+			cacheMidiTextField1.addActionListener(e -> checkForInput1(this.cacheMidiTextField1));
+
+			cacheMidiTextField2 = new JTextField("Enter ID here (Index 11)... ");
+			cacheMidiTextField2.setVisible(true);
+			cacheMidiTextField2.addActionListener(e -> checkForInput2(this.cacheMidiTextField2));
+
+			cachePanel.add(cacheMidiLabelField1);
+			cachePanel.add(cacheMidiTextField1);
+			cachePanel.add(cacheMidiLabelField2);
+			cachePanel.add(cacheMidiTextField2);
+
+			cacheFrame.setLayout(null);
+			cacheFrame.setResizable(false);
+			cacheFrame.setMaximumSize(new Dimension(50, 400));
+			cacheFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			cacheFrame.setContentPane(cachePanel);
+			cacheFrame.setLocationRelativeTo(null);
+			cacheFrame.setVisible(true);
+			cacheFrame.pack();
+		}
+
+		private void checkForInput1(JTextField textField) {
+
+			String id = textField.getText();
+
+			if (id.equals("all")) {
+				dumpAllMusic();
+			}
+
+			if (id.equals("All")) {
+				dumpAllMusic();
+			}
+
+			else {
+
+				int idInt = Integer.parseInt(id);
+
+				ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(idInt).getFile(0).getData());
+				MidiTrack midiTrack = new MidiTrack(midiBuffer);
+
+				try {
+					File dir = new File("./MIDI/Music/");
+					if (dir.mkdirs()) {
+						System.out.println("Created new directory: /MIDI/Music/");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./MIDI/Music/" + idInt + ".mid")));
+						dos.write(midiTrack.getMidi());
+						System.out.println("Wrote MIDI data to file!");
+					} else {
+						System.out.println("Couldn't create new directory (It might already exist).");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./MIDI/Music/" + idInt + ".mid")));
+						dos.write(midiTrack.getMidi());
+						System.out.println("Wrote MIDI data to file!");
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		private void checkForInput2(JTextField textField) {
+
+			String id = textField.getText();
+
+			if (id.equals("All")) {
+				dumpAllFanfares();
+			}
+
+			if (id.equals("all")) {
+				dumpAllFanfares();
+			} else {
+
+				int idInt = Integer.parseInt(id);
+
+				ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(11).getArchive(idInt).getFile(0).getData());
+				MidiTrack midiTrack = new MidiTrack(midiBuffer);
+
+				try {
+					File dir = new File("./MIDI/Fanfares/");
+					if (dir.mkdirs()) {
+						System.out.println("Created new directory: /MIDI/Fanfares/");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./MIDI/Fanfares/" + idInt + ".mid")));
+						dos.write(midiTrack.getMidi());
+						System.out.println("Wrote MIDI data to file!");
+					} else {
+						System.out.println("Couldn't create new directory (It might already exist).");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./MIDI/Fanfares/" + idInt + ".mid")));
+						dos.write(midiTrack.getMidi());
+						System.out.println("Wrote MIDI data to file!");
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		private void dumpAllMusic() {
+
+			for (int idInt = 0; idInt < cacheLibrary.getIndex(6).getArchives().length; idInt++) {
+				ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(idInt).getFile(0).getData());
+				MidiTrack midiTrack = new MidiTrack(midiBuffer);
+
+				try {
+					File dir = new File("./MIDI/Music/");
+					if (dir.mkdirs()) {
+						System.out.println("Created new directory: /MIDI/Music/");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./MIDI/Music/" + idInt + ".mid")));
+						dos.write(midiTrack.getMidi());
+						System.out.println("Wrote MIDI data to file! - " + idInt);
+					} else {
+						System.out.println("Couldn't create new directory (It might already exist).");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./MIDI/Music/" + idInt + ".mid")));
+						dos.write(midiTrack.getMidi());
+						System.out.println("Wrote MIDI data to file! - " + idInt);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		private void dumpAllFanfares() {
+
+			for (int idInt = 0; idInt < cacheLibrary.getIndex(11).getArchives().length; idInt++) {
+				ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(11).getArchive(idInt).getFile(0).getData());
+				MidiTrack midiTrack = new MidiTrack(midiBuffer);
+
+				try {
+					File dir = new File("./MIDI/Fanfares/");
+					if (dir.mkdirs()) {
+						System.out.println("Created new directory: /MIDI/Fanfares/");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./MIDI/Fanfares/" + idInt + ".mid")));
+						dos.write(midiTrack.getMidi());
+						System.out.println("Wrote MIDI data to file! - " + idInt);
+					} else {
+						System.out.println("Couldn't create new directory (It might already exist).");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./MIDI/Fanfares/" + idInt + ".mid")));
+						dos.write(midiTrack.getMidi());
+						System.out.println("Wrote MIDI data to file! - " + idInt);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	private class MidiEncoder implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			if (midiFile != null) {
+				try {
+					MidiTrack.encode(midiFile);
+					System.out.println("MIDI file successfully encoded and ready to pack!");
+				} catch (InvalidMidiDataException | IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			else {
+				System.out.println("Error: Please load a valid MIDI file!");
+			}
+		}
+	}
 }
