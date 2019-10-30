@@ -374,7 +374,7 @@ public final class ByteBufferUtils {
 
     }
 
-    static int method3642(int var0, int var1) {
+    public static int method3642(int var0, int var1) {
         int var2;
         for(var2 = 1; var1 > 1; var1 >>= 1) {
             if((var1 & 1) != 0) {
@@ -389,5 +389,16 @@ public final class ByteBufferUtils {
         } else {
             return var2;
         }
+    }
+
+    public static int __as_311(ByteBuffer buffer) {
+        byte var1 = buffer.array()[(buffer.position() + 1) - 1];
+
+        int var2;
+        for(var2 = 0; var1 < 0; var1 = buffer.array()[(buffer.position() + 1) - 1]) {
+            var2 = (var2 | var1 & 127) << 7;
+        }
+
+        return var2 | var1;
     }
 }

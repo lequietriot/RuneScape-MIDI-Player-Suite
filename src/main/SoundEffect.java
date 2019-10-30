@@ -1,5 +1,7 @@
 package main;
 
+import org.displee.cache.index.Index;
+
 import java.nio.ByteBuffer;
 
 public class SoundEffect {
@@ -8,6 +10,12 @@ public class SoundEffect {
     
     private static int start;
     private static int end;
+
+    public static SoundEffect readSoundEffect(Index soundEffectIndex, int archiveId, int fileId) {
+        SoundEffect sfx = new SoundEffect();
+        sfx.decode(ByteBuffer.wrap(soundEffectIndex.getArchive(archiveId).getFile(fileId).getData()));
+        return sfx;
+    }
 
     public void decode(ByteBuffer buffer) {
 

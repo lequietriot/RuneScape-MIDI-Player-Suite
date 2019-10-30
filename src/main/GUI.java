@@ -17,6 +17,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 
+import main.tools.MakeSoundFont;
 import org.displee.CacheLibrary;
 
 public class GUI implements ControllerEventListener {
@@ -137,10 +138,12 @@ public class GUI implements ControllerEventListener {
 
 			utilityMenu.add("Dump Data - Music...").addActionListener(new MidiDumper());
 			utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
-            //utilityMenu.add("Dump Data - Sound Bank Samples...").addActionListener(new MusicSampleDumper());
+            utilityMenu.add("Dump Data - Sound Bank Samples...").addActionListener(new MusicSampleDumper());
 
 			utilityMenu.add("Fix MIDI File (OS Version)").addActionListener(new FixButtonListenerOSRS());
 			utilityMenu.add("Fix MIDI File (HD Version)").addActionListener(new FixButtonListenerRSHD());
+
+			utilityMenu.add("Convert Data - Sound Bank to SoundFont").addActionListener(new SoundFontCreator());
 			
 			jMenuBar.add(fileMenu);
 			jMenuBar.add(preferencesMenu);
@@ -2479,7 +2482,13 @@ public class GUI implements ControllerEventListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			chooseCacheSoundEffect();
+			if (cacheSfxTextField == null) {
+				chooseCacheSoundEffect();
+			}
+
+			else {
+				checkForInput(cacheSfxTextField);
+			}
 		}
 
 		private void chooseCacheSoundEffect() {
@@ -2591,6 +2600,151 @@ public class GUI implements ControllerEventListener {
 					e.printStackTrace();
 				}
 			}
+		}
+	}
+
+	private class MusicSampleDumper implements ActionListener {
+
+    	private JTextField musicSampleTextField;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			if (musicSampleTextField == null) {
+				chooseCacheMusicSample();
+			}
+
+			else {
+				checkForInput(musicSampleTextField);
+			}
+		}
+
+		private void chooseCacheMusicSample() {
+
+			cacheFrame = new JFrame("Sound Bank Sample Decoding Tool");
+
+			JPanel cachePanel = new JPanel();
+			cachePanel.setVisible(true);
+
+			JLabel cacheSampleLabelField = new JLabel("Choose a Music Sample (or type 'All' to dump them all!) - ");
+			cacheSampleLabelField.setVisible(true);
+
+			musicSampleTextField = new JTextField("Enter ID here (Index 14)... ");
+			musicSampleTextField.setVisible(true);
+			musicSampleTextField.addActionListener(e -> checkForInput(this.musicSampleTextField));
+
+			cachePanel.add(cacheSampleLabelField);
+			cachePanel.add(musicSampleTextField);
+
+			cacheFrame.setLayout(null);
+			cacheFrame.setResizable(false);
+			cacheFrame.setMaximumSize(new Dimension(50, 400));
+			cacheFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			cacheFrame.setContentPane(cachePanel);
+			cacheFrame.setLocationRelativeTo(null);
+			cacheFrame.setVisible(true);
+			cacheFrame.pack();
+		}
+
+		private void checkForInput(JTextField musicSampleTextField) {
+
+			String id = musicSampleTextField.getText();
+
+			if (id.equals("All")) {
+				dumpAllSamples();
+			}
+
+			if (id.equals("all")) {
+				dumpAllSamples();
+			} else {
+
+				int idInt = Integer.parseInt(id);
+
+				SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+
+				try {
+					File dir = new File("./Sounds/Sound Bank Samples/");
+					if (dir.mkdirs()) {
+						System.out.println("Created new directory: /Sounds/Sound Bank Samples/");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
+						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+						RawSound rawSound = soundBankCache.getMusicSample(idInt, null);
+						AudioInputStream audioInputStream;
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(rawSound.samples), new AudioFormat(rawSound.sampleRate, 8, 1, true, false), rawSound.samples.length);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						dos.write(byteArrayOutputStream.toByteArray());
+						System.out.println("Wrote sound bank sample data to WAVE file!");
+					} else {
+						System.out.println("Couldn't create new directory (It might already exist).");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
+						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+						RawSound rawSound = soundBankCache.getMusicSample(idInt, null);
+						AudioInputStream audioInputStream;
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(rawSound.samples), new AudioFormat(rawSound.sampleRate, 8, 1, true, false), rawSound.samples.length);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						dos.write(byteArrayOutputStream.toByteArray());
+						System.out.println("Wrote sound bank sample data to WAVE file!");
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		private void dumpAllSamples() {
+
+			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+
+			//Starts at ID 1, because ID 0 is typically a corrupted file.
+
+			for (int idInt = 1; idInt < cacheLibrary.getIndex(14).getArchives().length; idInt++) {
+				try {
+					File dir = new File("./Sounds/Sound Bank Samples/");
+					if (dir.mkdirs()) {
+						System.out.println("Created new directory: /Sounds/Sound Bank Samples/");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
+						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+						RawSound rawSound = soundBankCache.getMusicSample(idInt, null);
+						if (rawSound == null) {
+							continue;
+						}
+						AudioInputStream audioInputStream;
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(rawSound.samples), new AudioFormat(rawSound.sampleRate, 8, 1, true, false), rawSound.samples.length);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						dos.write(byteArrayOutputStream.toByteArray());
+						System.out.println("Wrote sound bank sample data to WAVE file!");
+					} else {
+						System.out.println("Couldn't create new directory (It might already exist).");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
+						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+						RawSound rawSound = soundBankCache.getMusicSample(idInt, null);
+						if (rawSound == null) {
+							continue;
+						}
+						AudioInputStream audioInputStream;
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(rawSound.samples), new AudioFormat(rawSound.sampleRate, 8, 1, true, false), rawSound.samples.length);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						dos.write(byteArrayOutputStream.toByteArray());
+						System.out.println("Wrote sound bank sample data to WAVE file!");
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	private class SoundFontCreator implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+			byte[] patch = cacheLibrary.getIndex(15).getArchive(0).getFile(0).getData();
+			MusicPatch musicPatch = new MusicPatch(patch);
+			musicPatch.isPatchLoaded(soundBankCache, null, null);
+			MakeSoundFont makeSoundFont = new MakeSoundFont();
+			makeSoundFont.createSoundFont(soundBankCache.getMusicSample(1, null).samples);
 		}
 	}
 }
