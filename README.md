@@ -1,4 +1,4 @@
-# OSRS-MIDI-Player
+# RuneScape MIDI Player
 With this tool, choose any MIDI file and hear it in any of the Old RuneScape Soundfonts. (Higher quality audio than in-game!)
 
 Setup instructions:
@@ -7,7 +7,16 @@ Setup instructions:
 
 Since you set the preference for your soundfont, it should remember what you wanted when you re-open the application!
 
+# Credits/Thanks
+
+- Rodolfo (https://github.com/lequietriot): creation of the MIDI Player.
+- Displee (https://github.com/Displee): for the amazing cache library!
+- Vincent (from Rune-Server): for figuring out the MIDI Encoder.
+- The RuneScape Team: for being an inspiration in making this happen.
+
 # Features
+- Can dump any MIDI from the RuneScape cache if loaded from the File tab.
+- Can also encode any custom MIDI into a file using the RuneScape format.
 - Loop Mode button to easily loop your songs. If the MIDI has metadata messages named "loopStart" & "loopEnd", it will loop from those positions.
 - The program now supports pausing, and stopping instead of just playing. 
 - Rendering a MIDI file to Waveform Audio was carried on from the previous versions into this new revamp.
@@ -20,8 +29,7 @@ Since you set the preference for your soundfont, it should remember what you wan
 - This program supports fixing and resaving RuneScape HD MIDI files, handling and converting custom instruments to basic ones. The notes are corrected to the normal sound, and all tracks are labelled according to instrument used.
 
 # To do list (Ideas)
-- Add the MIDI dumper
-- Possibly include sound tools
+- Sound tools (Sound Effects, Sound Bank...)
 - Automatic soundfont creating from cache
-- MIDI Encoding/Packing to cache
+- Packing encoded MIDI to cache instead of new file
 - Custom MIDI Playlists
