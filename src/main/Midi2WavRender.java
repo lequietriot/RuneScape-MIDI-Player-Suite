@@ -1,4 +1,4 @@
-package application.utils;
+package main;
 
 /*
  * Copyright (c) 2007 by Karl Helgason

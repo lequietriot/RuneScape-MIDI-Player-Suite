@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package application.utils;
+package main.utils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -282,7 +282,7 @@ public final class ByteBufferUtils {
         buffer.put((byte) (val & 0x7F));
     }
 
-    static void putVarIntDos(DataOutputStream dos, int value) throws IOException {
+    public static void putVarIntDos(DataOutputStream dos, int value) throws IOException {
         if ((value & ~0x7f) != 0) {
             if ((value & ~0x3fff) != 0) {
                 if ((~0x1fffff & value) != 0) {

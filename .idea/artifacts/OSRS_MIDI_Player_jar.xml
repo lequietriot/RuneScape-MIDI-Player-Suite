@@ -2,7 +2,11 @@
   <artifact type="jar" name="OSRS-MIDI-Player:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/OSRS_MIDI_Player_jar</output-path>
     <root id="archive" name="OSRS-MIDI-Player.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
+      </element>
       <element id="module-output" name="OSRS-MIDI-Player" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libs/Displee-RS-Cache-Library.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

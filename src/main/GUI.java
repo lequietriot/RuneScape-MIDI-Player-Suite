@@ -1,4 +1,4 @@
-package application;
+package main;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -11,12 +11,12 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import javax.sound.midi.*;
+import javax.sound.sampled.*;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 
-import application.utils.*;
 import org.displee.CacheLibrary;
 
 public class GUI implements ControllerEventListener {
@@ -136,7 +136,7 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.add("Encode Data - Music...").addActionListener(new MidiEncoder());
 
 			utilityMenu.add("Dump Data - Music...").addActionListener(new MidiDumper());
-			//utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
+			utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
             //utilityMenu.add("Dump Data - Sound Bank Samples...").addActionListener(new MusicSampleDumper());
 
 			utilityMenu.add("Fix MIDI File (OS Version)").addActionListener(new FixButtonListenerOSRS());
@@ -2469,6 +2469,127 @@ public class GUI implements ControllerEventListener {
 
 			else {
 				System.out.println("Error: Please load a valid MIDI file!");
+			}
+		}
+	}
+
+	private class SfxDumper implements ActionListener {
+
+		private JTextField cacheSfxTextField;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			chooseCacheSoundEffect();
+		}
+
+		private void chooseCacheSoundEffect() {
+
+			cacheFrame = new JFrame("Sound Effect Decoding Tool");
+
+			JPanel cachePanel = new JPanel();
+			cachePanel.setVisible(true);
+
+			JLabel cacheSfxLabelField = new JLabel("Choose a Sound Effect (or type 'All' to dump them all!) - ");
+			cacheSfxLabelField.setVisible(true);
+
+			cacheSfxTextField = new JTextField("Enter ID here (Index 4)... ");
+			cacheSfxTextField.setVisible(true);
+			cacheSfxTextField.addActionListener(e -> checkForInput(this.cacheSfxTextField));
+
+			cachePanel.add(cacheSfxLabelField);
+			cachePanel.add(cacheSfxTextField);
+
+			cacheFrame.setLayout(null);
+			cacheFrame.setResizable(false);
+			cacheFrame.setMaximumSize(new Dimension(50, 400));
+			cacheFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			cacheFrame.setContentPane(cachePanel);
+			cacheFrame.setLocationRelativeTo(null);
+			cacheFrame.setVisible(true);
+			cacheFrame.pack();
+		}
+
+		private void checkForInput(JTextField cacheSfxTextField) {
+
+			String id = cacheSfxTextField.getText();
+
+			if (id.equals("All")) {
+				dumpAllSfx();
+			}
+
+			if (id.equals("all")) {
+				dumpAllSfx();
+			} else {
+
+				int idInt = Integer.parseInt(id);
+
+				ByteBuffer sfxBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(4).getArchive(idInt).getFile(0).getData());
+				SoundEffect soundEffect = new SoundEffect();
+				soundEffect.decode(sfxBuffer);
+
+				try {
+					File dir = new File("./Sounds/Sound Effects/");
+					if (dir.mkdirs()) {
+						System.out.println("Created new directory: /Sounds/Sound Effects/");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
+						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+						RawSound rawSound = SoundEffect.toRawSound();
+						AudioInputStream audioInputStream;
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(rawSound.samples), new AudioFormat(22050, 8, 1, true, false), rawSound.samples.length);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						dos.write(byteArrayOutputStream.toByteArray());
+						System.out.println("Wrote sound effect data to WAVE file!");
+					} else {
+						System.out.println("Couldn't create new directory (It might already exist).");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
+						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+						RawSound rawSound = SoundEffect.toRawSound();
+						AudioInputStream audioInputStream;
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(rawSound.samples), new AudioFormat(22050, 8, 1, true, false), rawSound.samples.length);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						dos.write(byteArrayOutputStream.toByteArray());
+						System.out.println("Wrote sound effect data to WAVE file!");
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		private void dumpAllSfx() {
+
+			for (int idInt = 0; idInt < cacheLibrary.getIndex(4).getArchives().length; idInt++) {
+
+				ByteBuffer sfxBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(4).getArchive(idInt).getFile(0).getData());
+				SoundEffect soundEffect = new SoundEffect();
+				soundEffect.decode(sfxBuffer);
+
+				try {
+					File dir = new File("./Sounds/Sound Effects/");
+					if (dir.mkdirs()) {
+						System.out.println("Created new directory: /Sounds/Sound Effects/");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
+						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+						RawSound rawSound = SoundEffect.toRawSound();
+						AudioInputStream audioInputStream;
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(rawSound.samples), new AudioFormat(22050, 8, 1, true, false), rawSound.samples.length);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						dos.write(byteArrayOutputStream.toByteArray());
+						System.out.println("Wrote sound effect data to WAVE file!");
+					} else {
+						System.out.println("Couldn't create new directory (It might already exist).");
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
+						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+						RawSound rawSound = SoundEffect.toRawSound();
+						AudioInputStream audioInputStream;
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(rawSound.samples), new AudioFormat(22050, 8, 1, true, false), rawSound.samples.length);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						dos.write(byteArrayOutputStream.toByteArray());
+						System.out.println("Wrote sound effect data to WAVE file!");
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

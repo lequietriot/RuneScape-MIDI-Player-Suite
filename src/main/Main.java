@@ -1,4 +1,4 @@
-package application;
+package main;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiUnavailableException;

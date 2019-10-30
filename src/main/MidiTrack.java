@@ -1,4 +1,6 @@
-package application.utils;
+package main;
+
+import main.utils.ByteBufferUtils;
 
 import javax.sound.midi.*;
 import java.io.DataOutputStream;
