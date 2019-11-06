@@ -401,4 +401,26 @@ public final class ByteBufferUtils {
 
         return var2 | var1;
     }
+
+    public static int __ag_302(ByteBuffer buffer) {
+        buffer.position(buffer.position() + 2);
+        return (buffer.array()[buffer.position() - 1] & 255) + ((buffer.array()[buffer.position() - 2] & 255) << 8);
+    }
+
+    public static void clearIntArray(int[] var0, int var1, int var2) {
+        for(var2 = var2 + var1 - 7; var1 < var2; var0[var1++] = 0) {
+            var0[var1++] = 0;
+            var0[var1++] = 0;
+            var0[var1++] = 0;
+            var0[var1++] = 0;
+            var0[var1++] = 0;
+            var0[var1++] = 0;
+            var0[var1++] = 0;
+        }
+
+        for(var2 += 7; var1 < var2; var0[var1++] = 0) {
+            ;
+        }
+
+    }
 }

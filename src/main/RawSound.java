@@ -1,11 +1,12 @@
 package main;
 
-public class RawSound {
+public class RawSound extends AbstractSound {
 
-    int sampleRate;
-    byte[] samples;
-    int start;
-    int end;
+    public int sampleRate;
+    public byte[] samples;
+    public int start;
+    public int end;
+
     boolean effectsEnabled;
 
     RawSound(int sRate, byte[] data, int loopStart, int loopEnd) {

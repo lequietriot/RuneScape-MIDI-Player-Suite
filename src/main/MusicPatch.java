@@ -1,40 +1,49 @@
 package main;
 
 import main.utils.ByteBufferUtils;
+import main.utils.Node;
+import org.displee.cache.index.Index;
 
 import java.nio.ByteBuffer;
 
-public class MusicPatch {
+public class MusicPatch extends Node {
 
     int __m;
     RawSound[] rawSounds;
-    short[] loopMode;
+    short[] l;
     byte[] __w;
     byte[] __o;
-    MusicPatchNode[] __u;
+    MusicPatchNode2[] __u;
     byte[] __g;
     int[] containerIDs;
 
-    MusicPatch(byte[] var1) {
+    int[] notePitches;
+
+    static MusicPatch getMusicPatch(Index patchIndex, int archiveID, int fileID) {
+        byte[] patchData = patchIndex.getArchive(archiveID).getFile(fileID).getData();
+        return new MusicPatch(ByteBuffer.wrap(patchData));
+    }
+
+    MusicPatch(ByteBuffer buffer) {
         this.rawSounds = new RawSound[128];
-        this.loopMode = new short[128];
+        this.l = new short[128];
         this.__w = new byte[128];
         this.__o = new byte[128];
-        this.__u = new MusicPatchNode[128];
+        this.__u = new MusicPatchNode2[128];
         this.__g = new byte[128];
         this.containerIDs = new int[128];
-        ByteBuffer buffer = ByteBuffer.wrap(var1);
+        this.notePitches = new int[128];
 
         int var3;
         for(var3 = 0; buffer.array()[var3 + buffer.position()] != 0; ++var3) {
-
+            ;
         }
 
         byte[] var4 = new byte[var3];
 
         int var5;
         for(var5 = 0; var5 < var3; ++var5) {
-            var4[var5] = buffer.get();
+            var4[var5] = (byte) (buffer.get() & 0xFF);
         }
 
         buffer.position(buffer.position() + 1);
@@ -44,14 +53,14 @@ public class MusicPatch {
 
         int var6;
         for(var6 = 0; buffer.array()[var6 + buffer.position()] != 0; ++var6) {
-
+            ;
         }
 
         byte[] var7 = new byte[var6];
 
         int var8;
         for(var8 = 0; var8 < var6; ++var8) {
-            var7[var8] = buffer.get();
+            var7[var8] = (byte) (buffer.get() & 0xFF);
         }
 
         buffer.position(buffer.position() + 1);
@@ -61,13 +70,13 @@ public class MusicPatch {
 
         int var9;
         for(var9 = 0; buffer.array()[var9 + buffer.position()] != 0; ++var9) {
-
+            ;
         }
 
         byte[] var10 = new byte[var9];
 
         for(int var11 = 0; var11 < var9; ++var11) {
-            var10[var11] = buffer.get();
+            var10[var11] = (byte) (buffer.get() & 0xFF);
         }
 
         buffer.position(buffer.position() + 1);
@@ -98,11 +107,11 @@ public class MusicPatch {
             var12 = var9;
         }
 
-        MusicPatchNode[] var43 = new MusicPatchNode[var12];
+        MusicPatchNode2[] var43 = new MusicPatchNode2[var12];
 
-        MusicPatchNode var44;
+        MusicPatchNode2 var44;
         for(var13 = 0; var13 < var43.length; ++var13) {
-            var44 = var43[var13] = new MusicPatchNode();
+            var44 = var43[var13] = new MusicPatchNode2();
             int var16 = buffer.get() & 0xFF;
             if(var16 > 0) {
                 var44.__m = new byte[var16 * 2];
@@ -122,14 +131,14 @@ public class MusicPatch {
 
         int var18;
         for(var18 = 0; buffer.array()[var18 + buffer.position()] != 0; ++var18) {
-
+            ;
         }
 
         byte[] var19 = new byte[var18];
 
         int notePitch;
         for(notePitch = 0; notePitch < var18; ++notePitch) {
-            var19[notePitch] = buffer.get();
+            var19[notePitch] = (byte) (buffer.get() & 0xFF);
         }
 
         buffer.position(buffer.position() + 1);
@@ -139,14 +148,16 @@ public class MusicPatch {
         int noteRangeCount;
         for(noteRangeCount = 0; noteRangeCount < 128; ++noteRangeCount) {
             notePitch += buffer.get() & 0xFF;
-            this.loopMode[noteRangeCount] = (short) notePitch;
+            this.l[noteRangeCount] = (short) notePitch;
         }
 
         notePitch = 0;
 
         for(noteRangeCount = 0; noteRangeCount < 128; ++noteRangeCount) {
             notePitch += buffer.get() & 0xFF;
-            this.loopMode[noteRangeCount] = (short)(this.loopMode[noteRangeCount] + (notePitch << 8));
+            this.l[noteRangeCount] = (short)(this.l[noteRangeCount] + (notePitch << 8));
+
+            notePitches[noteRangeCount] = notePitch;
         }
 
         noteRangeCount = 0;
@@ -165,7 +176,7 @@ public class MusicPatch {
                 containerID = ByteBufferUtils.__as_311(buffer);
             }
 
-            this.loopMode[containerNoteRanges] = (short)(this.loopMode[containerNoteRanges] + ((containerID - 1 & 2) << 14));
+            this.l[containerNoteRanges] = (short)(this.l[containerNoteRanges] + ((containerID - 1 & 2) << 14));
             this.containerIDs[containerNoteRanges] = containerID;
             --noteRangeCount;
         }
@@ -216,7 +227,7 @@ public class MusicPatch {
 
         noteRangeCount = 0;
         var22 = 0;
-        MusicPatchNode var46 = null;
+        MusicPatchNode2 var46 = null;
 
         int var27;
         for(var27 = 0; var27 < 128; ++var27) {
@@ -259,32 +270,32 @@ public class MusicPatch {
 
         this.__m = buffer.get() & 0xFF + 1;
 
-        MusicPatchNode var29;
+        MusicPatchNode2 var29;
         int var30;
         for(var28 = 0; var28 < var12; ++var28) {
             var29 = var43[var28];
             if(var29.__m != null) {
                 for(var30 = 1; var30 < var29.__m.length; var30 += 2) {
-                    var29.__m[var30] = buffer.get();
+                    var29.__m[var30] = (byte) (buffer.get() & 0xFF);
                 }
             }
 
             if(var29.__f != null) {
                 for(var30 = 3; var30 < var29.__f.length - 2; var30 += 2) {
-                    var29.__f[var30] = buffer.get();
+                    var29.__f[var30] = (byte) (buffer.get() & 0xFF);
                 }
             }
         }
 
         if(var45 != null) {
             for(var28 = 1; var28 < var45.length; var28 += 2) {
-                var45[var28] = buffer.get();
+                var45[var28] = (byte) (buffer.get() & 0xFF);
             }
         }
 
         if(var17 != null) {
             for(var28 = 1; var28 < var17.length; var28 += 2) {
-                var17[var28] = buffer.get();
+                var17[var28] = (byte) (buffer.get() & 0xFF);
             }
         }
 
@@ -356,6 +367,8 @@ public class MusicPatch {
             for(var37 = var38; var37 < 128; ++var37) {
                 this.__w[var37] = (byte)(var39 * this.__w[var37] + 32 >> 6);
             }
+
+            var44 = null;
         }
 
         if(var17 != null) {
@@ -464,7 +477,8 @@ public class MusicPatch {
         }
     }
 
-    boolean isPatchLoaded(SoundBankCache var1, byte[] var2, int[] var3) {
+    boolean loadPatchSamples(SoundBankCache var1, byte[] var2, int[] var3) {
+
         boolean var4 = true;
         int var5 = 0;
         RawSound var6 = null;
@@ -500,4 +514,3 @@ public class MusicPatch {
         this.containerIDs = null;
     }
 }
-

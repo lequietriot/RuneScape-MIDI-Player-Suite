@@ -17,15 +17,15 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 
-import main.tools.MakeSoundFont;
 import org.displee.CacheLibrary;
+import org.displee.cache.index.Index;
 
 public class GUI implements ControllerEventListener {
 	
 	private File midiFile;
 	private File soundsetFile;
 
-    private CacheLibrary cacheLibrary;
+    private static CacheLibrary cacheLibrary;
 
 	private String defaultSoundfontPath;
 
@@ -56,6 +56,7 @@ public class GUI implements ControllerEventListener {
 
 	private JFrame frame;
 	private JFrame cacheFrame;
+	private static JFrame noteGeneratorFrame;
 
 	private JPanel panel;
 	private JPanel songPanel;
@@ -135,6 +136,7 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.setVisible(true);
 
 			utilityMenu.add("Encode Data - Music...").addActionListener(new MidiEncoder());
+			utilityMenu.add("Generate Sound - Music...").addActionListener(new MidiNoteGenerator());
 
 			utilityMenu.add("Dump Data - Music...").addActionListener(new MidiDumper());
 			utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
@@ -2286,8 +2288,14 @@ public class GUI implements ControllerEventListener {
 				}
 
 				else {
-					checkForInput1(cacheMidiTextField1);
-					checkForInput2(cacheMidiTextField2);
+
+					if (cacheMidiTextField1 != null) {
+						checkForInput1(cacheMidiTextField1);
+					}
+
+					if (cacheMidiTextField2 != null) {
+						checkForInput2(cacheMidiTextField2);
+					}
 				}
 
 			} catch (Exception ex) {
@@ -2695,7 +2703,7 @@ public class GUI implements ControllerEventListener {
 
 			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
 
-			//Starts at ID 1, because ID 0 is typically a corrupted file.
+			//Starts at ID 1, because ID 0 is typically an incorrect or corrupted file.
 
 			for (int idInt = 1; idInt < cacheLibrary.getIndex(14).getArchives().length; idInt++) {
 				try {
@@ -2734,17 +2742,185 @@ public class GUI implements ControllerEventListener {
 		}
 	}
 
+	private static class MidiNoteGenerator implements ActionListener {
+
+    	private JTextField programInput;
+		private JTextField noteInput;
+
+		private static Sequence sequence;
+		private Index index15;
+		private SoundBankCache soundBankCache;
+		private static int bankLSBValue;
+		private static int programValue;
+		private static int noteValue;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			index15 = cacheLibrary.getIndex(15);
+			soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+
+			if (programInput == null && noteInput == null) {
+
+				try {
+
+					sequence = new Sequence(Sequence.PPQ, 1);
+
+					generateMidi();
+
+				} catch (InvalidMidiDataException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			else {
+
+				if (programInput != null && noteInput != null) {
+					checkForInput(programInput, noteInput);
+				}
+			}
+		}
+
+		private void generateSound() {
+
+			try {
+
+				File filePath = new File("./seq.mid/");
+				DataOutputStream dos = new DataOutputStream(new FileOutputStream(filePath));
+				MidiSystem.write(sequence, 1, dos);
+
+				File encodedMidi = MidiTrack.encode(MidiSystem.getSequence(filePath));
+				Path path = Paths.get(encodedMidi.getPath());
+				MidiTrack midiTrack = new MidiTrack(ByteBuffer.wrap(Files.readAllBytes(path)));
+
+				MidiPcmStream midiPcmStream = new MidiPcmStream();
+				midiPcmStream.setMusicTrack(midiTrack, midiPcmStream.loadMusicTrack(midiTrack, index15, soundBankCache, 0));
+				midiPcmStream.setMidiStreamVolume(256);
+				midiPcmStream.__ai_367();
+
+				SoundPlayer soundPlayer = new SoundPlayer();
+
+				for (int i = 0; i < 1000; i++) {
+					soundPlayer.setStream(midiPcmStream);
+
+					soundPlayer.frequency = AudioConstants.systemSampleRate;
+					soundPlayer.samples = new int[1024];
+					soundPlayer.timeMs = 999999999;
+					soundPlayer.retryTimeMs = 0;
+					soundPlayer.capacity = 0;
+
+					soundPlayer.init();
+					soundPlayer.open(soundPlayer.capacity);
+					soundPlayer.run();
+				}
+			} catch (IOException | InvalidMidiDataException e) {
+				e.printStackTrace();
+			}
+		}
+
+		private void generateMidi() {
+
+			noteGeneratorFrame = new JFrame("MIDI Note Generation Tool");
+
+			JPanel cachePanel = new JPanel();
+			cachePanel.setVisible(true);
+
+			JLabel programLabelField = new JLabel("Type in a valid program change number - ");
+			programLabelField.setVisible(true);
+
+			JLabel noteLabelField = new JLabel("Type in a valid note value (0-127) - ");
+			noteLabelField.setVisible(true);
+
+			programInput = new JTextField("Enter a program change... ");
+			programInput.setVisible(true);
+			programInput.addActionListener(e -> checkForInput(this.programInput, this.noteInput));
+
+			noteInput = new JTextField("Enter a note value... ");
+			noteInput.setVisible(true);
+			noteInput.addActionListener(e -> checkForInput(this.programInput, this.noteInput));
+
+			cachePanel.add(programLabelField);
+			cachePanel.add(programInput);
+			cachePanel.add(noteLabelField);
+			cachePanel.add(noteInput);
+
+			noteGeneratorFrame.setLayout(null);
+			noteGeneratorFrame.setResizable(false);
+			noteGeneratorFrame.setMaximumSize(new Dimension(50, 400));
+			noteGeneratorFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			noteGeneratorFrame.setContentPane(cachePanel);
+			noteGeneratorFrame.setLocationRelativeTo(null);
+			noteGeneratorFrame.setVisible(true);
+			noteGeneratorFrame.pack();
+		}
+
+		private void checkForInput(JTextField programInput, JTextField noteInput) {
+
+			String programText = programInput.getText();
+			String noteText = noteInput.getText();
+
+			if (programText != null && noteText != null) {
+
+				programValue = Integer.parseInt(programText);
+				noteValue = Integer.parseInt(noteText);
+
+				ShortMessage bankSelectMSB = new ShortMessage();
+				ShortMessage bankSelectLSB = new ShortMessage();
+				ShortMessage programChange = new ShortMessage();
+				ShortMessage volumeValue = new ShortMessage();
+				ShortMessage noteOnValue = new ShortMessage();
+				ShortMessage noteOffValue = new ShortMessage();
+
+				bankLSBValue = (int) Math.floor(programValue >> 7);
+				System.out.println("Bank LSB - " + bankLSBValue);
+
+				while (programValue >= 128) {
+					programValue = programValue - 128;
+				}
+
+				System.out.println("Program Change - " + programValue);
+
+				try {
+
+					Track track = sequence.createTrack();
+
+					bankSelectMSB.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 0);
+					bankSelectLSB.setMessage(ShortMessage.CONTROL_CHANGE, 0, 32, bankLSBValue);
+					programChange.setMessage(ShortMessage.PROGRAM_CHANGE, 0, programValue, 0);
+					volumeValue.setMessage(ShortMessage.CONTROL_CHANGE, 0, 7, 127);
+					noteOnValue.setMessage(ShortMessage.NOTE_ON, 0, noteValue, 127);
+					noteOffValue.setMessage(ShortMessage.NOTE_OFF, 0, noteValue, 127);
+
+					track.add(new MidiEvent(volumeValue, 0));
+					track.add(new MidiEvent(noteOnValue, 3));
+					track.add(new MidiEvent(noteOffValue, 303));
+					track.add(new MidiEvent(programChange, 2));
+					track.add(new MidiEvent(bankSelectMSB, 0));
+					track.add(new MidiEvent(bankSelectLSB, 1));
+
+					generateSound();
+
+				} catch (InvalidMidiDataException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	private class SoundFontCreator implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
 			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
-			byte[] patch = cacheLibrary.getIndex(15).getArchive(0).getFile(0).getData();
-			MusicPatch musicPatch = new MusicPatch(patch);
-			musicPatch.isPatchLoaded(soundBankCache, null, null);
-			MakeSoundFont makeSoundFont = new MakeSoundFont();
-			makeSoundFont.createSoundFont(soundBankCache.getMusicSample(1, null).samples);
+
+			MusicPatch musicPatch = MusicPatch.getMusicPatch(cacheLibrary.getIndex(15), 0, 0);
+			musicPatch.loadPatchSamples(soundBankCache, null, null);
+
+			if (musicPatch.rawSounds[127] != null) {
+				MakeSoundFont makeSoundFont = new MakeSoundFont();
+				makeSoundFont.createSoundFont(musicPatch);
+			}
 		}
 	}
 }
