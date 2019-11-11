@@ -1,11 +1,15 @@
 package main;
 
+import main.utils.ByteArrayNode;
 import main.utils.ByteBufferUtils;
+import main.utils.NodeHashTable;
 
 import javax.sound.midi.*;
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Hashtable;
 
 class MidiTrack {
 
@@ -20,9 +24,9 @@ class MidiTrack {
     private static final int END_OF_TRACK = 0x2F;
     private static final int SET_TEMPO = 0x51;
 
-    byte[] midi;
+    static byte[] midi;
 
-    Hashtable table;
+    NodeHashTable table;
 
     /**
      * The class to decode RuneScape's custom encoded MIDI data.
@@ -32,11 +36,17 @@ class MidiTrack {
         decode(buffer);
     }
 
+    static MidiTrack getTrack(ByteBuffer data) {
+        decode(data);
+
+        return new MidiTrack(data);
+    }
+
     /**
      * The method to decode RuneScape's custom encoded MIDI data.
      * @param buf The buffer storing encoded MIDI data
      */
-    private void decode(ByteBuffer buf) {
+    private static void decode(ByteBuffer buf) {
 
         buf.position(buf.limit() - 3);
         int tracks = buf.get() & 0xFF;
@@ -1249,14 +1259,15 @@ class MidiTrack {
         return midi;
     }
 
+
     void loadMidiTrackInfo() {
         if(this.table == null) {
-            this.table = new Hashtable(16);
+            this.table = new NodeHashTable(16);
             int[] var1 = new int[16];
             int[] var2 = new int[16];
             var2[9] = 128;
             var1[9] = 128;
-            MidiFileReader var3 = new MidiFileReader(this.midi);
+            MidiFileReader var3 = new MidiFileReader(midi);
             int var4 = var3.trackCount();
 
             int var5;
@@ -1310,13 +1321,13 @@ class MidiTrack {
                             var11 = var7 >> 16 & 127;
                             if(var11 > 0) {
                                 int var12 = var2[var9];
-                                byte[] var13 = (byte[]) this.table.get((long)var12);
+                                ByteArrayNode var13 = (ByteArrayNode)this.table.get(var12);
                                 if(var13 == null) {
-                                    var13 = new byte[128];
-                                    this.table.put(var13, (long) var12);
+                                    var13 = new ByteArrayNode(new byte[128]);
+                                    this.table.put(var13, var12);
                                 }
 
-                                var13[var10] = 1;
+                                var13.byteArray[var10] = 1;
                             }
                         }
 

@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.sound.midi.*;
@@ -135,12 +136,14 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.setSize(100, 20);
 			utilityMenu.setVisible(true);
 
-			utilityMenu.add("Encode Data - Music...").addActionListener(new MidiEncoder());
-			utilityMenu.add("Generate Sound - Music...").addActionListener(new MidiNoteGenerator());
+			utilityMenu.add("Encode Data - MIDI Music...").addActionListener(new MidiEncoder());
+			utilityMenu.add("Generate Sound - MIDI Music...").addActionListener(new MidiNoteGenerator());
 
-			utilityMenu.add("Dump Data - Music...").addActionListener(new MidiDumper());
+			utilityMenu.add("Dump Data - MIDI Music...").addActionListener(new MidiDumper());
 			utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
             utilityMenu.add("Dump Data - Sound Bank Samples...").addActionListener(new MusicSampleDumper());
+
+			utilityMenu.add("Dump Data - RS3 Sound Effects...").addActionListener(new StreamSoundEffectDumper());
 
 			utilityMenu.add("Fix MIDI File (OS Version)").addActionListener(new FixButtonListenerOSRS());
 			utilityMenu.add("Fix MIDI File (HD Version)").addActionListener(new FixButtonListenerRSHD());
@@ -2255,7 +2258,7 @@ public class GUI implements ControllerEventListener {
             frame.add(chooseCache);
             int returnValue = chooseCache.showOpenDialog(null);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
-                cacheLibrary = new CacheLibrary(chooseCache.getSelectedFile().getPath());
+                cacheLibrary = new CacheLibrary(chooseCache.getSelectedFile().getPath() + "/");
 
                 File preferences = new File("./DefaultCachePath.txt/");
                 FileOutputStream fos;
@@ -2263,7 +2266,7 @@ public class GUI implements ControllerEventListener {
                 try {
                     fos = new FileOutputStream(preferences);
                     DataOutputStream dos = new DataOutputStream(fos);
-                    dos.writeBytes(chooseCache.getSelectedFile().getPath());
+                    dos.writeBytes(chooseCache.getSelectedFile().getPath() + "/");
                     dos.flush();
                     dos.close();
                 } catch (IOException e1) {
@@ -2752,19 +2755,17 @@ public class GUI implements ControllerEventListener {
 		private SoundBankCache soundBankCache;
 		private static int bankLSBValue;
 		private static int programValue;
+		private static int patchValue;
 		private static int noteValue;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			index15 = cacheLibrary.getIndex(15);
-			soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
-
 			if (programInput == null && noteInput == null) {
 
 				try {
 
-					sequence = new Sequence(Sequence.PPQ, 1);
+					sequence = new Sequence(Sequence.PPQ, 480);
 
 					generateMidi();
 
@@ -2783,38 +2784,64 @@ public class GUI implements ControllerEventListener {
 
 		private void generateSound() {
 
-			try {
+			index15 = cacheLibrary.getIndex(15);
+			soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
 
-				File filePath = new File("./seq.mid/");
-				DataOutputStream dos = new DataOutputStream(new FileOutputStream(filePath));
-				MidiSystem.write(sequence, 1, dos);
+			File filePath = new File("./Generated Midi/");
+			File generatedMidi = new File("./Generated Midi/" + patchValue + "_" + noteValue + ".mid/");
 
-				File encodedMidi = MidiTrack.encode(MidiSystem.getSequence(filePath));
-				Path path = Paths.get(encodedMidi.getPath());
-				MidiTrack midiTrack = new MidiTrack(ByteBuffer.wrap(Files.readAllBytes(path)));
+			if (filePath.mkdir()) {
+				try {
+					DataOutputStream dos = new DataOutputStream(new FileOutputStream(generatedMidi));
+					MidiSystem.write(sequence, 1, dos);
 
-				MidiPcmStream midiPcmStream = new MidiPcmStream();
-				midiPcmStream.setMusicTrack(midiTrack, midiPcmStream.loadMusicTrack(midiTrack, index15, soundBankCache, 0));
-				midiPcmStream.setMidiStreamVolume(256);
-				midiPcmStream.__ai_367();
-
-				SoundPlayer soundPlayer = new SoundPlayer();
-
-				for (int i = 0; i < 1000; i++) {
-					soundPlayer.setStream(midiPcmStream);
-
-					soundPlayer.frequency = AudioConstants.systemSampleRate;
-					soundPlayer.samples = new int[1024];
-					soundPlayer.timeMs = 999999999;
-					soundPlayer.retryTimeMs = 0;
-					soundPlayer.capacity = 0;
-
-					soundPlayer.init();
-					soundPlayer.open(soundPlayer.capacity);
-					soundPlayer.run();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-			} catch (IOException | InvalidMidiDataException e) {
-				e.printStackTrace();
+			}
+
+			else {
+				try {
+					DataOutputStream dos = new DataOutputStream(new FileOutputStream(generatedMidi));
+					MidiSystem.write(sequence, 1, dos);
+
+					File encodedMidi = MidiTrack.encode(sequence);
+					byte[] encodedData = Files.readAllBytes(Paths.get(encodedMidi.getPath()));
+
+					cacheLibrary.getIndex(6).getArchive(0).removeFile(0);
+					cacheLibrary.getIndex(6).addArchive(0).addFile(encodedData);
+					cacheLibrary.getIndex(6).update();
+					System.out.println(Arrays.toString(encodedData));
+
+					MidiTrack midiTrack = MidiTrack.getTrack(ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(0).getFile(0).getData()));
+					MidiPcmStream midiPcmStream = new MidiPcmStream();
+					midiPcmStream.setMusicTrack(midiTrack, false);
+					System.out.println("Music Track set");
+					midiPcmStream.setMidiStreamVolume(128);
+					System.out.println("Volume set");
+					midiPcmStream.loadMusicTrack(midiTrack, index15, soundBankCache, 0);
+
+					SoundPlayer soundPlayer = new SoundPlayer();
+
+					for (int i = 0; i < 1000; i++) {
+
+						soundPlayer.setStream(midiPcmStream);
+
+						soundPlayer.frequency = AudioConstants.systemSampleRate;
+						soundPlayer.samples = new int[1024];
+						soundPlayer.timeMs = 1;
+						soundPlayer.retryTimeMs = 1;
+						soundPlayer.capacity = 16384;
+
+						soundPlayer.init();
+						soundPlayer.open(soundPlayer.capacity);
+						soundPlayer.run();
+
+						System.out.println(i);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -2861,6 +2888,7 @@ public class GUI implements ControllerEventListener {
 
 			if (programText != null && noteText != null) {
 
+				patchValue = Integer.parseInt(programText);
 				programValue = Integer.parseInt(programText);
 				noteValue = Integer.parseInt(noteText);
 
@@ -2868,38 +2896,52 @@ public class GUI implements ControllerEventListener {
 				ShortMessage bankSelectLSB = new ShortMessage();
 				ShortMessage programChange = new ShortMessage();
 				ShortMessage volumeValue = new ShortMessage();
+				ShortMessage volumeValueLSB = new ShortMessage();
+				ShortMessage expression = new ShortMessage();
 				ShortMessage noteOnValue = new ShortMessage();
 				ShortMessage noteOffValue = new ShortMessage();
+
+				MetaMessage tempoValue = new MetaMessage();
+				MetaMessage endOfTrack = new MetaMessage();
 
 				bankLSBValue = (int) Math.floor(programValue >> 7);
 				System.out.println("Bank LSB - " + bankLSBValue);
 
+				System.out.println("Selected Patch - " + programValue);
 				while (programValue >= 128) {
 					programValue = programValue - 128;
 				}
-
-				System.out.println("Program Change - " + programValue);
 
 				try {
 
 					Track track = sequence.createTrack();
 
+					tempoValue.setMessage(0x51, new byte[]{5, 0, 0}, 3);
+					endOfTrack.setMessage(0x2F, new byte[3], 3);
 					bankSelectMSB.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 0);
 					bankSelectLSB.setMessage(ShortMessage.CONTROL_CHANGE, 0, 32, bankLSBValue);
 					programChange.setMessage(ShortMessage.PROGRAM_CHANGE, 0, programValue, 0);
 					volumeValue.setMessage(ShortMessage.CONTROL_CHANGE, 0, 7, 127);
+					volumeValueLSB.setMessage(ShortMessage.CONTROL_CHANGE, 0, 39, 127);
+					expression.setMessage(ShortMessage.CONTROL_CHANGE, 0, 11, 127);
 					noteOnValue.setMessage(ShortMessage.NOTE_ON, 0, noteValue, 127);
 					noteOffValue.setMessage(ShortMessage.NOTE_OFF, 0, noteValue, 127);
+					noteOffValue.setMessage(ShortMessage.NOTE_OFF, 0, noteValue, 127);
 
-					track.add(new MidiEvent(volumeValue, 0));
+					//track.add(new MidiEvent(endOfTrack, 303));
+					//track.add(new MidiEvent(tempoValue, 1));
+					track.add(new MidiEvent(volumeValue, 1));
+					track.add(new MidiEvent(volumeValueLSB, 1));
+					track.add(new MidiEvent(expression, 1));
 					track.add(new MidiEvent(noteOnValue, 3));
-					track.add(new MidiEvent(noteOffValue, 303));
+					track.add(new MidiEvent(noteOffValue, 300003));
 					track.add(new MidiEvent(programChange, 2));
-					track.add(new MidiEvent(bankSelectMSB, 0));
+					track.add(new MidiEvent(bankSelectMSB, 2));
 					track.add(new MidiEvent(bankSelectLSB, 1));
 
-					generateSound();
-
+					if (sequence.getTracks()[0] != null) {
+						generateSound();
+					}
 				} catch (InvalidMidiDataException e) {
 					e.printStackTrace();
 				}
@@ -2920,6 +2962,25 @@ public class GUI implements ControllerEventListener {
 			if (musicPatch.rawSounds[127] != null) {
 				MakeSoundFont makeSoundFont = new MakeSoundFont();
 				makeSoundFont.createSoundFont(musicPatch);
+			}
+		}
+	}
+
+	private static class StreamSoundEffectDumper implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			//Start at file 1
+			for (int archiveIndex = 1; archiveIndex < cacheLibrary.getIndex(14).getArchives().length; archiveIndex++) {
+				try {
+					byte[] data = cacheLibrary.getIndex(14).getArchive(archiveIndex).getFile(0).getData();
+					if (data != null) {
+						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Streams/Sound Effects/" + archiveIndex + ".ogg/"));
+						fileOutputStream.write(data);
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
 			}
 		}
 	}

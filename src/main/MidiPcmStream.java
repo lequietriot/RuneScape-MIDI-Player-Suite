@@ -1,13 +1,16 @@
 package main;
 
+import main.utils.ByteArrayNode;
+import main.utils.NodeHashTable;
 import org.displee.cache.index.Index;
 
+import java.io.IOException;
 import java.util.Hashtable;
 
 
 public class MidiPcmStream extends PcmStream {
 
-    Hashtable musicPatches;
+    NodeHashTable musicPatches;
     int volume;
     int tempoDivision;
     int[] volumeCtrlArray;
@@ -57,7 +60,7 @@ public class MidiPcmStream extends PcmStream {
         this.__ag = new MusicPatchNode[16][128];
         this.midiFile = new MidiFileReader();
         this.patchStream = new MusicPatchPcmStream(this);
-        this.musicPatches = new Hashtable(128);
+        this.musicPatches = new NodeHashTable(128);
         this.__at_354();
     }
 
@@ -69,6 +72,16 @@ public class MidiPcmStream extends PcmStream {
         return this.volume;
     }
 
+    synchronized void loadMusicPatches(Index idx15, SoundBankCache soundBankCache, int patchID) {
+
+        MusicPatch musicPatch = MusicPatch.getMusicPatch(idx15, patchID, 0);
+
+        this.musicPatches.put(musicPatch, patchID);
+
+        musicPatch.loadPatchSamples(soundBankCache, null, null);
+        System.out.println("Loaded patch " + patchID);
+    }
+
     synchronized boolean loadMusicTrack(MidiTrack var1, Index var2, SoundBankCache var3, int var4) {
         var1.loadMidiTrackInfo();
         boolean var5 = false;
@@ -77,16 +90,20 @@ public class MidiPcmStream extends PcmStream {
             var6 = new int[]{var4};
         }
 
-        int position = 0;
-        for (byte[] var7 = (byte[]) var1.table.get(position); var7 != null; var7 = (byte[]) var1.table.get(position++)) {
-            MusicPatch var9 = (MusicPatch)this.musicPatches.get((long) position);
+        for(ByteArrayNode var7 = (ByteArrayNode)var1.table.first(); var7 != null; var7 = (ByteArrayNode)var1.table.next()) {
+            int var8 = (int)var7.key;
+            MusicPatch var9 = (MusicPatch)this.musicPatches.get(var8);
             if(var9 == null) {
-                var9 = MusicPatch.getMusicPatch(var2, position, 0);
+                var9 = MusicPatch.getMusicPatch(var2, var8, 0);
+                if(var9 == null) {
+                    var5 = false;
+                    continue;
+                }
 
-                this.musicPatches.put(var9, (long) position);
+                this.musicPatches.put(var9, var8);
             }
 
-            if(!var9.loadPatchSamples(var3, var7, var6)) {
+            if(!var9.loadPatchSamples(var3, var7.byteArray, var6)) {
                 var5 = false;
             }
         }

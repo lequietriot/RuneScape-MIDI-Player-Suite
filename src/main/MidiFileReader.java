@@ -6,8 +6,8 @@ import java.nio.ByteBuffer;
 
 public class MidiFileReader {
 
-    static final byte[] __hs_x;
-    ByteBuffer buffer;
+    private static final byte[] __hs_x = new byte[]{(byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)0, (byte)1, (byte)2, (byte)1, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0};
+    private ByteBuffer buffer;
     int division;
     int[] trackStarts;
     int[] trackPositions;
@@ -25,7 +25,7 @@ public class MidiFileReader {
     }
 
     void parse(byte[] var1) {
-        this.buffer = ByteBuffer.wrap(var1);
+        buffer = ByteBuffer.wrap(var1);
         this.buffer.position(10);
         int var2 = ByteBufferUtils.__ag_302(this.buffer);
         this.division = ByteBufferUtils.__ag_302(this.buffer);
@@ -88,8 +88,7 @@ public class MidiFileReader {
     }
 
     int readMessage(int var1) {
-        int var2 = this.readMessage0(var1);
-        return var2;
+        return this.readMessage0(var1);
     }
 
     int readMessage0(int var1) {
@@ -121,7 +120,7 @@ public class MidiFileReader {
         }
     }
 
-    int __d_371(int var1, int var2) {
+    private int __d_371(int var1, int var2) {
         int var3;
         if(var2 == 255) {
             int var7 = this.buffer.get() & 0xFF;
@@ -130,7 +129,7 @@ public class MidiFileReader {
                 this.buffer.position(this.buffer.position() + var3);
                 return 1;
             } else if(var7 == 81) {
-                int var5 = ByteBufferUtils.getMedium(this.buffer);
+                int var5 = ByteBufferUtils.getMedium(buffer);
                 var3 -= 3;
                 int var6 = this.trackLengths[var1];
                 this.__e += (long)var6 * (long)(this.microseconds - var5);
@@ -145,11 +144,11 @@ public class MidiFileReader {
             byte var4 = __hs_x[var2 - 128];
             var3 = var2;
             if(var4 >= 1) {
-                var3 = var2 | (this.buffer.get() & 0xFF) << 8;
+                var3 = var2 | this.buffer.get() & 0xFF << 8;
             }
 
             if(var4 >= 2) {
-                var3 |= (this.buffer.get() & 0xFF) << 16;
+                var3 |= this.buffer.get() & 0xFF << 16;
             }
 
             return var3;
@@ -201,7 +200,4 @@ public class MidiFileReader {
 
     }
 
-    static {
-        __hs_x = new byte[]{(byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)0, (byte)1, (byte)2, (byte)1, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0};
-    }
 }
