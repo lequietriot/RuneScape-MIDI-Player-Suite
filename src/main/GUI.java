@@ -1,5 +1,15 @@
 package main;
 
+import com.sun.media.sound.AudioSynthesizer;
+import org.displee.CacheLibrary;
+import org.displee.cache.index.Index;
+
+import javax.sound.midi.*;
+import javax.sound.sampled.*;
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,16 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.sound.midi.*;
-import javax.sound.sampled.*;
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileSystemView;
-
-import org.displee.CacheLibrary;
-import org.displee.cache.index.Index;
 
 public class GUI implements ControllerEventListener {
 	
@@ -65,6 +65,7 @@ public class GUI implements ControllerEventListener {
 	private JMenu fileMenu;
 	private JMenu preferencesMenu;
 	private JMenu utilityMenu;
+	private JMenu playlistMenu;
 
 	private JFileChooser chooseMID;
 	private JFileChooser chooseSf2;
@@ -75,6 +76,7 @@ public class GUI implements ControllerEventListener {
 	private JButton pauseButton;
 	private JButton stopButton;
 	private JButton loopButton;
+	private JButton testButton;
 	private JButton renderMIDItoWavButton;
 
 	private JSlider songSlider;
@@ -90,7 +92,7 @@ public class GUI implements ControllerEventListener {
 	private int retriggerValue;
 	private boolean loopMode = false;
 
-    GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException {
+	GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException {
 
 		frame = new JFrame("RuneScape MIDI Player");
 		JFrame.setDefaultLookAndFeelDecorated(true);
@@ -149,10 +151,20 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.add("Fix MIDI File (HD Version)").addActionListener(new FixButtonListenerRSHD());
 
 			utilityMenu.add("Convert Data - Sound Bank to SoundFont").addActionListener(new SoundFontCreator());
-			
+
+			utilityMenu.add("Render Song").addActionListener(new SongRenderer());
+
+			playlistMenu = new JMenu();
+			playlistMenu.setText("Playlist");
+			playlistMenu.setSize(100, 20);
+			playlistMenu.setVisible(true);
+
+			playlistMenu.add("Slot 1");
+
 			jMenuBar.add(fileMenu);
 			jMenuBar.add(preferencesMenu);
 			jMenuBar.add(utilityMenu);
+			jMenuBar.add(playlistMenu);
 			
 			System.out.println("Application loaded successfully!");
 		}
@@ -194,7 +206,6 @@ public class GUI implements ControllerEventListener {
 			}
 
 			init(buttonsPanel);
-			initSynthesizers();
 		}
 	}
 
@@ -204,11 +215,13 @@ public class GUI implements ControllerEventListener {
 		pauseButton = new JButton();
 		stopButton = new JButton();
 		loopButton = new JButton();
+		testButton = new JButton();
 		
 		startButton.addActionListener(new StartButtonListener());
 		pauseButton.addActionListener(new PauseButtonListener());
 		stopButton.addActionListener(new StopButtonListener());
 		loopButton.addActionListener(new LoopButtonListener());
+		testButton.addActionListener(new TestButtonListener());
 		
 		buttonsPanel.add(startButton);
 		startButton.setText("Play");
@@ -223,6 +236,10 @@ public class GUI implements ControllerEventListener {
 		stopButton.setVisible(true);
 
 		buttonsPanel.add(loopButton);
+
+		testButton.setText("Test");
+		testButton.setVisible(true);
+		buttonsPanel.add(testButton);
 
 		if (loopMode) {
 			loopButton.setText("Loop Mode: On");
@@ -303,47 +320,50 @@ public class GUI implements ControllerEventListener {
 
 		System.out.println("Initializing Synthesizers, please wait...");
 
-		if (soundsetFile.exists()) {
+		synth1 = MidiSystem.getSynthesizer();
+		synth1.open();
+		synth1.unloadAllInstruments(synth1.getDefaultSoundbank());
+		synth1.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
 
-			synth1 = MidiSystem.getSynthesizer();
-			synth1.open();
-			synth1.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		System.out.println("Loaded Synthesizer 1!");
 
-			System.out.println("Loaded Synthesizer 1!");
+		synth2 = MidiSystem.getSynthesizer();
+		synth2.open();
+		synth2.unloadAllInstruments(synth2.getDefaultSoundbank());
+		synth2.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
 
-			synth2 = MidiSystem.getSynthesizer();
-			synth2.open();
-			synth2.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		System.out.println("Loaded Synthesizer 2!");
 
-			System.out.println("Loaded Synthesizer 2!");
+		synth3 = MidiSystem.getSynthesizer();
+		synth3.open();
+		synth3.unloadAllInstruments(synth3.getDefaultSoundbank());
+		synth3.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
 
-			synth3 = MidiSystem.getSynthesizer();
-			synth3.open();
-			synth3.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		System.out.println("Loaded Synthesizer 3!");
 
-			System.out.println("Loaded Synthesizer 3!");
+		synth4 = MidiSystem.getSynthesizer();
+		synth4.open();
+		synth4.unloadAllInstruments(synth4.getDefaultSoundbank());
+		synth4.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
 
-			synth4 = MidiSystem.getSynthesizer();
-			synth4.open();
-			synth4.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		System.out.println("Loaded Synthesizer 4!");
 
-			System.out.println("Loaded Synthesizer 4!");
+		synth5 = MidiSystem.getSynthesizer();
+		synth5.open();
+		synth5.unloadAllInstruments(synth5.getDefaultSoundbank());
+		synth5.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
 
-			synth5 = MidiSystem.getSynthesizer();
-			synth5.open();
-			synth5.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		System.out.println("Loaded Synthesizer 5!");
 
-			System.out.println("Loaded Synthesizer 5!");
+		synth6 = MidiSystem.getSynthesizer();
+		synth6.open();
+		synth6.unloadAllInstruments(synth6.getDefaultSoundbank());
+		synth6.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
 
-			synth6 = MidiSystem.getSynthesizer();
-			synth6.open();
-			synth6.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
-
-			System.out.println("Loaded Synthesizer 6!");
-		}
+		System.out.println("Loaded Synthesizer 6!");
 	}
 
-	private void LoadMIDI(JFrame frame) {
+	private void LoadMIDI(JFrame frame) throws MidiUnavailableException, InvalidMidiDataException, IOException {
 		chooseMID = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
 		chooseMID.setSize(400, 200);
 		chooseMID.setDialogTitle("Please choose a MIDI File");
@@ -352,6 +372,9 @@ public class GUI implements ControllerEventListener {
 		int returnValue = chooseMID.showOpenDialog(null);
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
 			midiFile = chooseMID.getSelectedFile();
+			if (synth1 == null) {
+				initSynthesizers();
+			}
 		}
 	}
 
@@ -372,8 +395,12 @@ public class GUI implements ControllerEventListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			LoadMIDI(frame);
-			
+			try {
+				LoadMIDI(frame);
+			} catch (MidiUnavailableException | InvalidMidiDataException | IOException ex) {
+				ex.printStackTrace();
+			}
+
 			if (midiFile.exists()) {
 				songSlider.setEnabled(true);
 				songSliderInfo.setText("Song loaded: " + midiFile.getName());
@@ -575,9 +602,9 @@ public class GUI implements ControllerEventListener {
 						pauseButton.setEnabled(true);
 					}
 				}
-				
+
 				if (sequencer1.isRunning()) {
-					Timer timer = new Timer(100, new TimerListener());
+					Timer timer = new Timer(0, new TimerListener());
 					timer.start();
 				}
 			} catch (MidiUnavailableException | InvalidMidiDataException | IOException e1) {
@@ -2359,7 +2386,7 @@ public class GUI implements ControllerEventListener {
 				int idInt = Integer.parseInt(id);
 
 				ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(idInt).getFile(0).getData());
-				MidiTrack midiTrack = new MidiTrack(midiBuffer);
+				MidiTrack midiTrack = new MidiTrack(midiBuffer, true);
 
 				try {
 					File dir = new File("./MIDI/Music/");
@@ -2395,7 +2422,7 @@ public class GUI implements ControllerEventListener {
 				int idInt = Integer.parseInt(id);
 
 				ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(11).getArchive(idInt).getFile(0).getData());
-				MidiTrack midiTrack = new MidiTrack(midiBuffer);
+				MidiTrack midiTrack = new MidiTrack(midiBuffer, true);
 
 				try {
 					File dir = new File("./MIDI/Fanfares/");
@@ -2420,7 +2447,7 @@ public class GUI implements ControllerEventListener {
 
 			for (int idInt = 0; idInt < cacheLibrary.getIndex(6).getArchives().length; idInt++) {
 				ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(idInt).getFile(0).getData());
-				MidiTrack midiTrack = new MidiTrack(midiBuffer);
+				MidiTrack midiTrack = new MidiTrack(midiBuffer, true);
 
 				try {
 					File dir = new File("./MIDI/Music/");
@@ -2445,7 +2472,7 @@ public class GUI implements ControllerEventListener {
 
 			for (int idInt = 0; idInt < cacheLibrary.getIndex(11).getArchives().length; idInt++) {
 				ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(11).getArchive(idInt).getFile(0).getData());
-				MidiTrack midiTrack = new MidiTrack(midiBuffer);
+				MidiTrack midiTrack = new MidiTrack(midiBuffer, true);
 
 				try {
 					File dir = new File("./MIDI/Fanfares/");
@@ -2475,7 +2502,8 @@ public class GUI implements ControllerEventListener {
 			if (midiFile != null) {
 				try {
 					MidiTrack.encode(midiFile);
-					System.out.println("MIDI file successfully encoded and ready to pack!");
+					cacheLibrary.getIndex(6).getArchive(0).getFile(0).setData(MidiTrack.getEncoded());
+					System.out.println("MIDI file successfully encoded and packed to ID - 0!");
 				} catch (InvalidMidiDataException | IOException ex) {
 					ex.printStackTrace();
 				}
@@ -2813,13 +2841,13 @@ public class GUI implements ControllerEventListener {
 					cacheLibrary.getIndex(6).update();
 					System.out.println(Arrays.toString(encodedData));
 
-					MidiTrack midiTrack = MidiTrack.getTrack(ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(0).getFile(0).getData()));
+					MidiTrack midiTrack = MidiTrack.getMidiTrack(ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(0).getFile(0).getData()));
 					MidiPcmStream midiPcmStream = new MidiPcmStream();
-					midiPcmStream.setMusicTrack(midiTrack, false);
+					midiPcmStream.setMidiTrack(midiTrack, false);
 					System.out.println("Music Track set");
 					midiPcmStream.setMidiStreamVolume(128);
 					System.out.println("Volume set");
-					midiPcmStream.loadMusicTrack(midiTrack, index15, soundBankCache, 0);
+					midiPcmStream.loadMidiTrack(midiTrack, index15, soundBankCache, 0);
 
 					SoundPlayer soundPlayer = new SoundPlayer();
 
@@ -2958,11 +2986,6 @@ public class GUI implements ControllerEventListener {
 
 			MusicPatch musicPatch = MusicPatch.getMusicPatch(cacheLibrary.getIndex(15), 0, 0);
 			musicPatch.loadPatchSamples(soundBankCache, null, null);
-
-			if (musicPatch.rawSounds[127] != null) {
-				MakeSoundFont makeSoundFont = new MakeSoundFont();
-				makeSoundFont.createSoundFont(musicPatch);
-			}
 		}
 	}
 
@@ -2981,6 +3004,186 @@ public class GUI implements ControllerEventListener {
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
+			}
+		}
+	}
+
+	private class TestButtonListener implements ActionListener {
+
+		AudioFormat audioFormat;
+		SourceDataLine sourceDataLine;
+		int trackCount;
+		byte[] bytes;
+		byte[] combinedBytes;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			audioFormat = new AudioFormat(44100, 16, 2, true, false);
+
+			try {
+				DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat, 999999999);
+				sourceDataLine = (SourceDataLine) AudioSystem.getLine(info);
+				sourceDataLine.open();
+				sourceDataLine.start();
+			} catch (LineUnavailableException ex) {
+				ex.printStackTrace();
+			}
+
+			try {
+				Sequencer sequencer = MidiSystem.getSequencer(false);
+				Sequence sequence = MidiSystem.getSequence(midiFile);
+				Soundbank soundbank = MidiSystem.getSoundbank(soundsetFile);
+
+				sequencer.setSequence(sequence);
+				trackCount = sequence.getTracks().length;
+
+				System.out.println("Track Count - " + trackCount);
+
+				for (int track = 0; track < trackCount; track++) {
+
+					System.out.println("Rendering... Track " + track);
+
+					AudioSynthesizer audioSynthesizer = findAudioSynthesizer();
+
+					AudioInputStream audioInputStream = audioSynthesizer.openStream(null, null);
+
+					sequencer.getTransmitter().setReceiver(audioSynthesizer.getReceiver());
+
+					audioSynthesizer.unloadAllInstruments(audioSynthesizer.getDefaultSoundbank());
+					audioSynthesizer.loadAllInstruments(soundbank);
+
+					sequencer.setTrackSolo(track, true);
+
+					double total = send(sequence, audioSynthesizer.getReceiver());
+
+					long length = (long) (audioInputStream.getFormat().getFrameRate() * (total + 4));
+					audioInputStream = new AudioInputStream(audioInputStream, audioInputStream.getFormat(), length);
+					bytes = audioInputStream.readAllBytes();
+
+					if (combinedBytes == null) {
+						combinedBytes = new byte[bytes.length + 4];
+						System.arraycopy(bytes, 0, combinedBytes, 0, bytes.length);
+
+					} else {
+
+						for (int index = 0; index < bytes.length; index++) {
+							combinedBytes[index] = (byte) (Math.floor((combinedBytes[index]) + (bytes[index])) / 2.5);
+						}
+					}
+				}
+
+				File file = new File("./output.dat/");
+				FileOutputStream fileOutputStream = new FileOutputStream(file);
+				fileOutputStream.write(combinedBytes);
+
+				sourceDataLine.write(combinedBytes, 0, combinedBytes.length);
+
+			} catch (MidiUnavailableException | IOException | InvalidMidiDataException exception) {
+				exception.printStackTrace();
+			}
+		}
+
+		public double send(Sequence seq, Receiver recv) {
+			float divtype = seq.getDivisionType();
+			assert (seq.getDivisionType() == Sequence.PPQ);
+			Track[] tracks = seq.getTracks();
+			int[] trackspos = new int[tracks.length];
+			int mpq = 500000;
+			int seqres = seq.getResolution();
+			long lasttick = 0;
+			long curtime = 0;
+			while (true) {
+				MidiEvent selevent = null;
+				int seltrack = -1;
+				for (int i = 0; i < tracks.length; i++) {
+					int trackpos = trackspos[i];
+					Track track = tracks[i];
+					if (trackpos < track.size()) {
+						MidiEvent event = track.get(trackpos);
+						if (selevent == null
+								|| event.getTick() < selevent.getTick()) {
+							selevent = event;
+							seltrack = i;
+						}
+					}
+				}
+				if (seltrack == -1)
+					break;
+				trackspos[seltrack]++;
+				long tick = selevent.getTick();
+				if (divtype == Sequence.PPQ)
+					curtime += ((tick - lasttick) * mpq) / seqres;
+				else
+					curtime = (long) ((tick * 1000000.0 * divtype) / seqres);
+				lasttick = tick;
+				MidiMessage msg = selevent.getMessage();
+				if (msg instanceof MetaMessage) {
+					if (divtype == Sequence.PPQ)
+						if (((MetaMessage) msg).getType() == 0x51) {
+							byte[] data = ((MetaMessage) msg).getData();
+							mpq = ((data[0] & 0xff) << 16)
+									| ((data[1] & 0xff) << 8) | (data[2] & 0xff);
+						}
+				} else {
+					if (recv != null)
+						recv.send(msg, curtime);
+				}
+			}
+			return curtime / 1000000.0;
+		}
+
+		public AudioSynthesizer findAudioSynthesizer() throws MidiUnavailableException {
+
+			Synthesizer synth = MidiSystem.getSynthesizer();
+
+			if (synth instanceof AudioSynthesizer) {
+				return (AudioSynthesizer) synth;
+			}
+
+			MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+
+			for (MidiDevice.Info info : infos) {
+				MidiDevice dev = MidiSystem.getMidiDevice(info);
+				if (dev instanceof AudioSynthesizer) {
+					return (AudioSynthesizer) dev;
+				}
+			}
+			return null;
+		}
+	}
+
+	private class SongRenderer implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			Index soundEffectIndex = cacheLibrary.getIndex(4);
+			Index soundBankIndex = cacheLibrary.getIndex(14);
+			Index musicPatchIndex = cacheLibrary.getIndex(15);
+
+			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
+
+			MidiPcmStream midiPcmStream = new MidiPcmStream();
+			ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(0).getFile(0).getData());
+			MidiTrack midiTrack = new MidiTrack(midiBuffer, false);
+			midiPcmStream.setMidiTrack(midiTrack, false);
+			midiPcmStream.altLoadMidiTrack(midiTrack, musicPatchIndex, soundBankCache, 22050);
+			midiPcmStream.setMidiStreamVolume(256);
+			midiPcmStream.__ai_367();
+
+			SoundPlayer soundPlayer = new SoundPlayer();
+			AudioConstants.isStereo = true;
+			AudioConstants.systemSampleRate = 22050;
+			soundPlayer.samples = new int[1024];
+			soundPlayer.frequency = AudioConstants.systemSampleRate;
+			soundPlayer.timeMs = System.currentTimeMillis();
+			soundPlayer.setStream(midiPcmStream);
+			soundPlayer.init();
+			soundPlayer.open(16384);
+
+			while (midiPcmStream.active) {
+				soundPlayer.run();
 			}
 		}
 	}

@@ -77,7 +77,7 @@ public class MusicSample {
    }
 
    float[] __g_175(int var1) {
-      method2337(this.sampleContainer[var1], 0);
+      setData(this.sampleContainer[var1], 0);
       method2338();
       int var2 = method2352(ByteBufferUtils.method634(__cd_j.length - 1));
       boolean var3 = __cd_z[var2];
@@ -385,7 +385,7 @@ public class MusicSample {
       return (float)((double)var1 * Math.pow(2.0D, (double)(var3 - 788)));
    }
 
-   static void method2337(byte[] var0, int var1) {
+   static void setData(byte[] var0, int var1) {
       __cd_g = var0;
       anInt = var1;
       __cd_e = 0;
@@ -423,7 +423,7 @@ public class MusicSample {
    }
 
    static void method2341(byte[] var0) {
-      method2337(var0, 0);
+      setData(var0, 0);
       __cd_x = 1 << method2352(4);
       __cd_d = 1 << method2352(4);
       __cd_c = new float[__cd_d];

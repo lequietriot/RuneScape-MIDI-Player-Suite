@@ -8,15 +8,14 @@ import java.nio.ByteBuffer;
 
 public class MusicPatch extends Node {
 
-    int __m;
+    int unknownInt;
     RawSound[] rawSounds;
-    short[] l;
+    short[] generators;
     byte[] __w;
     byte[] __o;
-    MusicPatchNode2[] __u;
-    byte[] __g;
+    MusicPatchNode2[] parameters;
+    byte[] notes;
     int[] containerIDs;
-
     int[] notePitches;
 
     static MusicPatch getMusicPatch(Index patchIndex, int archiveID, int fileID) {
@@ -26,11 +25,11 @@ public class MusicPatch extends Node {
 
     MusicPatch(ByteBuffer buffer) {
         this.rawSounds = new RawSound[128];
-        this.l = new short[128];
+        this.generators = new short[128];
         this.__w = new byte[128];
         this.__o = new byte[128];
-        this.__u = new MusicPatchNode2[128];
-        this.__g = new byte[128];
+        this.parameters = new MusicPatchNode2[128];
+        this.notes = new byte[128];
         this.containerIDs = new int[128];
         this.notePitches = new int[128];
 
@@ -148,14 +147,14 @@ public class MusicPatch extends Node {
         int noteRangeCount;
         for(noteRangeCount = 0; noteRangeCount < 128; ++noteRangeCount) {
             notePitch += buffer.get() & 0xFF;
-            this.l[noteRangeCount] = (short) notePitch;
+            this.generators[noteRangeCount] = (short) notePitch;
         }
 
         notePitch = 0;
 
         for(noteRangeCount = 0; noteRangeCount < 128; ++noteRangeCount) {
             notePitch += buffer.get() & 0xFF;
-            this.l[noteRangeCount] = (short)(this.l[noteRangeCount] + (notePitch << 8));
+            this.generators[noteRangeCount] = (short)(this.generators[noteRangeCount] + (notePitch << 8));
 
             notePitches[noteRangeCount] = notePitch;
         }
@@ -176,7 +175,7 @@ public class MusicPatch extends Node {
                 containerID = ByteBufferUtils.__as_311(buffer);
             }
 
-            this.l[containerNoteRanges] = (short)(this.l[containerNoteRanges] + ((containerID - 1 & 2) << 14));
+            this.generators[containerNoteRanges] = (short)(this.generators[containerNoteRanges] + ((containerID - 1 & 2) << 14));
             this.containerIDs[containerNoteRanges] = containerID;
             --noteRangeCount;
         }
@@ -198,7 +197,7 @@ public class MusicPatch extends Node {
                     containerNoteRanges = buffer.array()[var5++] - 1;
                 }
 
-                this.__g[var25] = (byte)containerNoteRanges;
+                this.notes[var25] = (byte)containerNoteRanges;
                 --noteRangeCount;
             }
         }
@@ -241,7 +240,7 @@ public class MusicPatch extends Node {
                     }
                 }
 
-                this.__u[var27] = var46;
+                this.parameters[var27] = var46;
                 --noteRangeCount;
             }
         }
@@ -268,7 +267,7 @@ public class MusicPatch extends Node {
             --noteRangeCount;
         }
 
-        this.__m = buffer.get() & 0xFF + 1;
+        this.unknownInt = buffer.get() & 0xFF + 1;
 
         MusicPatchNode2 var29;
         int var30;

@@ -6,8 +6,8 @@ import java.nio.ByteBuffer;
 
 public class MidiFileReader {
 
-    private static final byte[] __hs_x = new byte[]{(byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)0, (byte)1, (byte)2, (byte)1, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0};
-    private ByteBuffer buffer;
+    static final byte[] __hs_x;
+    ByteBuffer buffer;
     int division;
     int[] trackStarts;
     int[] trackPositions;
@@ -17,15 +17,16 @@ public class MidiFileReader {
     long __e;
 
     MidiFileReader(byte[] var1) {
+        this.buffer = null;
         this.parse(var1);
     }
 
-    MidiFileReader() {
-
+    public MidiFileReader() {
+        this.buffer = null;
     }
 
     void parse(byte[] var1) {
-        buffer = ByteBuffer.wrap(var1);
+        this.buffer = ByteBuffer.wrap(var1);
         this.buffer.position(10);
         int var2 = ByteBufferUtils.__ag_302(this.buffer);
         this.division = ByteBufferUtils.__ag_302(this.buffer);
@@ -34,7 +35,7 @@ public class MidiFileReader {
 
         int var3;
         int var4;
-        for(var3 = 0; var3 < var2; this.buffer.position(this.buffer.position() + var4)) {
+        for(var3 = 0; var3 < var2; ByteBufferUtils.skip(this.buffer, var4)) {
             int var5 = this.buffer.getInt();
             var4 = this.buffer.getInt();
             if(var5 == 1297379947) {
@@ -63,7 +64,7 @@ public class MidiFileReader {
     }
 
     boolean isReady() {
-        return this.buffer != null;
+        return true;
     }
 
     int trackCount() {
@@ -79,7 +80,7 @@ public class MidiFileReader {
     }
 
     void setTrackDone() {
-        this.buffer.position(-1);
+        this.buffer.position(0);
     }
 
     void readTrackLength(int var1) {
@@ -88,7 +89,8 @@ public class MidiFileReader {
     }
 
     int readMessage(int var1) {
-        return this.readMessage0(var1);
+        int var2 = this.readMessage0(var1);
+        return var2;
     }
 
     int readMessage0(int var1) {
@@ -97,7 +99,7 @@ public class MidiFileReader {
         if(var2 < 0) {
             var3 = var2 & 255;
             this.__u[var1] = var3;
-            this.buffer.position(this.buffer.position() + 1);
+            ByteBufferUtils.skip(this.buffer, 1);
         } else {
             var3 = this.__u[var1];
         }
@@ -109,46 +111,46 @@ public class MidiFileReader {
             if(var3 == 247 && var4 > 0) {
                 int var5 = this.buffer.array()[this.buffer.position()] & 255;
                 if(var5 >= 241 && var5 <= 243 || var5 == 246 || var5 == 248 || var5 >= 250 && var5 <= 252 || var5 == 254) {
-                    this.buffer.position(this.buffer.position() + 1);
+                    ByteBufferUtils.skip(this.buffer, 1);
                     this.__u[var1] = var5;
                     return this.__d_371(var1, var5);
                 }
             }
 
-            this.buffer.position(this.buffer.position() + var4);
+            ByteBufferUtils.skip(this.buffer, var4);
             return 0;
         }
     }
 
-    private int __d_371(int var1, int var2) {
+    int __d_371(int var1, int var2) {
         int var3;
         if(var2 == 255) {
             int var7 = this.buffer.get() & 0xFF;
             var3 = ByteBufferUtils.__as_311(this.buffer);
             if(var7 == 47) {
-                this.buffer.position(this.buffer.position() + var3);
+                ByteBufferUtils.skip(this.buffer, var3);
                 return 1;
             } else if(var7 == 81) {
-                int var5 = ByteBufferUtils.getMedium(buffer);
+                int var5 = ByteBufferUtils.getMedium(this.buffer);
                 var3 -= 3;
                 int var6 = this.trackLengths[var1];
                 this.__e += (long)var6 * (long)(this.microseconds - var5);
                 this.microseconds = var5;
-                this.buffer.position(this.buffer.position() + var3);
+                ByteBufferUtils.skip(this.buffer, var3);
                 return 2;
             } else {
-                this.buffer.position(this.buffer.position() + var3);
+                ByteBufferUtils.skip(this.buffer, var3);
                 return 3;
             }
         } else {
             byte var4 = __hs_x[var2 - 128];
             var3 = var2;
             if(var4 >= 1) {
-                var3 = var2 | this.buffer.get() & 0xFF << 8;
+                var3 = var2 | (this.buffer.get() & 0xFF) << 8;
             }
 
             if(var4 >= 2) {
-                var3 |= this.buffer.get() & 0xFF << 16;
+                var3 |= (this.buffer.get() & 0xFF) << 16;
             }
 
             return var3;
@@ -200,4 +202,7 @@ public class MidiFileReader {
 
     }
 
+    static {
+        __hs_x = new byte[]{(byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)1, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)2, (byte)0, (byte)1, (byte)2, (byte)1, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0};
+    }
 }

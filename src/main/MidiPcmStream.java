@@ -5,8 +5,6 @@ import main.utils.NodeHashTable;
 import org.displee.cache.index.Index;
 
 import java.io.IOException;
-import java.util.Hashtable;
-
 
 public class MidiPcmStream extends PcmStream {
 
@@ -38,7 +36,7 @@ public class MidiPcmStream extends PcmStream {
     long __ay;
     MusicPatchPcmStream patchStream;
 
-    MidiPcmStream() {
+    public MidiPcmStream() {
         this.volume = 256;
         this.tempoDivision = 1000000;
         this.volumeCtrlArray = new int[16];
@@ -64,7 +62,7 @@ public class MidiPcmStream extends PcmStream {
         this.__at_354();
     }
 
-    synchronized void setMidiStreamVolume(int var1) {
+    public synchronized void setMidiStreamVolume(int var1) {
         this.volume = var1;
     }
 
@@ -72,17 +70,23 @@ public class MidiPcmStream extends PcmStream {
         return this.volume;
     }
 
-    synchronized void loadMusicPatches(Index idx15, SoundBankCache soundBankCache, int patchID) {
+    public synchronized boolean altLoadMidiTrack(MidiTrack var1, Index var2, SoundBankCache var3, int var4) {
+        boolean var5 = false;
 
-        MusicPatch musicPatch = MusicPatch.getMusicPatch(idx15, patchID, 0);
+        for(int index = 0; index < 1; index++) {
+            int var8 = index;
+            MusicPatch var9 = (MusicPatch) this.musicPatches.get(var8);
+            if (var9 == null) {
+                var9 = MusicPatch.getMusicPatch(var2, var8, 0);
 
-        this.musicPatches.put(musicPatch, patchID);
-
-        musicPatch.loadPatchSamples(soundBankCache, null, null);
-        System.out.println("Loaded patch " + patchID);
+                this.musicPatches.put(var9, var8);
+            }
+            var9.loadPatchSamples(var3, null, null);
+        }
+        return var5;
     }
 
-    synchronized boolean loadMusicTrack(MidiTrack var1, Index var2, SoundBankCache var3, int var4) {
+    public synchronized boolean loadMidiTrack(MidiTrack var1, Index var2, SoundBankCache var3, int var4) {
         var1.loadMidiTrackInfo();
         boolean var5 = false;
         int[] var6 = null;
@@ -92,7 +96,7 @@ public class MidiPcmStream extends PcmStream {
 
         for(ByteArrayNode var7 = (ByteArrayNode)var1.table.first(); var7 != null; var7 = (ByteArrayNode)var1.table.next()) {
             int var8 = (int)var7.key;
-            MusicPatch var9 = (MusicPatch)this.musicPatches.get(var8);
+            MusicPatch var9 = (MusicPatch)this.musicPatches.get((long)var8);
             if(var9 == null) {
                 var9 = MusicPatch.getMusicPatch(var2, var8, 0);
                 if(var9 == null) {
@@ -116,17 +120,14 @@ public class MidiPcmStream extends PcmStream {
     }
 
     public synchronized void clearAll() {
-
-        int position = 0;
-        for(MusicPatch var1 = (MusicPatch)this.musicPatches.get(position); var1 != null; var1 = (MusicPatch)this.musicPatches.get(position++)) {
+        for(MusicPatch var1 = (MusicPatch)this.musicPatches.first(); var1 != null; var1 = (MusicPatch)this.musicPatches.next()) {
             var1.clear();
         }
 
     }
 
     public synchronized void removeAll() {
-        int position = 0;
-        for(MusicPatch var1 = (MusicPatch)this.musicPatches.get(position); var1 != null; var1 = (MusicPatch)this.musicPatches.get(position++)) {
+        for(MusicPatch var1 = (MusicPatch)this.musicPatches.first(); var1 != null; var1 = (MusicPatch)this.musicPatches.next()) {
             var1.remove();
         }
 
@@ -167,7 +168,7 @@ public class MidiPcmStream extends PcmStream {
         this.patchStream.__e_172(var1, var2, var3);
     }
 
-    synchronized void setMusicTrack(MidiTrack var1, boolean var2) {
+    public synchronized void setMidiTrack(MidiTrack var1, boolean var2) {
         this.clear();
         this.midiFile.parse(var1.midi);
         this.__aj = var2;
@@ -240,7 +241,7 @@ public class MidiPcmStream extends PcmStream {
     void __y_345(int var1, int var2, int var3) {
         this.__b_347(var1, var2, 64);
         if((this.switchArray[var1] & 2) != 0) {
-            for(MusicPatchNode var4 = (MusicPatchNode) this.patchStream.queue.first(); var4 != null; var4 = (MusicPatchNode)this.patchStream.queue.next()) {
+            for(MusicPatchNode var4 = (MusicPatchNode)this.patchStream.queue.first(); var4 != null; var4 = (MusicPatchNode)this.patchStream.queue.next()) {
                 if(var4.volumeValue == var1 && var4.__a < 0) {
                     this.__v[var1][var4.__u] = null;
                     this.__v[var1][var2] = var4;
@@ -262,12 +263,12 @@ public class MidiPcmStream extends PcmStream {
                 var6.volumeValue = var1;
                 var6.patch = var9;
                 var6.rawSound = var8;
-                var6.__w = var9.__u[var2];
-                var6.__o = var9.l[var2];
+                var6.__w = var9.parameters[var2];
+                var6.__o = var9.notes[var2];
                 var6.__u = var2;
-                var6.__g = var3 * var3 * var9.__w[var2] * var9.__m + 1024 >> 11;
+                var6.__g = var3 * var3 * var9.__w[var2] * var9.unknownInt + 1024 >> 11;
                 var6.panValue = var9.__o[var2] & 255;
-                var6.__e = (var2 << 8) - (var9.l[var2] & 32767);
+                var6.__e = (var2 << 8) - (var9.generators[var2] & 32767);
                 var6.__k = 0;
                 var6.__o = 0;
                 var6.__i = 0;
@@ -277,10 +278,10 @@ public class MidiPcmStream extends PcmStream {
                     var6.stream = RawPcmStream.method2524(var8, this.__aa_359(var6), this.__ax_360(var6), this.__af_361(var6));
                 } else {
                     var6.stream = RawPcmStream.method2524(var8, this.__aa_359(var6), 0, this.__af_361(var6));
-                    this.__h_346(var6, var9.l[var2] < 0);
+                    this.__h_346(var6, var9.generators[var2] < 0);
                 }
 
-                if(var9.l[var2] < 0) {
+                if(var9.generators[var2] < 0) {
                     var6.stream.setLoopOnSample(-1);
                 }
 
@@ -642,7 +643,7 @@ public class MidiPcmStream extends PcmStream {
             var2 += (int)(var6 * (double)var4);
         }
 
-        var4 = (int)((double)(var1.rawSound.sampleRate * 256) * Math.pow(2.0D, (double)var2 * 3.255208333333333E-4D) / (double)AudioConstants.systemSampleRate + 0.5D);
+        var4 = (int)((double)(var1.rawSound.sampleRate * 256) * Math.pow(2.0D, (double)var2 * 3.255208333333333E-4D) / (double) AudioConstants.systemSampleRate + 0.5D);
         return var4 < 1?1:var4;
     }
 

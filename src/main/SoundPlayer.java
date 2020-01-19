@@ -1,6 +1,7 @@
 package main;
 
 import javax.sound.sampled.*;
+import java.io.*;
 
 public class SoundPlayer extends PcmPlayer {
 
@@ -8,10 +9,19 @@ public class SoundPlayer extends PcmPlayer {
     SourceDataLine sourceDataLine;
     int capacity;
     byte[] byteSamples;
+    DataOutputStream dataOutputStream;
 
     void init() {
         this.audioFormat = new AudioFormat((float) AudioConstants.systemSampleRate, 16, AudioConstants.isStereo ? 2 : 1, true, false);
         this.byteSamples = new byte[256 << (AudioConstants.isStereo ? 2 : 1)];
+
+        try {
+            File file = new File("./output.dat/");
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            dataOutputStream = new DataOutputStream(fileOutputStream);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     void open(int available) {
@@ -46,7 +56,12 @@ public class SoundPlayer extends PcmPlayer {
             this.byteSamples[var2 * 2] = (byte)(var3 >> 8);
             this.byteSamples[var2 * 2 + 1] = (byte)(var3 >> 16);
         }
-        this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);
+        try {
+            dataOutputStream.write(this.byteSamples);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);
     }
 
     void close() {

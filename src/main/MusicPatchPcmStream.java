@@ -7,7 +7,7 @@ public class MusicPatchPcmStream extends PcmStream {
    NodeDeque queue;
    PcmStreamMixer mixer;
 
-   MusicPatchPcmStream(MidiPcmStream var1) {
+   public MusicPatchPcmStream(MidiPcmStream var1) {
       this.queue = new NodeDeque();
       this.mixer = new PcmStreamMixer();
       this.superStream = var1;
@@ -39,11 +39,11 @@ public class MusicPatchPcmStream extends PcmStream {
                var1.stream = RawPcmStream.method2524(var1.rawSound, var10.__ab_194(), var10.__s_185(), var10.__t_186());
             } else {
                var1.stream = RawPcmStream.method2524(var1.rawSound, var10.__ab_194(), 0, var10.__t_186());
-               this.superStream.__h_346(var1, var1.patch.l[var1.__u] < 0);
+               this.superStream.__h_346(var1, var1.patch.generators[var1.__u] < 0);
                var1.stream.__c_190(var8, var10.__s_185());
             }
 
-            if(var1.patch.l[var1.__u] < 0) {
+            if(var1.patch.generators[var1.__u] < 0) {
                var1.stream.setLoopOnSample(-1);
             }
 
@@ -68,10 +68,10 @@ public class MusicPatchPcmStream extends PcmStream {
                var1.stream = RawPcmStream.method2524(var1.rawSound, var1.stream.__ab_194(), var1.stream.__s_185(), var1.stream.__t_186());
             } else {
                var1.stream = RawPcmStream.method2524(var1.rawSound, var1.stream.__ab_194(), 0, var1.stream.__t_186());
-               this.superStream.__h_346(var1, var1.patch.l[var1.__u] < 0);
+               this.superStream.__h_346(var1, var1.patch.generators[var1.__u] < 0);
             }
 
-            if(var1.patch.l[var1.__u] < 0) {
+            if(var1.patch.generators[var1.__u] < 0) {
                var1.stream.setLoopOnSample(-1);
             }
 

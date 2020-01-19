@@ -10,6 +10,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 class MidiTrack {
 
@@ -26,27 +29,380 @@ class MidiTrack {
 
     static byte[] midi;
 
+    static byte[] encoded;
+
     NodeHashTable table;
 
     /**
      * The class to decode RuneScape's custom encoded MIDI data.
      * @param buffer initialize the decoder with the buffer data.
      */
-    MidiTrack(ByteBuffer buffer) {
-        decode(buffer);
+    MidiTrack(ByteBuffer buffer, boolean midiConvert) {
+        if (midiConvert) {
+            convertToMidi(buffer);
+        }
+
+        else {
+            decode(buffer);
+        }
     }
 
-    static MidiTrack getTrack(ByteBuffer data) {
-        decode(data);
-
-        return new MidiTrack(data);
-    }
 
     /**
      * The method to decode RuneScape's custom encoded MIDI data.
      * @param buf The buffer storing encoded MIDI data
      */
     private static void decode(ByteBuffer buf) {
+
+        buf.position(buf.limit() - 3);
+        int tracks = buf.get() & 0xFF;
+        int division = buf.getShort() & 0xFFFF;
+        int length = 14 + tracks * 10;
+        buf.position(0);
+        int tempoCount = 0;
+        int controlChangeCount = 0;
+        int noteOnCount = 0;
+        int noteOffCount = 0;
+        int pitchBendCount = 0;
+        int channelPressureCount = 0;
+        int keyAftertouchCount = 0;
+        int programChangeCount = 0;
+
+        int track;
+        int opcode;
+        int eventCount;
+        for (track = 0; track < tracks; ++track) {
+            opcode = -1;
+
+            while (true) {
+                eventCount = buf.get() & 0xFF;
+                if (eventCount != opcode) {
+                    ++length;
+                }
+
+                opcode = eventCount & 15;
+                if (eventCount == 7) {
+                    break;
+                }
+
+                if (eventCount == 23) {
+                    ++tempoCount;
+                } else if (opcode == 0) {
+                    ++noteOnCount;
+                } else if (opcode == 1) {
+                    ++noteOffCount;
+                } else if (opcode == 2) {
+                    ++controlChangeCount;
+                } else if (opcode == 3) {
+                    ++pitchBendCount;
+                } else if (opcode == 4) {
+                    ++channelPressureCount;
+                } else if (opcode == 5) {
+                    ++keyAftertouchCount;
+                } else {
+                    if (opcode != 6) {
+                        throw new RuntimeException();
+                    }
+
+                    ++programChangeCount;
+                }
+            }
+        }
+
+        length += 5 * tempoCount;
+        length += 2 * (noteOnCount + noteOffCount + controlChangeCount + pitchBendCount + keyAftertouchCount);
+        length += channelPressureCount + programChangeCount;
+        track = buf.position();
+        opcode = tracks + tempoCount + controlChangeCount + noteOnCount + noteOffCount + pitchBendCount
+                + channelPressureCount + keyAftertouchCount + programChangeCount;
+
+        for (eventCount = 0; eventCount < opcode; ++eventCount) {
+            ByteBufferUtils.getVarInt(buf);
+        }
+
+        length += buf.position() - track;
+        eventCount = buf.position();
+        int modulationMSBCount = 0;
+        int modulationLSBCount = 0;
+        int channelVolumeMSBCount = 0;
+        int channelVolumeLSBCount = 0;
+        int channelPanningMSBCount = 0;
+        int channelPanningLSBCount = 0;
+        int NRPNMSBCount = 0;
+        int NRPNLSBCount = 0;
+        int RPNMSBCount = 0;
+        int RPNLSBCount = 0;
+        int miscEventCount = 0;
+        int toggleCount = 0;
+        int controller = 0;
+
+        int controllerCount;
+        for (controllerCount = 0; controllerCount < controlChangeCount; ++controllerCount) {
+            controller = controller + (buf.get() & 0xFF) & 127;
+            if (controller != 0 && controller != 32) {
+                if (controller == 1) {
+                    ++modulationMSBCount;
+                } else if (controller == 33) {
+                    ++modulationLSBCount;
+                } else if (controller == 7) {
+                    ++channelVolumeMSBCount;
+                } else if (controller == 39) {
+                    ++channelVolumeLSBCount;
+                } else if (controller == 10) {
+                    ++channelPanningMSBCount;
+                } else if (controller == 42) {
+                    ++channelPanningLSBCount;
+                } else if (controller == 99) {
+                    ++NRPNMSBCount;
+                } else if (controller == 98) {
+                    ++NRPNLSBCount;
+                } else if (controller == 101) {
+                    ++RPNMSBCount;
+                } else if (controller == 100) {
+                    ++RPNLSBCount;
+                } else if (controller != 64 && controller != 65 && controller != 120 && controller != 121 && controller != 123) {
+                    ++toggleCount;
+                } else {
+                    ++miscEventCount;
+                }
+            } else {
+                ++programChangeCount;
+            }
+        }
+
+        controllerCount = 0;
+
+        int miscEventOffset = buf.position();
+        ByteBufferUtils.skip(buf, miscEventCount);
+
+        int keyPressureOffset = buf.position();
+        ByteBufferUtils.skip(buf, keyAftertouchCount);
+
+        int channelPressureOffset = buf.position();
+        ByteBufferUtils.skip(buf, channelPressureCount);
+
+        int pitchBendOffset = buf.position();
+        ByteBufferUtils.skip(buf, pitchBendCount);
+
+        int modulationMSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, modulationMSBCount);
+
+        int channelVolumeMSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, channelVolumeMSBCount);
+
+        int channelPanningMSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, channelPanningMSBCount);
+
+        int pitchOffset = buf.position();
+        ByteBufferUtils.skip(buf, noteOnCount + noteOffCount + keyAftertouchCount);
+
+        int noteOnOffset = buf.position();
+        ByteBufferUtils.skip(buf, noteOnCount);
+
+        int toggleOffset = buf.position();
+        ByteBufferUtils.skip(buf, toggleCount);
+
+        int noteOffOffset = buf.position();
+        ByteBufferUtils.skip(buf, noteOffCount);
+
+        int modulationLSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, modulationLSBCount);
+
+        int channelVolumeLSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, channelVolumeLSBCount);
+
+        int channelPanningLSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, channelPanningLSBCount);
+
+        int programChangeOffset = buf.position();
+        ByteBufferUtils.skip(buf, programChangeCount);
+
+        int pitchBend2Offset = buf.position();
+        ByteBufferUtils.skip(buf, pitchBendCount);
+
+        int NRPNMSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, NRPNMSBCount);
+
+        int NRPNLSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, NRPNLSBCount);
+
+        int RPNMSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, RPNMSBCount);
+
+        int RPNLSBOffset = buf.position();
+        ByteBufferUtils.skip(buf, RPNLSBCount);
+
+        int tempoOffset = buf.position();
+        ByteBufferUtils.skip(buf, tempoCount * 3);
+
+        ByteBuffer midiBuff = ByteBuffer.allocate(length + 1);
+
+        midiBuff.putInt(1297377380);
+        midiBuff.putInt(6);
+        midiBuff.putShort((short) (tracks > 1 ? 1 : 0));
+        midiBuff.putShort((short) tracks);
+        midiBuff.putShort((short) division);
+
+        buf.position(track);
+
+        int messagePosition = 0;
+        int pitchPosition = 0;
+        int noteOnPosition = 0;
+        int noteOffPosition = 0;
+        int pitchBendPositions = 0;
+        int channelPressurePosition = 0;
+        int keyPressurePosition = 0;
+        int[] controllerArray = new int[128];
+        controller = 0;
+
+        label: for (int trackIndex = 0; trackIndex < tracks; ++trackIndex) {
+            midiBuff.putInt(1297379947);
+            ByteBufferUtils.skip(midiBuff, 4);
+            int currentPosition = midiBuff.position();
+            int currentOffset = -1;
+
+            while (true) {
+                int varInt = ByteBufferUtils.getVarInt(buf);
+
+                ByteBufferUtils.putVarInt(midiBuff, varInt);
+
+                int controllerValue = buf.array()[controllerCount++] & 255;
+                boolean messageExists = controllerValue != currentOffset;
+                currentOffset = controllerValue & 15;
+                if (controllerValue == 7) {
+                    if (messageExists)
+                    {
+                        midiBuff.put((byte) 255);
+                    }
+
+                    midiBuff.put((byte) 47);
+                    midiBuff.put((byte) 0);
+                    ByteBufferUtils.putLengthFromMark(midiBuff, midiBuff.position() - currentPosition);
+                    continue label;
+                }
+
+                if (controllerValue == 23) {
+                    if (messageExists)
+                    {
+                        midiBuff.put((byte) 255);
+                    }
+
+                    midiBuff.put((byte) 81);
+                    midiBuff.put((byte) 3);
+                    midiBuff.put(buf.array()[tempoOffset++]);
+                    midiBuff.put(buf.array()[tempoOffset++]);
+                    midiBuff.put(buf.array()[tempoOffset++]);
+                } else {
+                    messagePosition ^= controllerValue >> 4;
+                    if (currentOffset == 0) {
+                        if (messageExists) {
+                            midiBuff.put((byte) (144 + messagePosition));
+                        }
+
+                        pitchPosition += buf.array()[pitchOffset++];
+                        noteOnPosition += buf.array()[noteOnOffset++];
+                        midiBuff.put((byte) (pitchPosition & 127));
+                        midiBuff.put((byte) (noteOnPosition & 127));
+                    } else if (currentOffset == 1) {
+                        if (messageExists) {
+                            midiBuff.put((byte) (128 + messagePosition));
+                        }
+
+                        pitchPosition += buf.array()[pitchOffset++];
+                        noteOffPosition += buf.array()[noteOffOffset++];
+                        midiBuff.put((byte) (pitchPosition & 127));
+                        midiBuff.put((byte) (noteOffPosition & 127));
+                    } else if (currentOffset == 2) {
+                        if (messageExists) {
+                            midiBuff.put((byte) (176 + messagePosition));
+                        }
+
+                        controller = controller + buf.array()[eventCount++] & 127;
+                        midiBuff.put((byte) controller);
+                        byte controllerData;
+                        if (controller != 0 && controller != 32) {
+                            if (controller == 1) {
+                                controllerData = buf.array()[modulationMSBOffset++];
+                            } else if (controller == 33) {
+                                controllerData = buf.array()[modulationLSBOffset++];
+                            } else if (controller == 7) {
+                                controllerData = buf.array()[channelVolumeMSBOffset++];
+                            } else if (controller == 39) {
+                                controllerData = buf.array()[channelVolumeLSBOffset++];
+                            } else if (controller == 10) {
+                                controllerData = buf.array()[channelPanningMSBOffset++];
+                            } else if (controller == 42) {
+                                controllerData = buf.array()[channelPanningLSBOffset++];
+                            } else if (controller == 99) {
+                                controllerData = buf.array()[NRPNMSBOffset++];
+                            } else if (controller == 98) {
+                                controllerData = buf.array()[NRPNLSBOffset++];
+                            } else if (controller == 101) {
+                                controllerData = buf.array()[RPNMSBOffset++];
+                            } else if (controller == 100) {
+                                controllerData = buf.array()[RPNLSBOffset++];
+                            } else if (controller != 64 && controller != 65 && controller != 120 && controller != 121 && controller != 123) {
+                                controllerData = buf.array()[toggleOffset++];
+                            } else {
+                                controllerData = buf.array()[miscEventOffset++];
+                            }
+                        } else {
+                            controllerData = buf.array()[programChangeOffset++];
+                        }
+
+                        int controllerInfo = controllerData + controllerArray[controller];
+                        controllerArray[controller] = controllerInfo;
+                        midiBuff.put((byte) (controllerInfo & 127));
+                    } else if (currentOffset == 3) {
+                        if (messageExists) {
+                            midiBuff.put((byte) (224 + messagePosition));
+                        }
+
+                        pitchBendPositions += buf.array()[pitchBend2Offset++];
+                        pitchBendPositions += buf.array()[pitchBendOffset++] << 7;
+                        midiBuff.put((byte) (pitchBendPositions & 127));
+                        midiBuff.put((byte) (pitchBendPositions >> 7 & 127));
+                    } else if (currentOffset == 4) {
+                        if (messageExists) {
+                            midiBuff.put((byte) (208 + messagePosition));
+                        }
+
+                        channelPressurePosition += buf.array()[channelPressureOffset++];
+                        midiBuff.put((byte) (channelPressurePosition & 127));
+                    } else if (currentOffset == 5) {
+                        if (messageExists) {
+                            midiBuff.put((byte) (160 + messagePosition));
+                        }
+
+                        pitchPosition += buf.array()[pitchOffset++];
+                        keyPressurePosition += buf.array()[keyPressureOffset++];
+                        midiBuff.put((byte) (pitchPosition & 127));
+                        midiBuff.put((byte) (keyPressurePosition & 127));
+                    } else {
+                        if (currentOffset != 6) {
+                            throw new RuntimeException();
+                        }
+
+                        if (messageExists) {
+                            midiBuff.put((byte) (192 + messagePosition));
+                        }
+
+                        midiBuff.put(buf.array()[programChangeOffset++]);
+                    }
+                }
+            }
+        }
+
+        midiBuff.flip();
+
+        midi = midiBuff.array();
+    }
+
+    /**
+     * The method to decode RuneScape's custom encoded MIDI data to a regular MIDI format.
+     * @param buf The buffer storing encoded MIDI data
+     */
+    private static void convertToMidi(ByteBuffer buf) {
 
         buf.position(buf.limit() - 3);
         int tracks = buf.get() & 0xFF;
@@ -822,6 +1178,9 @@ class MidiTrack {
 
         dos.flush();
         dos.close();
+
+        Path path = Paths.get("./" + midiFile.getName() + ".dat/");
+        encoded = Files.readAllBytes(path);
     }
 
     static File encode(Sequence sequence) throws IOException {
@@ -1251,6 +1610,10 @@ class MidiTrack {
         return encodedMidiFile;
     }
 
+    public static MidiTrack getMidiTrack(ByteBuffer buffer) {
+        return new MidiTrack(buffer, true);
+    }
+
     /**
      * The method to return decoded MIDI data.
      * @return returns the decoded MIDI file.
@@ -1259,6 +1622,13 @@ class MidiTrack {
         return midi;
     }
 
+    /**
+     * The method to return encoded MIDI data.
+     * @return returns the encoded MIDI file.
+     */
+    static byte[] getEncoded() {
+        return encoded;
+    }
 
     void loadMidiTrackInfo() {
         if(this.table == null) {
@@ -1337,7 +1707,6 @@ class MidiTrack {
                 }
             } while(!var3.isDone());
         }
-
     }
 
     void clear() {
