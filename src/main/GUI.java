@@ -152,6 +152,9 @@ public class GUI implements ControllerEventListener {
 
 			utilityMenu.add("Convert Data - Sound Bank to SoundFont").addActionListener(new SoundFontCreator());
 
+			utilityMenu.add("Dump Raw Soundbank").addActionListener(new SoundDumper());
+			utilityMenu.add("Pack Raw Soundbank").addActionListener(new SoundPacker());
+
 			utilityMenu.add("Render Song").addActionListener(new SongRenderer());
 
 			playlistMenu = new JMenu();
@@ -2502,7 +2505,9 @@ public class GUI implements ControllerEventListener {
 			if (midiFile != null) {
 				try {
 					MidiTrack.encode(midiFile);
-					cacheLibrary.getIndex(6).getArchive(0).getFile(0).setData(MidiTrack.getEncoded());
+					cacheLibrary.getIndex(6).getArchive(0).removeFile(0);
+					cacheLibrary.getIndex(6).getArchive(0).addFile(MidiTrack.getEncoded());
+					cacheLibrary.getIndex(6).update();
 					System.out.println("MIDI file successfully encoded and packed to ID - 0!");
 				} catch (InvalidMidiDataException | IOException ex) {
 					ex.printStackTrace();
@@ -3184,6 +3189,126 @@ public class GUI implements ControllerEventListener {
 
 			while (midiPcmStream.active) {
 				soundPlayer.run();
+			}
+		}
+	}
+
+	private class SoundDumper implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			Index soundEffectIndex = cacheLibrary.getIndex(4);
+			Index soundBankIndex = cacheLibrary.getIndex(14);
+			Index musicPatchIndex = cacheLibrary.getIndex(15);
+
+			for (int i = 0; i < soundEffectIndex.getArchives().length; i++) {
+				try {
+					FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 4/" + i + ".dat/"));
+					fileOutputStream.write(soundEffectIndex.getArchive(i).getFile(0).getData());
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			for (int i = 0; i < soundBankIndex.getArchives().length; i++) {
+				try {
+					FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 14/" + i + ".dat/"));
+					fileOutputStream.write(soundBankIndex.getArchive(i).getFile(0).getData());
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			for (int i = 0; i < 4000; i++) {
+				try {
+
+					if (musicPatchIndex.getArchive(i) == null) {
+						continue;
+					}
+
+					FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 15/" + i + ".dat/"));
+					fileOutputStream.write(musicPatchIndex.getArchive(i).getFile(0).getData());
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+	}
+
+	private class SoundPacker implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			Index soundEffectIndex = cacheLibrary.getIndex(4);
+			Index soundBankIndex = cacheLibrary.getIndex(14);
+			Index musicPatchIndex = cacheLibrary.getIndex(15);
+
+			for (int i = 0; i < 10000; i++) {
+				Path path = Paths.get("./Raw Data/Index 4/" + i + ".dat/");
+				try {
+					if (path.toFile().exists()) {
+
+						byte[] data = Files.readAllBytes(path);
+
+						if (soundEffectIndex.getArchive(i) == null) {
+							soundEffectIndex.addArchive(i).addFile(data);
+							soundEffectIndex.update();
+						}
+						else {
+							soundEffectIndex.getArchive(i).removeFile(0);
+							soundEffectIndex.getArchive(i).addFile(data);
+							soundEffectIndex.update();
+						}
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			for (int i = 0; i < 10000; i++) {
+				Path path = Paths.get("./Raw Data/Index 14/" + i + ".dat/");
+				try {
+					if (path.toFile().exists()) {
+
+						byte[] data = Files.readAllBytes(path);
+
+						if (soundBankIndex.getArchive(i) == null) {
+							soundBankIndex.addArchive(i).addFile(data);
+							soundBankIndex.update();
+						}
+						else {
+							soundBankIndex.getArchive(i).removeFile(0);
+							soundBankIndex.getArchive(i).addFile(data);
+							soundBankIndex.update();
+						}
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			for (int i = 0; i < 10000; i++) {
+				Path path = Paths.get("./Raw Data/Index 15/" + i + ".dat/");
+				try {
+					if (path.toFile().exists()) {
+
+						byte[] data = Files.readAllBytes(path);
+
+						if (musicPatchIndex.getArchive(i) == null) {
+							musicPatchIndex.addArchive(i).addFile(data);
+							musicPatchIndex.update();
+						}
+						else {
+							musicPatchIndex.getArchive(i).removeFile(0);
+							musicPatchIndex.getArchive(i).addFile(data);
+							musicPatchIndex.update();
+						}
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
 			}
 		}
 	}
