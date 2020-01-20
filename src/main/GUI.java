@@ -3204,8 +3204,10 @@ public class GUI implements ControllerEventListener {
 
 			for (int i = 0; i < soundEffectIndex.getArchives().length; i++) {
 				try {
-					FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 4/" + i + ".dat/"));
-					fileOutputStream.write(soundEffectIndex.getArchive(i).getFile(0).getData());
+					if (soundEffectIndex.getArchive(i) != null) {
+						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 4/" + i + ".dat/"));
+						fileOutputStream.write(soundEffectIndex.getArchive(i).getFile(0).getData());
+					}
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -3213,8 +3215,10 @@ public class GUI implements ControllerEventListener {
 
 			for (int i = 0; i < soundBankIndex.getArchives().length; i++) {
 				try {
-					FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 14/" + i + ".dat/"));
-					fileOutputStream.write(soundBankIndex.getArchive(i).getFile(0).getData());
+					if (soundBankIndex.getArchive(i) != null) {
+						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 14/" + i + ".dat/"));
+						fileOutputStream.write(soundBankIndex.getArchive(i).getFile(0).getData());
+					}
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
@@ -3245,7 +3249,7 @@ public class GUI implements ControllerEventListener {
 			Index soundBankIndex = cacheLibrary.getIndex(14);
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
-			for (int i = 0; i < 10000; i++) {
+			for (int i = 0; i < 100000; i++) {
 				Path path = Paths.get("./Raw Data/Index 4/" + i + ".dat/");
 				try {
 					if (path.toFile().exists()) {
@@ -3267,7 +3271,7 @@ public class GUI implements ControllerEventListener {
 				}
 			}
 
-			for (int i = 0; i < 10000; i++) {
+			for (int i = 0; i < 100000; i++) {
 				Path path = Paths.get("./Raw Data/Index 14/" + i + ".dat/");
 				try {
 					if (path.toFile().exists()) {
@@ -3289,7 +3293,7 @@ public class GUI implements ControllerEventListener {
 				}
 			}
 
-			for (int i = 0; i < 10000; i++) {
+			for (int i = 0; i < 100000; i++) {
 				Path path = Paths.get("./Raw Data/Index 15/" + i + ".dat/");
 				try {
 					if (path.toFile().exists()) {
