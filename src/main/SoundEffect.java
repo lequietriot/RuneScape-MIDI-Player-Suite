@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 
 public class SoundEffect {
 
-    private static AudioInstrument[] instruments;
+    private static Tone[] tones;
     
     private static int start;
     private static int end;
@@ -19,23 +19,23 @@ public class SoundEffect {
 
     public void decode(ByteBuffer buffer) {
 
-        instruments = new AudioInstrument[10];
+        tones = new Tone[10];
 
-        for(int idx = 0; idx < 10; ++idx) {
-            final int var3 = buffer.get() & 0xFF;
-            if(var3 != 0) {
+        for(int index = 0; index < 10; ++index) {
+            final int type = buffer.get() & 0xFF;
+            if(type != 0) {
                 buffer.position(buffer.position() - 1);
-                instruments[idx] = new AudioInstrument();
-                instruments[idx].decode(buffer);
+                tones[index] = new Tone();
+                tones[index].decode(buffer);
             }
         }
         start = buffer.getShort() & 0xFFFF;
         end = buffer.getShort() & 0xFFFF;
     }
 
-    public static RawSound toRawSound() {
+    public static AudioBuffer toRawSound() {
         final byte[] mix = mix();
-        return new RawSound(22050, mix, start * 22050 / 1000, end * 22050 / 1000);
+        return new AudioBuffer(22050, mix, start * 22050 / 1000, end * 22050 / 1000);
     }
 
     public final int calculateDelay() {
@@ -43,8 +43,8 @@ public class SoundEffect {
 
         int var2;
         for(var2 = 0; var2 < 10; ++var2) {
-            if(instruments[var2] != null && instruments[var2].offset / 20 < var1) {
-                var1 = instruments[var2].offset / 20;
+            if(tones[var2] != null && tones[var2].offset / 20 < var1) {
+                var1 = tones[var2].offset / 20;
             }
         }
 
@@ -54,8 +54,8 @@ public class SoundEffect {
 
         if(var1 != 9999999 && var1 != 0) {
             for(var2 = 0; var2 < 10; ++var2) {
-                if(instruments[var2] != null) {
-                    instruments[var2].offset -= var1 * 20;
+                if(tones[var2] != null) {
+                    tones[var2].offset -= var1 * 20;
                 }
             }
 
@@ -75,8 +75,8 @@ public class SoundEffect {
 
         int var2;
         for(var2 = 0; var2 < 10; ++var2) {
-            if(instruments[var2] != null && instruments[var2].duration + instruments[var2].offset > var1) {
-                var1 = instruments[var2].duration + instruments[var2].offset;
+            if(tones[var2] != null && tones[var2].duration + tones[var2].offset > var1) {
+                var1 = tones[var2].duration + tones[var2].offset;
             }
         }
 
@@ -87,10 +87,10 @@ public class SoundEffect {
             final byte[] var3 = new byte[var2];
 
             for(int var4 = 0; var4 < 10; ++var4) {
-                if(instruments[var4] != null) {
-                    final int var5 = instruments[var4].duration * 22050 / 1000;
-                    final int var6 = instruments[var4].offset * 22050 / 1000;
-                    final int[] var7 = instruments[var4].synthesize(var5, instruments[var4].duration);
+                if(tones[var4] != null) {
+                    final int var5 = tones[var4].duration * 22050 / 1000;
+                    final int var6 = tones[var4].offset * 22050 / 1000;
+                    final int[] var7 = tones[var4].synthesize(var5, tones[var4].duration);
 
                     for(int var8 = 0; var8 < var5; ++var8) {
                         int var9 = (var7[var8] >> 8) + var3[var8 + var6];

@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 public class MusicPatch extends Node {
 
     int unknownInt;
-    RawSound[] rawSounds;
+    AudioBuffer[] audioBuffers;
     short[] generators;
     byte[] __w;
     byte[] __o;
@@ -24,7 +24,7 @@ public class MusicPatch extends Node {
     }
 
     MusicPatch(ByteBuffer buffer) {
-        this.rawSounds = new RawSound[128];
+        this.audioBuffers = new AudioBuffer[128];
         this.generators = new short[128];
         this.__w = new byte[128];
         this.__o = new byte[128];
@@ -480,7 +480,7 @@ public class MusicPatch extends Node {
 
         boolean var4 = true;
         int var5 = 0;
-        RawSound var6 = null;
+        AudioBuffer var6 = null;
 
         for(int var7 = 0; var7 < 128; ++var7) {
             if(var2 == null || var2[var7] != 0) {
@@ -500,7 +500,7 @@ public class MusicPatch extends Node {
                     }
 
                     if(var6 != null) {
-                        this.rawSounds[var7] = var6;
+                        this.audioBuffers[var7] = var6;
                         this.containerIDs[var7] = 0;
                     }
                 }

@@ -4,13 +4,11 @@ import main.utils.ByteArrayNode;
 import main.utils.NodeHashTable;
 import org.displee.cache.index.Index;
 
-import java.io.IOException;
-
 public class MidiPcmStream extends PcmStream {
 
     NodeHashTable musicPatches;
     int volume;
-    int tempoDivision;
+    int pitchChangeInterval;
     int[] volumeCtrlArray;
     int[] panCtrlArray;
     int[] expressionCtrlArray;
@@ -38,7 +36,7 @@ public class MidiPcmStream extends PcmStream {
 
     public MidiPcmStream() {
         this.volume = 256;
-        this.tempoDivision = 1000000;
+        this.pitchChangeInterval = 10000000;
         this.volumeCtrlArray = new int[16];
         this.panCtrlArray = new int[16];
         this.expressionCtrlArray = new int[16];
@@ -70,23 +68,7 @@ public class MidiPcmStream extends PcmStream {
         return this.volume;
     }
 
-    public synchronized boolean altLoadMidiTrack(MidiTrack var1, Index var2, SoundBankCache var3, int var4) {
-        boolean var5 = false;
-
-        for(int index = 0; index < 1; index++) {
-            int var8 = index;
-            MusicPatch var9 = (MusicPatch) this.musicPatches.get(var8);
-            if (var9 == null) {
-                var9 = MusicPatch.getMusicPatch(var2, var8, 0);
-
-                this.musicPatches.put(var9, var8);
-            }
-            var9.loadPatchSamples(var3, null, null);
-        }
-        return var5;
-    }
-
-    public synchronized boolean loadMidiTrack(MidiTrack var1, Index var2, SoundBankCache var3, int var4) {
+    public synchronized boolean loadMusicTrack(MidiTrack var1, Index var2, SoundBankCache var3, int var4) {
         var1.loadMidiTrackInfo();
         boolean var5 = false;
         int[] var6 = null;
@@ -104,7 +86,7 @@ public class MidiPcmStream extends PcmStream {
                     continue;
                 }
 
-                this.musicPatches.put(var9, var8);
+                this.musicPatches.put(var9, (long) var8);
             }
 
             if(!var9.loadPatchSamples(var3, var7.byteArray, var6)) {
@@ -147,7 +129,7 @@ public class MidiPcmStream extends PcmStream {
 
     protected synchronized void __e_172(int[] var1, int var2, int var3) {
         if(this.midiFile.isReady()) {
-            int var4 = this.midiFile.division * this.tempoDivision / AudioConstants.systemSampleRate;
+            int var4 = this.midiFile.division * this.pitchChangeInterval / AudioConstants.systemSampleRate;
 
             do {
                 long var5 = (long)var4 * (long)var3 + this.__ac;
@@ -168,7 +150,7 @@ public class MidiPcmStream extends PcmStream {
         this.patchStream.__e_172(var1, var2, var3);
     }
 
-    public synchronized void setMidiTrack(MidiTrack var1, boolean var2) {
+    public synchronized void setMusicTrack(MidiTrack var1, boolean var2) {
         this.clear();
         this.midiFile.parse(var1.midi);
         this.__aj = var2;
@@ -188,7 +170,7 @@ public class MidiPcmStream extends PcmStream {
 
     protected synchronized void __d_173(int var1) {
         if(this.midiFile.isReady()) {
-            int var2 = this.midiFile.division * this.tempoDivision / AudioConstants.systemSampleRate;
+            int var2 = this.midiFile.division * this.pitchChangeInterval / AudioConstants.systemSampleRate;
 
             do {
                 long var3 = this.__ac + (long)var2 * (long)var1;
@@ -224,10 +206,10 @@ public class MidiPcmStream extends PcmStream {
     void __s_343(int var1, int var2) {
         this.programChangeArray[var1] = var2;
         this.bankSelectArray[var1] = var2 & -128;
-        this.__t_344(var1, var2);
+        this.setProgramChange(var1, var2);
     }
 
-    void __t_344(int var1, int var2) {
+    void setProgramChange(int var1, int var2) {
         if(var2 != this.patchArray[var1]) {
             this.patchArray[var1] = var2;
 
@@ -238,8 +220,8 @@ public class MidiPcmStream extends PcmStream {
 
     }
 
-    void __y_345(int var1, int var2, int var3) {
-        this.__b_347(var1, var2, 64);
+    void setNoteOn(int var1, int var2, int var3) {
+        this.setNoteOff(var1, var2, 64);
         if((this.switchArray[var1] & 2) != 0) {
             for(MusicPatchNode var4 = (MusicPatchNode)this.patchStream.queue.first(); var4 != null; var4 = (MusicPatchNode)this.patchStream.queue.next()) {
                 if(var4.volumeValue == var1 && var4.__a < 0) {
@@ -257,12 +239,12 @@ public class MidiPcmStream extends PcmStream {
 
         MusicPatch var9 = (MusicPatch)this.musicPatches.get((long)this.patchArray[var1]);
         if(var9 != null) {
-            RawSound var8 = var9.rawSounds[var2];
+            AudioBuffer var8 = var9.audioBuffers[var2];
             if(var8 != null) {
                 MusicPatchNode var6 = new MusicPatchNode();
                 var6.volumeValue = var1;
                 var6.patch = var9;
-                var6.rawSound = var8;
+                var6.audioBuffer = var8;
                 var6.__w = var9.parameters[var2];
                 var6.__o = var9.notes[var2];
                 var6.__u = var2;
@@ -302,10 +284,10 @@ public class MidiPcmStream extends PcmStream {
     }
 
     void __h_346(MusicPatchNode var1, boolean var2) {
-        int var3 = var1.rawSound.samples.length;
+        int var3 = var1.audioBuffer.samples.length;
         int var4;
-        if(var2 && var1.rawSound.effectsEnabled) {
-            int var5 = var3 + var3 - var1.rawSound.start;
+        if(var2 && var1.audioBuffer.bool) {
+            int var5 = var3 + var3 - var1.audioBuffer.start;
             var4 = (int)((long)var5 * (long)this.customEffectArray[var1.volumeValue] >> 6);
             var3 <<= 8;
             if(var4 >= var3) {
@@ -319,7 +301,7 @@ public class MidiPcmStream extends PcmStream {
         var1.stream.__y_187(var4);
     }
 
-    void __b_347(int var1, int var2, int var3) {
+    void setNoteOff(int var1, int var2, int var3) {
         MusicPatchNode var4 = this.__v[var1][var2];
         if(var4 != null) {
             this.__v[var1][var2] = null;
@@ -337,17 +319,17 @@ public class MidiPcmStream extends PcmStream {
         }
     }
 
-    void __c_348(int var1, int var2, int var3) {
+    void setPolyphonicAftertouch(int var1, int var2, int var3) {
     }
 
-    void __p_349(int var1, int var2) {
+    void setAftertouch(int var1, int var2) {
     }
 
-    void __v_350(int var1, int var2) {
+    void setPitchBend(int var1, int var2) {
         this.pitchBendArray[var1] = var2;
     }
 
-    void __ah_351(int var1) {
+    void turnSoundOff(int var1) {
         for(MusicPatchNode var2 = (MusicPatchNode)this.patchStream.queue.last(); var2 != null; var2 = (MusicPatchNode)this.patchStream.queue.previous()) {
             if(var1 < 0 || var2.volumeValue == var1) {
                 if(var2.stream != null) {
@@ -356,7 +338,7 @@ public class MidiPcmStream extends PcmStream {
                         this.patchStream.mixer.addSubStream(var2.stream);
                     }
 
-                    var2.__m_370();
+                    var2.clearAudioBuffer();
                 }
 
                 if(var2.__a < 0) {
@@ -369,7 +351,7 @@ public class MidiPcmStream extends PcmStream {
 
     }
 
-    void __ab_352(int var1) {
+    void resetAllControllers(int var1) {
         if(var1 >= 0) {
             this.volumeCtrlArray[var1] = 12800;
             this.panCtrlArray[var1] = 8192;
@@ -386,13 +368,13 @@ public class MidiPcmStream extends PcmStream {
             this.__ao_358(var1, 8192);
         } else {
             for(var1 = 0; var1 < 16; ++var1) {
-                this.__ab_352(var1);
+                this.resetAllControllers(var1);
             }
 
         }
     }
 
-    void __ae_353(int var1) {
+    void muteAllNotes(int var1) {
         for(MusicPatchNode var2 = (MusicPatchNode)this.patchStream.queue.last(); var2 != null; var2 = (MusicPatchNode)this.patchStream.queue.previous()) {
             if((var1 < 0 || var2.volumeValue == var1) && var2.__a < 0) {
                 this.__v[var2.volumeValue][var2.__u] = null;
@@ -403,8 +385,8 @@ public class MidiPcmStream extends PcmStream {
     }
 
     void __at_354() {
-        this.__ah_351(-1);
-        this.__ab_352(-1);
+        this.turnSoundOff(-1);
+        this.resetAllControllers(-1);
 
         int var1;
         for(var1 = 0; var1 < 16; ++var1) {
@@ -439,183 +421,183 @@ public class MidiPcmStream extends PcmStream {
 
     }
 
-    void __au_357(int var1) {
-        int var2 = var1 & 240;
-        int var3;
+    void parseMidiMessage(int midiMessage) {
+        int status = midiMessage & 240;
+        int messageSize;
         int midiCtrl;
         int dataValue1;
-        if(var2 == 128) {
-            var3 = var1 & 15;
-            midiCtrl = var1 >> 8 & 127;
-            dataValue1 = var1 >> 16 & 127;
-            this.__b_347(var3, midiCtrl, dataValue1);
-        } else if(var2 == 144) {
-            var3 = var1 & 15;
-            midiCtrl = var1 >> 8 & 127;
-            dataValue1 = var1 >> 16 & 127;
+        if(status == 128) {
+            messageSize = midiMessage & 15;
+            midiCtrl = midiMessage >> 8 & 127;
+            dataValue1 = midiMessage >> 16 & 127;
+            this.setNoteOff(messageSize, midiCtrl, dataValue1);
+        } else if(status == 144) {
+            messageSize = midiMessage & 15;
+            midiCtrl = midiMessage >> 8 & 127;
+            dataValue1 = midiMessage >> 16 & 127;
             if(dataValue1 > 0) {
-                this.__y_345(var3, midiCtrl, dataValue1);
+                this.setNoteOn(messageSize, midiCtrl, dataValue1);
             } else {
-                this.__b_347(var3, midiCtrl, 64);
+                this.setNoteOff(messageSize, midiCtrl, 64);
             }
 
-        } else if(var2 == 160) {
-            var3 = var1 & 15;
-            midiCtrl = var1 >> 8 & 127;
-            dataValue1 = var1 >> 16 & 127;
-            this.__c_348(var3, midiCtrl, dataValue1);
-        } else if(var2 == 176) {
-            var3 = var1 & 15;
-            midiCtrl = var1 >> 8 & 127;
-            dataValue1 = var1 >> 16 & 127;
+        } else if(status == 160) {
+            messageSize = midiMessage & 15;
+            midiCtrl = midiMessage >> 8 & 127;
+            dataValue1 = midiMessage >> 16 & 127;
+            this.setPolyphonicAftertouch(messageSize, midiCtrl, dataValue1);
+        } else if(status == 176) {
+            messageSize = midiMessage & 15;
+            midiCtrl = midiMessage >> 8 & 127;
+            dataValue1 = midiMessage >> 16 & 127;
             if(midiCtrl == 0) {
-                this.bankSelectArray[var3] = (dataValue1 << 14) + (this.bankSelectArray[var3] & -2080769);
+                this.bankSelectArray[messageSize] = (dataValue1 << 14) + (this.bankSelectArray[messageSize] & -2080769);
             }
 
             if(midiCtrl == 32) {
-                this.bankSelectArray[var3] = (dataValue1 << 7) + (this.bankSelectArray[var3] & -16257);
+                this.bankSelectArray[messageSize] = (dataValue1 << 7) + (this.bankSelectArray[messageSize] & -16257);
             }
 
             if(midiCtrl == 1) {
-                this.modulationCtrlArray[var3] = (dataValue1 << 7) + (this.modulationCtrlArray[var3] & -16257);
+                this.modulationCtrlArray[messageSize] = (dataValue1 << 7) + (this.modulationCtrlArray[messageSize] & -16257);
             }
 
             if(midiCtrl == 33) {
-                this.modulationCtrlArray[var3] = dataValue1 + (this.modulationCtrlArray[var3] & -128);
+                this.modulationCtrlArray[messageSize] = dataValue1 + (this.modulationCtrlArray[messageSize] & -128);
             }
 
             if(midiCtrl == 5) {
-                this.portTimeCtrlArray[var3] = (dataValue1 << 7) + (this.portTimeCtrlArray[var3] & -16257);
+                this.portTimeCtrlArray[messageSize] = (dataValue1 << 7) + (this.portTimeCtrlArray[messageSize] & -16257);
             }
 
             if(midiCtrl == 37) {
-                this.portTimeCtrlArray[var3] = dataValue1 + (this.portTimeCtrlArray[var3] & -128);
+                this.portTimeCtrlArray[messageSize] = dataValue1 + (this.portTimeCtrlArray[messageSize] & -128);
             }
 
             if(midiCtrl == 7) {
-                this.volumeCtrlArray[var3] = (dataValue1 << 7) + (this.volumeCtrlArray[var3] & -16257);
+                this.volumeCtrlArray[messageSize] = (dataValue1 << 7) + (this.volumeCtrlArray[messageSize] & -16257);
             }
 
             if(midiCtrl == 39) {
-                this.volumeCtrlArray[var3] = dataValue1 + (this.volumeCtrlArray[var3] & -128);
+                this.volumeCtrlArray[messageSize] = dataValue1 + (this.volumeCtrlArray[messageSize] & -128);
             }
 
             if(midiCtrl == 10) {
-                this.panCtrlArray[var3] = (dataValue1 << 7) + (this.panCtrlArray[var3] & -16257);
+                this.panCtrlArray[messageSize] = (dataValue1 << 7) + (this.panCtrlArray[messageSize] & -16257);
             }
 
             if(midiCtrl == 42) {
-                this.panCtrlArray[var3] = dataValue1 + (this.panCtrlArray[var3] & -128);
+                this.panCtrlArray[messageSize] = dataValue1 + (this.panCtrlArray[messageSize] & -128);
             }
 
             if(midiCtrl == 11) {
-                this.expressionCtrlArray[var3] = (dataValue1 << 7) + (this.expressionCtrlArray[var3] & -16257);
+                this.expressionCtrlArray[messageSize] = (dataValue1 << 7) + (this.expressionCtrlArray[messageSize] & -16257);
             }
 
             if(midiCtrl == 43) {
-                this.expressionCtrlArray[var3] = dataValue1 + (this.expressionCtrlArray[var3] & -128);
+                this.expressionCtrlArray[messageSize] = dataValue1 + (this.expressionCtrlArray[messageSize] & -128);
             }
 
             if(midiCtrl == 64) {
                 if(dataValue1 >= 64) {
-                    this.switchArray[var3] |= 1;
+                    this.switchArray[messageSize] |= 1;
                 } else {
-                    this.switchArray[var3] &= -2;
+                    this.switchArray[messageSize] &= -2;
                 }
             }
 
             if(midiCtrl == 65) {
                 if(dataValue1 >= 64) {
-                    this.switchArray[var3] |= 2;
+                    this.switchArray[messageSize] |= 2;
                 } else {
-                    this.__ad_355(var3);
-                    this.switchArray[var3] &= -3;
+                    this.__ad_355(messageSize);
+                    this.switchArray[messageSize] &= -3;
                 }
             }
 
             if(midiCtrl == 99) {
-                this.rpnCtrlArray[var3] = (dataValue1 << 7) + (this.rpnCtrlArray[var3] & 127);
+                this.rpnCtrlArray[messageSize] = (dataValue1 << 7) + (this.rpnCtrlArray[messageSize] & 127);
             }
 
             if(midiCtrl == 98) {
-                this.rpnCtrlArray[var3] = (this.rpnCtrlArray[var3] & 16256) + dataValue1;
+                this.rpnCtrlArray[messageSize] = (this.rpnCtrlArray[messageSize] & 16256) + dataValue1;
             }
 
             if(midiCtrl == 101) {
-                this.rpnCtrlArray[var3] = (dataValue1 << 7) + (this.rpnCtrlArray[var3] & 127) + 16384;
+                this.rpnCtrlArray[messageSize] = (dataValue1 << 7) + (this.rpnCtrlArray[messageSize] & 127) + 16384;
             }
 
             if(midiCtrl == 100) {
-                this.rpnCtrlArray[var3] = (this.rpnCtrlArray[var3] & 16256) + dataValue1 + 16384;
+                this.rpnCtrlArray[messageSize] = (this.rpnCtrlArray[messageSize] & 16256) + dataValue1 + 16384;
             }
 
             if(midiCtrl == 120) {
-                this.__ah_351(var3);
+                this.turnSoundOff(messageSize);
             }
 
             if(midiCtrl == 121) {
-                this.__ab_352(var3);
+                this.resetAllControllers(messageSize);
             }
 
             if(midiCtrl == 123) {
-                this.__ae_353(var3);
+                this.muteAllNotes(messageSize);
             }
 
             int var6;
             if(midiCtrl == 6) {
-                var6 = this.rpnCtrlArray[var3];
+                var6 = this.rpnCtrlArray[messageSize];
                 if(var6 == 16384) {
-                    this.dataEntryMSBArray[var3] = (dataValue1 << 7) + (this.dataEntryMSBArray[var3] & -16257);
+                    this.dataEntryMSBArray[messageSize] = (dataValue1 << 7) + (this.dataEntryMSBArray[messageSize] & -16257);
                 }
             }
 
             if(midiCtrl == 38) {
-                var6 = this.rpnCtrlArray[var3];
+                var6 = this.rpnCtrlArray[messageSize];
                 if(var6 == 16384) {
-                    this.dataEntryMSBArray[var3] = dataValue1 + (this.dataEntryMSBArray[var3] & -128);
+                    this.dataEntryMSBArray[messageSize] = dataValue1 + (this.dataEntryMSBArray[messageSize] & -128);
                 }
             }
 
             if(midiCtrl == 16) {
-                this.customEffectArray[var3] = (dataValue1 << 7) + (this.customEffectArray[var3] & -16257);
+                this.customEffectArray[messageSize] = (dataValue1 << 7) + (this.customEffectArray[messageSize] & -16257);
             }
 
             if(midiCtrl == 48) {
-                this.customEffectArray[var3] = dataValue1 + (this.customEffectArray[var3] & -128);
+                this.customEffectArray[messageSize] = dataValue1 + (this.customEffectArray[messageSize] & -128);
             }
 
             if(midiCtrl == 81) {
                 if(dataValue1 >= 64) {
-                    this.switchArray[var3] |= 4;
+                    this.switchArray[messageSize] |= 4;
                 } else {
-                    this.__ap_356(var3);
-                    this.switchArray[var3] &= -5;
+                    this.__ap_356(messageSize);
+                    this.switchArray[messageSize] &= -5;
                 }
             }
 
             if(midiCtrl == 17) {
-                this.__ao_358(var3, (dataValue1 << 7) + (this.retriggerCustomArray[var3] & -16257));
+                this.__ao_358(messageSize, (dataValue1 << 7) + (this.retriggerCustomArray[messageSize] & -16257));
             }
 
             if(midiCtrl == 49) {
-                this.__ao_358(var3, dataValue1 + (this.retriggerCustomArray[var3] & -128));
+                this.__ao_358(messageSize, dataValue1 + (this.retriggerCustomArray[messageSize] & -128));
             }
 
-        } else if(var2 == 192) {
-            var3 = var1 & 15;
-            midiCtrl = var1 >> 8 & 127;
-            this.__t_344(var3, midiCtrl + this.bankSelectArray[var3]);
-        } else if(var2 == 208) {
-            var3 = var1 & 15;
-            midiCtrl = var1 >> 8 & 127;
-            this.__p_349(var3, midiCtrl);
-        } else if(var2 == 224) {
-            var3 = var1 & 15;
-            midiCtrl = (var1 >> 8 & 127) + (var1 >> 9 & 16256);
-            this.__v_350(var3, midiCtrl);
+        } else if(status == 192) {
+            messageSize = midiMessage & 15;
+            midiCtrl = midiMessage >> 8 & 127;
+            this.setProgramChange(messageSize, midiCtrl + this.bankSelectArray[messageSize]);
+        } else if(status == 208) {
+            messageSize = midiMessage & 15;
+            midiCtrl = midiMessage >> 8 & 127;
+            this.setAftertouch(messageSize, midiCtrl);
+        } else if(status == 224) {
+            messageSize = midiMessage & 15;
+            midiCtrl = (midiMessage >> 8 & 127) + (midiMessage >> 9 & 16256);
+            this.setPitchBend(messageSize, midiCtrl);
         } else {
-            var2 = var1 & 255;
-            if(var2 == 255) {
+            status = midiMessage & 255;
+            if(status == 255) {
                 this.__at_354();
             }
         }
@@ -643,8 +625,8 @@ public class MidiPcmStream extends PcmStream {
             var2 += (int)(var6 * (double)var4);
         }
 
-        var4 = (int)((double)(var1.rawSound.sampleRate * 256) * Math.pow(2.0D, (double)var2 * 3.255208333333333E-4D) / (double) AudioConstants.systemSampleRate + 0.5D);
-        return var4 < 1?1:var4;
+        var4 = (int)((double)(var1.audioBuffer.sampleRate * 256) * Math.pow(2.0D, (double)var2 * 3.255208333333333E-4D) / (double) AudioConstants.systemSampleRate + 0.5D);
+        return Math.max(var4, 1);
     }
 
     int __ax_360(MusicPatchNode var1) {
@@ -694,19 +676,19 @@ public class MidiPcmStream extends PcmStream {
     }
 
     void __ai_367() {
-        int var1 = this.track;
-        int var2 = this.trackLength;
+        int t = this.track;
+        int tLength = this.trackLength;
 
         long var3;
-        for(var3 = this.__ay; var2 == this.trackLength; var3 = this.midiFile.__a_372(var2)) {
-            while(var2 == this.midiFile.trackLengths[var1]) {
-                this.midiFile.gotoTrack(var1);
-                int var5 = this.midiFile.readMessage(var1);
-                if(var5 == 1) {
+        for(var3 = this.__ay; tLength == this.trackLength; var3 = this.midiFile.__a_372(tLength)) {
+            while(tLength == this.midiFile.trackLengths[t]) {
+                this.midiFile.gotoTrack(t);
+                int midiMessage = this.midiFile.readMessage(t);
+                if(midiMessage == 1) {
                     this.midiFile.setTrackDone();
-                    this.midiFile.markTrackPosition(var1);
+                    this.midiFile.markTrackPosition(t);
                     if(this.midiFile.isDone()) {
-                        if(!this.__aj || var2 == 0) {
+                        if(!this.__aj || tLength == 0) {
                             this.__at_354();
                             this.midiFile.clear();
                             return;
@@ -717,20 +699,20 @@ public class MidiPcmStream extends PcmStream {
                     break;
                 }
 
-                if((var5 & 128) != 0) {
-                    this.__au_357(var5);
+                if((midiMessage & 128) != 0) {
+                    this.parseMidiMessage(midiMessage);
                 }
 
-                this.midiFile.readTrackLength(var1);
-                this.midiFile.markTrackPosition(var1);
+                this.midiFile.readTrackLength(t);
+                this.midiFile.markTrackPosition(t);
             }
 
-            var1 = this.midiFile.getPrioritizedTrack();
-            var2 = this.midiFile.trackLengths[var1];
+            t = this.midiFile.getPrioritizedTrack();
+            tLength = this.midiFile.trackLengths[t];
         }
 
-        this.track = var1;
-        this.trackLength = var2;
+        this.track = t;
+        this.trackLength = tLength;
         this.__ay = var3;
     }
 
@@ -820,7 +802,7 @@ public class MidiPcmStream extends PcmStream {
                     this.patchStream.mixer.addSubStream(var1.stream);
                 }
 
-                var1.__m_370();
+                var1.clearAudioBuffer();
                 if(var1.__a >= 0) {
                     var1.remove();
                     if(var1.__o > 0 && var1 == this.__ag[var1.volumeValue][var1.__o]) {
@@ -834,7 +816,7 @@ public class MidiPcmStream extends PcmStream {
                 return false;
             }
         } else {
-            var1.__m_370();
+            var1.clearAudioBuffer();
             var1.remove();
             if(var1.__o > 0 && var1 == this.__ag[var1.volumeValue][var1.__o]) {
                 this.__ag[var1.volumeValue][var1.__o] = null;
@@ -844,7 +826,7 @@ public class MidiPcmStream extends PcmStream {
         }
     }
 
-    static final void PcmStream_disable(PcmStream var0) {
+    static void PcmStream_disable(PcmStream var0) {
         var0.active = false;
         if(var0.sound != null) {
             var0.sound.position = 0;

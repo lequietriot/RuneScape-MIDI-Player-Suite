@@ -4,98 +4,98 @@ import main.utils.ByteBufferUtils;
 
 public class MusicSampleCodebook {
 
-   int field1306;
-   int field1303;
-   int[] field1304;
-   int[] field1305;
-   float[][] field1302;
+   int dimensions;
+   int entries;
+   int[] entryLengths;
+   int[] codebookMultiplicands;
+   float[][] valueVector;
    int[] field1307;
 
    MusicSampleCodebook() {
-      MusicSample.method2352(24);
-      this.field1306 = MusicSample.method2352(16);
-      this.field1303 = MusicSample.method2352(24);
-      this.field1304 = new int[this.field1303];
-      boolean var1 = MusicSample.method2338() != 0;
-      int var2;
-      int var3;
-      int var4;
-      if(var1) {
-         var2 = 0;
+      MusicSample.getInt(24);
+      this.dimensions = MusicSample.getInt(16);
+      this.entries = MusicSample.getInt(24);
+      this.entryLengths = new int[this.entries];
+      boolean ordered = MusicSample.getBit() != 0;
+      int codebookLookupType;
+      int i_2;
+      int codebookValueBits;
+      if(ordered) {
+         codebookLookupType = 0;
 
-         for(var3 = MusicSample.method2352(5) + 1; var2 < this.field1303; ++var3) {
-            int var5 = MusicSample.method2352(ByteBufferUtils.method634(this.field1303 - var2));
+         for(i_2 = MusicSample.getInt(5) + 1; codebookLookupType < this.entries; ++i_2) {
+            int number = MusicSample.getInt(ByteBufferUtils.method634(this.entries - codebookLookupType));
 
-            for(var4 = 0; var4 < var5; ++var4) {
-               this.field1304[var2++] = var3;
+            for(codebookValueBits = 0; codebookValueBits < number; ++codebookValueBits) {
+               this.entryLengths[codebookLookupType++] = i_2;
             }
          }
       } else {
-         boolean var15 = MusicSample.method2338() != 0;
+         boolean sparse = MusicSample.getBit() != 0;
 
-         for(var3 = 0; var3 < this.field1303; ++var3) {
-            if(var15 && MusicSample.method2338() == 0) {
-               this.field1304[var3] = 0;
+         for(i_2 = 0; i_2 < this.entries; ++i_2) {
+            if(sparse && MusicSample.getBit() == 0) {
+               this.entryLengths[i_2] = 0;
             } else {
-               this.field1304[var3] = MusicSample.method2352(5) + 1;
+               this.entryLengths[i_2] = MusicSample.getInt(5) + 1;
             }
          }
       }
 
-      this.method2311();
-      var2 = MusicSample.method2352(4);
-      if(var2 > 0) {
-         float var16 = MusicSample.method2357(MusicSample.method2352(32));
-         float var6 = MusicSample.method2357(MusicSample.method2352(32));
-         var4 = MusicSample.method2352(4) + 1;
-         boolean var7 = MusicSample.method2338() != 0;
-         int var8;
-         if(var2 == 1) {
-            var8 = method2310(this.field1303, this.field1306);
+      this.createHuffmanTree();
+      codebookLookupType = MusicSample.getInt(4);
+      if(codebookLookupType > 0) {
+         float codebookMinimumValue = MusicSample.float32Unpack(MusicSample.getInt(32));
+         float codebookDeltaValue = MusicSample.float32Unpack(MusicSample.getInt(32));
+         codebookValueBits = MusicSample.getInt(4) + 1;
+         boolean codebookSequenceP = MusicSample.getBit() != 0;
+         int codebookLookupValues;
+         if(codebookLookupType == 1) {
+            codebookLookupValues = method2310(this.entries, this.dimensions);
          } else {
-            var8 = this.field1303 * this.field1306;
+            codebookLookupValues = this.entries * this.dimensions;
          }
 
-         this.field1305 = new int[var8];
+         this.codebookMultiplicands = new int[codebookLookupValues];
 
-         int var9;
-         for(var9 = 0; var9 < var8; ++var9) {
-            this.field1305[var9] = MusicSample.method2352(var4);
+         int i;
+         for(i = 0; i < codebookLookupValues; ++i) {
+            this.codebookMultiplicands[i] = MusicSample.getInt(codebookValueBits);
          }
 
-         this.field1302 = new float[this.field1303][this.field1306];
-         float var10;
-         int var11;
-         int var12;
-         if(var2 == 1) {
-            for(var9 = 0; var9 < this.field1303; ++var9) {
-               var10 = 0.0F;
-               var11 = 1;
+         this.valueVector = new float[this.entries][this.dimensions];
+         float last;
+         int indexDivisor;
+         int j;
+         if(codebookLookupType == 1) {
+            for(i = 0; i < this.entries; ++i) {
+               last = 0.0F;
+               indexDivisor = 1;
 
-               for(var12 = 0; var12 < this.field1306; ++var12) {
-                  int var13 = var9 / var11 % var8;
-                  float var14 = (float)this.field1305[var13] * var6 + var16 + var10;
-                  this.field1302[var9][var12] = var14;
-                  if(var7) {
-                     var10 = var14;
+               for(j = 0; j < this.dimensions; ++j) {
+                  int multiplicandOffset = i / indexDivisor % codebookLookupValues;
+                  float valueVectorFloat = (float)this.codebookMultiplicands[multiplicandOffset] * codebookDeltaValue + codebookMinimumValue + last;
+                  this.valueVector[i][j] = valueVectorFloat;
+                  if(codebookSequenceP) {
+                     last = valueVectorFloat;
                   }
 
-                  var11 *= var8;
+                  indexDivisor *= codebookLookupValues;
                }
             }
          } else {
-            for(var9 = 0; var9 < this.field1303; ++var9) {
-               var10 = 0.0F;
-               var11 = var9 * this.field1306;
+            for(i = 0; i < this.entries; ++i) {
+               last = 0.0F;
+               indexDivisor = i * this.dimensions;
 
-               for(var12 = 0; var12 < this.field1306; ++var12) {
-                  float var17 = (float)this.field1305[var11] * var6 + var16 + var10;
-                  this.field1302[var9][var12] = var17;
-                  if(var7) {
-                     var10 = var17;
+               for(j = 0; j < this.dimensions; ++j) {
+                  float valueVectorFloat2 = (float)this.codebookMultiplicands[indexDivisor] * codebookDeltaValue + codebookMinimumValue + last;
+                  this.valueVector[i][j] = valueVectorFloat2;
+                  if(codebookSequenceP) {
+                     last = valueVectorFloat2;
                   }
 
-                  ++var11;
+                  ++indexDivisor;
                }
             }
          }
@@ -103,8 +103,8 @@ public class MusicSampleCodebook {
 
    }
 
-   void method2311() {
-      int[] var1 = new int[this.field1303];
+   void createHuffmanTree() {
+      int[] var1 = new int[this.entries];
       int[] var2 = new int[33];
 
       int var3;
@@ -115,8 +115,8 @@ public class MusicSampleCodebook {
       int var8;
       int var9;
       int var10;
-      for(var3 = 0; var3 < this.field1303; ++var3) {
-         var4 = this.field1304[var3];
+      for(var3 = 0; var3 < this.entries; ++var3) {
+         var4 = this.entryLengths[var3];
          if(var4 != 0) {
             var5 = 1 << 32 - var4;
             var6 = var2[var4];
@@ -156,8 +156,8 @@ public class MusicSampleCodebook {
       this.field1307 = new int[8];
       var10 = 0;
 
-      for(var3 = 0; var3 < this.field1303; ++var3) {
-         var4 = this.field1304[var3];
+      for(var3 = 0; var3 < this.entries; ++var3) {
+         var4 = this.entryLengths[var3];
          if(var4 != 0) {
             var5 = var1[var3];
             var6 = 0;
@@ -196,9 +196,9 @@ public class MusicSampleCodebook {
 
    }
 
-   int method2306() {
+   int getHuffmanRoot() {
       int var1;
-      for(var1 = 0; this.field1307[var1] >= 0; var1 = MusicSample.method2338() != 0?this.field1307[var1]:var1 + 1) {
+      for(var1 = 0; this.field1307[var1] >= 0; var1 = MusicSample.getBit() != 0?this.field1307[var1]:var1 + 1) {
          ;
       }
 
@@ -206,7 +206,7 @@ public class MusicSampleCodebook {
    }
 
    float[] method2307() {
-      return this.field1302[this.method2306()];
+      return this.valueVector[this.getHuffmanRoot()];
    }
 
    static int method2310(int var0, int var1) {

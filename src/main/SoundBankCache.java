@@ -1,28 +1,27 @@
 package main;
 
+import main.utils.NodeHashTable;
 import org.displee.cache.index.Index;
-
-import java.util.Hashtable;
 
 public class SoundBankCache {
 
     private Index soundEffectIndex;
     private Index musicSampleIndex;
-    private Hashtable musicSamples;
-    private Hashtable rawSounds;
+    private NodeHashTable musicSamples;
+    private NodeHashTable rawSounds;
 
     SoundBankCache(Index var1, Index var2) {
-        this.musicSamples = new Hashtable(256);
-        this.rawSounds = new Hashtable(256);
+        this.musicSamples = new NodeHashTable(256);
+        this.rawSounds = new NodeHashTable(256);
         this.soundEffectIndex = var1;
         this.musicSampleIndex = var2;
     }
 
-    RawSound getSoundEffect0(int var1, int var2, int[] var3) {
+    AudioBuffer getSoundEffect0(int var1, int var2, int[] var3) {
         int var4 = var2 ^ (var1 << 4 & 65535 | var1 >>> 12);
         var4 |= var1 << 16;
         long var5 = (long)var4;
-        RawSound var7 = (RawSound)this.rawSounds.get(var5);
+        AudioBuffer var7 = (AudioBuffer)this.rawSounds.get(var5);
         if(var7 != null) {
             return var7;
         } else if(var3 != null && var3[0] <= 0) {
@@ -43,17 +42,17 @@ public class SoundBankCache {
         }
     }
 
-    RawSound getMusicSample0(int var1, int var2, int[] var3) {
+    AudioBuffer getMusicSample0(int var1, int var2, int[] var3) {
         int var4 = var2 ^ (var1 << 4 & 65535 | var1 >>> 12);
         var4 |= var1 << 16;
         long var5 = (long)var4 ^ 4294967296L;
-        RawSound var7 = (RawSound)this.rawSounds.get(var5);
+        AudioBuffer var7 = (AudioBuffer) this.rawSounds.get(var5);
         if(var7 != null) {
             return var7;
         } else if(var3 != null && var3[0] <= 0) {
             return null;
         } else {
-            MusicSample var8 = (MusicSample)this.musicSamples.get(var5);
+            MusicSample var8 = (MusicSample) this.musicSamples.get(var5);
             if(var8 == null) {
                 var8 = MusicSample.readMusicSample(this.musicSampleIndex, var1, var2);
                 if(var8 == null) {
@@ -73,7 +72,7 @@ public class SoundBankCache {
         }
     }
 
-    public RawSound getSoundEffect(int var1, int[] var2) {
+    public AudioBuffer getSoundEffect(int var1, int[] var2) {
         if(this.soundEffectIndex.getArchives().length == 1) {
             return this.getSoundEffect0(0, var1, var2);
         } else if(this.soundEffectIndex.getArchive(var1).getFiles().length == 1) {
@@ -83,7 +82,7 @@ public class SoundBankCache {
         }
     }
 
-    public RawSound getMusicSample(int var1, int[] var2) {
+    public AudioBuffer getMusicSample(int var1, int[] var2) {
         if(this.musicSampleIndex.getArchives().length == 1) {
             return this.getMusicSample0(0, var1, var2);
         } else if(this.musicSampleIndex.getArchive(var1).getFiles().length == 1) {

@@ -1,11 +1,11 @@
 package main;
 
+import main.utils.ByteBufferUtils;
+
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-import main.utils.ByteBufferUtils;
-
-class AudioInstrument {
+class Tone {
     private static final int[] samples;
     private static final int[] NOISE;
     private static final int[] AUDIO_SINE;
@@ -14,21 +14,21 @@ class AudioInstrument {
     private static final int[] volumeSteps;
     private static final int[] pitchSteps;
     private static final int[] pitchBaseSteps;
-    private AudioEnvelope pitch;
-    private AudioEnvelope volume;
-    private AudioEnvelope pitchModifier;
-    private AudioEnvelope pitchModifierAmplitude;
-    private AudioEnvelope volumeMultiplier;
-    private AudioEnvelope volumeMultiplierAmplitude;
-    private AudioEnvelope release;
-    private AudioEnvelope field1672;
+    private ToneEnvelope pitch;
+    private ToneEnvelope volume;
+    private ToneEnvelope pitchModifier;
+    private ToneEnvelope pitchModifierAmplitude;
+    private ToneEnvelope volumeMultiplier;
+    private ToneEnvelope volumeMultiplierAmplitude;
+    private ToneEnvelope release;
+    private ToneEnvelope field1672;
     private int[] oscillatorVolume;
     private int[] oscillatorPitch;
     private int[] oscillatorDelays;
     private int delayTime;
     private int delayDecay;
-    private AudioFilter filter;
-    private AudioEnvelope filterEnvelope;
+    private ToneFilter filter;
+    private ToneEnvelope filterEnvelope;
     int duration;
     int offset;
 
@@ -55,7 +55,7 @@ class AudioInstrument {
         pitchBaseSteps = new int[5];
     }
 
-    AudioInstrument() {
+    Tone() {
         this.oscillatorVolume = new int[]{0, 0, 0, 0, 0};
         this.oscillatorPitch = new int[]{0, 0, 0, 0, 0};
         this.oscillatorDelays = new int[]{0, 0, 0, 0, 0};
@@ -184,14 +184,14 @@ class AudioInstrument {
 
                     int var17;
                     while (var14 < var15) {
-                        var16 = (int) ((long) samples[var14 + var12] * AudioFilter.fowardMultiplier >> 16);
+                        var16 = (int) ((long) samples[var14 + var12] * ToneFilter.fowardMultiplier >> 16);
 
                         for (var17 = 0; var17 < var12; ++var17) {
-                            var16 += (int) ((long) samples[var14 + var12 - 1 - var17] * AudioFilter.coefficients[0][var17] >> 16);
+                            var16 += (int) ((long) samples[var14 + var12 - 1 - var17] * ToneFilter.coefficients[0][var17] >> 16);
                         }
 
                         for (var17 = 0; var17 < var14; ++var17) {
-                            var16 -= (int) ((long) samples[var14 - 1 - var17] * AudioFilter.coefficients[1][var17] >> 16);
+                            var16 -= (int) ((long) samples[var14 - 1 - var17] * ToneFilter.coefficients[1][var17] >> 16);
                         }
 
                         samples[var14] = var16;
@@ -208,14 +208,14 @@ class AudioInstrument {
 
                         int var18;
                         while (var14 < var15) {
-                            var17 = (int) ((long) samples[var14 + var12] * AudioFilter.fowardMultiplier >> 16);
+                            var17 = (int) ((long) samples[var14 + var12] * ToneFilter.fowardMultiplier >> 16);
 
                             for (var18 = 0; var18 < var12; ++var18) {
-                                var17 += (int) ((long) samples[var14 + var12 - 1 - var18] * AudioFilter.coefficients[0][var18] >> 16);
+                                var17 += (int) ((long) samples[var14 + var12 - 1 - var18] * ToneFilter.coefficients[0][var18] >> 16);
                             }
 
                             for (var18 = 0; var18 < var13; ++var18) {
-                                var17 -= (int) ((long) samples[var14 - 1 - var18] * AudioFilter.coefficients[1][var18] >> 16);
+                                var17 -= (int) ((long) samples[var14 - 1 - var18] * ToneFilter.coefficients[1][var18] >> 16);
                             }
 
                             samples[var14] = var17;
@@ -228,11 +228,11 @@ class AudioInstrument {
                                 var17 = 0;
 
                                 for (var18 = var14 + var12 - var1; var18 < var12; ++var18) {
-                                    var17 += (int) ((long) samples[var14 + var12 - 1 - var18] * AudioFilter.coefficients[0][var18] >> 16);
+                                    var17 += (int) ((long) samples[var14 + var12 - 1 - var18] * ToneFilter.coefficients[0][var18] >> 16);
                                 }
 
                                 for (var18 = 0; var18 < var13; ++var18) {
-                                    var17 -= (int) ((long) samples[var14 - 1 - var18] * AudioFilter.coefficients[1][var18] >> 16);
+                                    var17 -= (int) ((long) samples[var14 - 1 - var18] * ToneFilter.coefficients[1][var18] >> 16);
                                 }
 
                                 samples[var14] = var17;
@@ -284,34 +284,34 @@ class AudioInstrument {
     }
 
     final void decode(final ByteBuffer var1) {
-        this.pitch = new AudioEnvelope();
+        this.pitch = new ToneEnvelope();
         this.pitch.decode(var1);
-        this.volume = new AudioEnvelope();
+        this.volume = new ToneEnvelope();
         this.volume.decode(var1);
         int var2 = var1.get() & 0xFF;
         if(var2 != 0) {
             var1.position(var1.position() - 1);
-            this.pitchModifier = new AudioEnvelope();
+            this.pitchModifier = new ToneEnvelope();
             this.pitchModifier.decode(var1);
-            this.pitchModifierAmplitude = new AudioEnvelope();
+            this.pitchModifierAmplitude = new ToneEnvelope();
             this.pitchModifierAmplitude.decode(var1);
         }
 
         var2 = var1.get() & 0xFF;
         if(var2 != 0) {
             var1.position(var1.position() - 1);
-            this.volumeMultiplier = new AudioEnvelope();
+            this.volumeMultiplier = new ToneEnvelope();
             this.volumeMultiplier.decode(var1);
-            this.volumeMultiplierAmplitude = new AudioEnvelope();
+            this.volumeMultiplierAmplitude = new ToneEnvelope();
             this.volumeMultiplierAmplitude.decode(var1);
         }
 
         var2 = var1.get() & 0xFF;
         if(var2 != 0) {
             var1.position(var1.position() - 1);
-            this.release = new AudioEnvelope();
+            this.release = new ToneEnvelope();
             this.release.decode(var1);
-            this.field1672 = new AudioEnvelope();
+            this.field1672 = new ToneEnvelope();
             this.field1672.decode(var1);
         }
 
@@ -330,8 +330,8 @@ class AudioInstrument {
         this.delayDecay = ByteBufferUtils.getUnsignedSmart(var1);
         this.duration = var1.getShort() & 0xFFFF;
         this.offset = var1.getShort() & 0xFFFF;
-        this.filter = new AudioFilter();
-        this.filterEnvelope = new AudioEnvelope();
+        this.filter = new ToneFilter();
+        this.filterEnvelope = new ToneEnvelope();
         this.filter.decode(var1, this.filterEnvelope);
     }
 }

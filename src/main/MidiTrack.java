@@ -2,6 +2,7 @@ package main;
 
 import main.utils.ByteArrayNode;
 import main.utils.ByteBufferUtils;
+import main.utils.Node;
 import main.utils.NodeHashTable;
 
 import javax.sound.midi.*;
@@ -14,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-class MidiTrack {
+public class MidiTrack extends Node {
 
     private static final int NOTE_OFF = 0x80;
     private static final int NOTE_ON = 0x90;
@@ -1183,7 +1184,7 @@ class MidiTrack {
         encoded = Files.readAllBytes(path);
     }
 
-    static File encode(Sequence sequence) throws IOException {
+    public static File encode(Sequence sequence) throws IOException {
 
         File encodedMidiFile = new File("./data.dat/");
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(encodedMidiFile));
@@ -1606,6 +1607,9 @@ class MidiTrack {
 
         dos.flush();
         dos.close();
+
+        Path path = Paths.get("./data.dat/");
+        encoded = Files.readAllBytes(path);
 
         return encodedMidiFile;
     }

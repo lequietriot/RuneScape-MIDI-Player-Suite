@@ -1,13 +1,11 @@
 package main;
 
-import main.utils.ByteBufferUtils;
-
-import java.nio.ByteBuffer;
+import main.utils.Buffer;
 
 public class MidiFileReader {
 
     static final byte[] __hs_x;
-    ByteBuffer buffer;
+    Buffer buffer;
     int division;
     int[] trackStarts;
     int[] trackPositions;
@@ -17,29 +15,29 @@ public class MidiFileReader {
     long __e;
 
     MidiFileReader(byte[] var1) {
-        this.buffer = null;
+        this.buffer = new Buffer((byte[])null);
         this.parse(var1);
     }
 
-    public MidiFileReader() {
-        this.buffer = null;
+    MidiFileReader() {
+        this.buffer = new Buffer((byte[])null);
     }
 
     void parse(byte[] var1) {
-        this.buffer = ByteBuffer.wrap(var1);
-        this.buffer.position(10);
-        int var2 = ByteBufferUtils.__ag_302(this.buffer);
-        this.division = ByteBufferUtils.__ag_302(this.buffer);
+        this.buffer.array = var1;
+        this.buffer.index = 10;
+        int var2 = this.buffer.__ag_302();
+        this.division = this.buffer.__ag_302();
         this.microseconds = 500000;
         this.trackStarts = new int[var2];
 
         int var3;
         int var4;
-        for(var3 = 0; var3 < var2; ByteBufferUtils.skip(this.buffer, var4)) {
-            int var5 = this.buffer.getInt();
-            var4 = this.buffer.getInt();
+        for(var3 = 0; var3 < var2; this.buffer.index += var4) {
+            int var5 = this.buffer.readInt();
+            var4 = this.buffer.readInt();
             if(var5 == 1297379947) {
-                this.trackStarts[var3] = this.buffer.position();
+                this.trackStarts[var3] = this.buffer.index;
                 ++var3;
             }
         }
@@ -56,7 +54,7 @@ public class MidiFileReader {
     }
 
     void clear() {
-        this.buffer = null;
+        this.buffer.array = null;
         this.trackStarts = null;
         this.trackPositions = null;
         this.trackLengths = null;
@@ -64,7 +62,7 @@ public class MidiFileReader {
     }
 
     boolean isReady() {
-        return true;
+        return this.buffer.array != null;
     }
 
     int trackCount() {
@@ -72,19 +70,19 @@ public class MidiFileReader {
     }
 
     void gotoTrack(int var1) {
-        this.buffer.position(this.trackPositions[var1]);
+        this.buffer.index = this.trackPositions[var1];
     }
 
     void markTrackPosition(int var1) {
-        this.trackPositions[var1] = this.buffer.position();
+        this.trackPositions[var1] = this.buffer.index;
     }
 
     void setTrackDone() {
-        this.buffer.position(0);
+        this.buffer.index = -1;
     }
 
     void readTrackLength(int var1) {
-        int var2 = ByteBufferUtils.__as_311(this.buffer);
+        int var2 = this.buffer.__as_311();
         this.trackLengths[var1] += var2;
     }
 
@@ -94,12 +92,12 @@ public class MidiFileReader {
     }
 
     int readMessage0(int var1) {
-        byte var2 = this.buffer.array()[this.buffer.position()];
+        byte var2 = this.buffer.array[this.buffer.index];
         int var3;
         if(var2 < 0) {
             var3 = var2 & 255;
             this.__u[var1] = var3;
-            ByteBufferUtils.skip(this.buffer, 1);
+            ++this.buffer.index;
         } else {
             var3 = this.__u[var1];
         }
@@ -107,17 +105,17 @@ public class MidiFileReader {
         if(var3 != 240 && var3 != 247) {
             return this.__d_371(var1, var3);
         } else {
-            int var4 = ByteBufferUtils.__as_311(this.buffer);
+            int var4 = this.buffer.__as_311();
             if(var3 == 247 && var4 > 0) {
-                int var5 = this.buffer.array()[this.buffer.position()] & 255;
+                int var5 = this.buffer.array[this.buffer.index] & 255;
                 if(var5 >= 241 && var5 <= 243 || var5 == 246 || var5 == 248 || var5 >= 250 && var5 <= 252 || var5 == 254) {
-                    ByteBufferUtils.skip(this.buffer, 1);
+                    ++this.buffer.index;
                     this.__u[var1] = var5;
                     return this.__d_371(var1, var5);
                 }
             }
 
-            ByteBufferUtils.skip(this.buffer, var4);
+            this.buffer.index += var4;
             return 0;
         }
     }
@@ -125,32 +123,32 @@ public class MidiFileReader {
     int __d_371(int var1, int var2) {
         int var3;
         if(var2 == 255) {
-            int var7 = this.buffer.get() & 0xFF;
-            var3 = ByteBufferUtils.__as_311(this.buffer);
+            int var7 = this.buffer.readUnsignedByte();
+            var3 = this.buffer.__as_311();
             if(var7 == 47) {
-                ByteBufferUtils.skip(this.buffer, var3);
+                this.buffer.index += var3;
                 return 1;
             } else if(var7 == 81) {
-                int var5 = ByteBufferUtils.getMedium(this.buffer);
+                int var5 = this.buffer.readMedium();
                 var3 -= 3;
                 int var6 = this.trackLengths[var1];
                 this.__e += (long)var6 * (long)(this.microseconds - var5);
                 this.microseconds = var5;
-                ByteBufferUtils.skip(this.buffer, var3);
+                this.buffer.index += var3;
                 return 2;
             } else {
-                ByteBufferUtils.skip(this.buffer, var3);
+                this.buffer.index += var3;
                 return 3;
             }
         } else {
             byte var4 = __hs_x[var2 - 128];
             var3 = var2;
             if(var4 >= 1) {
-                var3 = var2 | (this.buffer.get() & 0xFF) << 8;
+                var3 = var2 | this.buffer.readUnsignedByte() << 8;
             }
 
             if(var4 >= 2) {
-                var3 |= (this.buffer.get() & 0xFF) << 16;
+                var3 |= this.buffer.readUnsignedByte() << 16;
             }
 
             return var3;
@@ -195,9 +193,9 @@ public class MidiFileReader {
         for(int var4 = 0; var4 < var3; ++var4) {
             this.trackLengths[var4] = 0;
             this.__u[var4] = 0;
-            this.buffer.position(this.trackStarts[var4]);
+            this.buffer.index = this.trackStarts[var4];
             this.readTrackLength(var4);
-            this.trackPositions[var4] = this.buffer.position();
+            this.trackPositions[var4] = this.buffer.index;
         }
 
     }

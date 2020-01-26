@@ -2,7 +2,7 @@ package main;
 
 import java.nio.ByteBuffer;
 
-class AudioFilter {
+class ToneFilter {
     private static final float[][] minimisedCoefficients;
     static final int[][] coefficients;
     private static float fowardMinimisedCoefficientMultiplier;
@@ -17,7 +17,7 @@ class AudioFilter {
         coefficients = new int[2][8];
     }
 
-    AudioFilter() {
+    ToneFilter() {
         this.pairs = new int[2];
         this.phases = new int[2][2][4];
         this.magnitudes = new int[2][2][4];
@@ -82,7 +82,7 @@ class AudioFilter {
         }
     }
 
-    final void decode(final ByteBuffer var1, final AudioEnvelope var2) {
+    final void decode(final ByteBuffer var1, final ToneEnvelope var2) {
         final int var3 = var1.get() & 0xFF;
         this.pairs[0] = var3 >> 4;
         this.pairs[1] = var3 & 15;

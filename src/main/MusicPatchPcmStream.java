@@ -36,9 +36,9 @@ public class MusicPatchPcmStream extends PcmStream {
 
             RawPcmStream var10 = var1.stream;
             if(this.superStream.customEffectArray[var1.volumeValue] == 0) {
-               var1.stream = RawPcmStream.method2524(var1.rawSound, var10.__ab_194(), var10.__s_185(), var10.__t_186());
+               var1.stream = RawPcmStream.method2524(var1.audioBuffer, var10.__ab_194(), var10.__s_185(), var10.__t_186());
             } else {
-               var1.stream = RawPcmStream.method2524(var1.rawSound, var10.__ab_194(), 0, var10.__t_186());
+               var1.stream = RawPcmStream.method2524(var1.audioBuffer, var10.__ab_194(), 0, var10.__t_186());
                this.superStream.__h_346(var1, var1.patch.generators[var1.__u] < 0);
                var1.stream.__c_190(var8, var10.__s_185());
             }
@@ -65,9 +65,9 @@ public class MusicPatchPcmStream extends PcmStream {
          var1.__b = var3 * var2 + var1.__b & 1048575;
          if(var4 <= var2) {
             if(this.superStream.customEffectArray[var1.volumeValue] == 0) {
-               var1.stream = RawPcmStream.method2524(var1.rawSound, var1.stream.__ab_194(), var1.stream.__s_185(), var1.stream.__t_186());
+               var1.stream = RawPcmStream.method2524(var1.audioBuffer, var1.stream.__ab_194(), var1.stream.__s_185(), var1.stream.__t_186());
             } else {
-               var1.stream = RawPcmStream.method2524(var1.rawSound, var1.stream.__ab_194(), 0, var1.stream.__t_186());
+               var1.stream = RawPcmStream.method2524(var1.audioBuffer, var1.stream.__ab_194(), 0, var1.stream.__t_186());
                this.superStream.__h_346(var1, var1.patch.generators[var1.__u] < 0);
             }
 

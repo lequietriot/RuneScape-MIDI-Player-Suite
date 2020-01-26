@@ -2,7 +2,7 @@ package main;
 
 import java.nio.ByteBuffer;
 
-class AudioEnvelope {
+class ToneEnvelope {
     private int segments;
     private int[] durations;
     private int[] phases;
@@ -15,7 +15,7 @@ class AudioEnvelope {
     private int max;
     private int amplitude;
 
-    AudioEnvelope() {
+    ToneEnvelope() {
         this.segments = 2;
         this.durations = new int[2];
         this.phases = new int[2];

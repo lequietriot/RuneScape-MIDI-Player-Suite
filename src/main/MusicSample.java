@@ -1,24 +1,25 @@
 package main;
 
 import main.utils.ByteBufferUtils;
+import main.utils.Node;
 import org.displee.cache.index.Index;
 
 import java.nio.ByteBuffer;
 
-public class MusicSample {
+public class MusicSample extends Node {
 
-   static byte[] __cd_g;
-   static int anInt;
-   static int __cd_e;
+   static byte[] source;
+   static int byteIndex;
+   static int root;
    static int __cd_x;
    static int __cd_d;
-   static MusicSampleCodebook[] field1323;
-   static MusicSampleFloor[] field1324;
-   static MusicSampleResidue[] field1344;
-   static MusicSampleMapping[] field1326;
-   static boolean[] __cd_z;
+   static MusicSampleCodebook[] codebooks;
+   static MusicSampleFloor[] floors;
+   static MusicSampleResidue[] residues;
+   static MusicSampleMapping[] mappings;
+   static boolean[] noResidues;
    static int[] __cd_j;
-   static boolean __cd_s;
+   static boolean initialized;
    static float[] __cd_c;
    static float[] __cd_r;
    static float[] __cd_p;
@@ -28,7 +29,7 @@ public class MusicSample {
    static float[] __cd_aj;
    static int[] __cd_av;
    static int[] __cd_ar;
-   byte[][] sampleContainer;
+   byte[][] windows;
    int sampleRate;
    int sampleCount;
    int start;
@@ -37,7 +38,7 @@ public class MusicSample {
    float[] __t;
    int __y;
    int __h;
-   boolean __b;
+   boolean blockFlag;
    byte[] samples;
    int sampleLength;
    int soundIndices;
@@ -58,7 +59,7 @@ public class MusicSample {
       }
 
       int soundIndex = buffer.getInt();
-      this.sampleContainer = new byte[soundIndex][];
+      this.windows = new byte[soundIndex][];
 
       for(int soundCount = 0; soundCount < soundIndex; ++soundCount) {
          int encodedSize = 0;
@@ -71,22 +72,22 @@ public class MusicSample {
 
          byte[] encoded = new byte[encodedSize];
          buffer.get(encoded, 0, encodedSize);
-         this.sampleContainer[soundCount] = encoded;
+         this.windows[soundCount] = encoded;
       }
 
    }
 
-   float[] __g_175(int var1) {
-      setData(this.sampleContainer[var1], 0);
-      method2338();
-      int var2 = method2352(ByteBufferUtils.method634(__cd_j.length - 1));
-      boolean var3 = __cd_z[var2];
+   float[] mix(int var1) {
+      setData(this.windows[var1], 0);
+      getBit();
+      int var2 = getInt(ByteBufferUtils.method634(__cd_j.length - 1));
+      boolean var3 = noResidues[var2];
       int var4 = var3?__cd_d:__cd_x;
       boolean var5 = false;
       boolean var6 = false;
       if(var3) {
-         var5 = method2338() != 0;
-         var6 = method2338() != 0;
+         var5 = getBit() != 0;
+         var6 = getBit() != 0;
       }
 
       int var7 = var4 >> 1;
@@ -116,14 +117,14 @@ public class MusicSample {
          var13 = var4 >> 1;
       }
 
-      MusicSampleMapping var14 = field1326[__cd_j[var2]];
+      MusicSampleMapping var14 = mappings[__cd_j[var2]];
       int var15 = var14.field1454;
       int var16 = var14.field1452[var15];
-      boolean var17 = !field1324[var16].method2367();
+      boolean var17 = !floors[var16].method2367();
       boolean var18 = var17;
 
       for(var16 = 0; var16 < var14.field1453; ++var16) {
-         MusicSampleResidue var19 = field1344[var14.field1455[var16]];
+         MusicSampleResidue var19 = residues[var14.field1455[var16]];
          float[] var20 = __cd_c;
          var19.method2473(var20, var4 >> 1, var18);
       }
@@ -132,7 +133,7 @@ public class MusicSample {
       if(!var17) {
          var16 = var14.field1454;
          var48 = var14.field1452[var16];
-         field1324[var48].method2375(__cd_c, var4 >> 1);
+         floors[var48].method2375(__cd_c, var4 >> 1);
       }
 
       float[] var21;
@@ -302,7 +303,7 @@ public class MusicSample {
       if(this.__y > 0) {
          var48 = var4 + this.__y >> 2;
          var21 = new float[var48];
-         if(!this.__b) {
+         if(!this.blockFlag) {
             for(var49 = 0; var49 < this.__h; ++var49) {
                var22 = var49 + (this.__y >> 1);
                var21[var49] += this.__t[var22];
@@ -322,11 +323,11 @@ public class MusicSample {
       __cd_c = var50;
       this.__y = var4;
       this.__h = var12 - (var4 >> 1);
-      this.__b = var17;
+      this.blockFlag = var17;
       return var21;
    }
 
-   RawSound toRawSound(int[] var1) {
+   AudioBuffer toRawSound(int[] var1) {
       if(var1 != null && var1[0] <= 0) {
          return null;
       } else {
@@ -338,12 +339,12 @@ public class MusicSample {
             this.soundIndices = 0;
          }
 
-         for(; this.soundIndices < this.sampleContainer.length; ++this.soundIndices) {
+         for(; this.soundIndices < this.windows.length; ++this.soundIndices) {
             if(var1 != null && var1[0] <= 0) {
                return null;
             }
 
-            float[] var2 = this.__g_175(this.soundIndices);
+            float[] var2 = this.mix(this.soundIndices);
             if(var2 != null) {
                int var3 = this.sampleLength;
                int var4 = var2.length;
@@ -368,64 +369,64 @@ public class MusicSample {
             }
          }
 
-         byte[] var7 = this.samples;
+         byte[] data = this.samples;
          
-         return new RawSound(this.sampleRate, var7, this.start, this.end, this.loopConsistency);
+         return new AudioBuffer(this.sampleRate, data, this.start, this.end, this.loopConsistency);
       }
    }
 
-   static float method2357(int var0) {
-      int var1 = var0 & 2097151;
-      int var2 = var0 & Integer.MIN_VALUE;
-      int var3 = (var0 & 2145386496) >> 21;
-      if(var2 != 0) {
-         var1 = -var1;
+   static float float32Unpack(int i) {
+      int mantissa = i & 2097151;
+      int x = i & Integer.MIN_VALUE;
+      int e = (i & 2145386496) >> 21;
+      if(x != 0) {
+         mantissa = -mantissa;
       }
 
-      return (float)((double)var1 * Math.pow(2.0D, (double)(var3 - 788)));
+      return (float) ((double) mantissa * Math.pow(2.0D, e - 788));
    }
 
-   static void setData(byte[] var0, int var1) {
-      __cd_g = var0;
-      anInt = var1;
-      __cd_e = 0;
+   static void setData(byte[] bytes, int index) {
+      source = bytes;
+      byteIndex = index;
+      root = 0;
    }
 
-   static int method2338() {
-      int var0 = __cd_g[anInt] >> __cd_e & 1;
-      ++__cd_e;
-      anInt += __cd_e >> 3;
-      __cd_e &= 7;
-      return var0;
+   static int getBit() {
+      int bit = source[byteIndex] >> root & 1;
+      ++root;
+      byteIndex += root >> 3;
+      root &= 7;
+      return bit;
    }
 
-   static int method2352(int var0) {
-      int var1 = 0;
+   static int getInt(int bits) {
+      int res = 0;
 
-      int var2;
-      int var3;
-      for(var2 = 0; var0 >= 8 - __cd_e; var0 -= var3) {
-         var3 = 8 - __cd_e;
-         int var4 = (1 << var3) - 1;
-         var1 += (__cd_g[anInt] >> __cd_e & var4) << var2;
-         __cd_e = 0;
-         ++anInt;
-         var2 += var3;
+      int index;
+      int bitIndex;
+      for(index = 0; bits >= 8 - root; bits -= bitIndex) {
+         bitIndex = 8 - root;
+         int mask = (1 << bitIndex) - 1;
+         res += (source[byteIndex] >> root & mask) << index;
+         root = 0;
+         ++byteIndex;
+         index += bitIndex;
       }
 
-      if(var0 > 0) {
-         var3 = (1 << var0) - 1;
-         var1 += (__cd_g[anInt] >> __cd_e & var3) << var2;
-         __cd_e += var0;
+      if(bits > 0) {
+         bitIndex = (1 << bits) - 1;
+         res += (source[byteIndex] >> root & bitIndex) << index;
+         root += bits;
       }
 
-      return var1;
+      return res;
    }
 
-   static void method2341(byte[] var0) {
+   static void initData(byte[] var0) {
       setData(var0, 0);
-      __cd_x = 1 << method2352(4);
-      __cd_d = 1 << method2352(4);
+      __cd_x = 1 << getInt(4);
+      __cd_d = 1 << getInt(4);
       __cd_c = new float[__cd_d];
 
       int var1;
@@ -479,80 +480,80 @@ public class MusicSample {
          }
       }
 
-      var1 = method2352(8) + 1;
-      field1323 = new MusicSampleCodebook[var1];
+      var1 = getInt(8) + 1;
+      codebooks = new MusicSampleCodebook[var1];
 
       for(var2 = 0; var2 < var1; ++var2) {
-         field1323[var2] = new MusicSampleCodebook();
+         codebooks[var2] = new MusicSampleCodebook();
       }
 
-      var2 = method2352(6) + 1;
+      var2 = getInt(6) + 1;
 
       for(var3 = 0; var3 < var2; ++var3) {
-         method2352(16);
+         getInt(16);
       }
 
-      var2 = method2352(6) + 1;
-      field1324 = new MusicSampleFloor[var2];
+      var2 = getInt(6) + 1;
+      floors = new MusicSampleFloor[var2];
 
       for(var3 = 0; var3 < var2; ++var3) {
-         field1324[var3] = new MusicSampleFloor();
+         floors[var3] = new MusicSampleFloor();
       }
 
-      var3 = method2352(6) + 1;
-      field1344 = new MusicSampleResidue[var3];
+      var3 = getInt(6) + 1;
+      residues = new MusicSampleResidue[var3];
 
       for(var4 = 0; var4 < var3; ++var4) {
-         field1344[var4] = new MusicSampleResidue();
+         residues[var4] = new MusicSampleResidue();
       }
 
-      var4 = method2352(6) + 1;
-      field1326 = new MusicSampleMapping[var4];
+      var4 = getInt(6) + 1;
+      mappings = new MusicSampleMapping[var4];
 
       for(var5 = 0; var5 < var4; ++var5) {
-         field1326[var5] = new MusicSampleMapping();
+         mappings[var5] = new MusicSampleMapping();
       }
 
-      var5 = method2352(6) + 1;
-      __cd_z = new boolean[var5];
+      var5 = getInt(6) + 1;
+      noResidues = new boolean[var5];
       __cd_j = new int[var5];
 
       for(int var12 = 0; var12 < var5; ++var12) {
-         __cd_z[var12] = method2338() != 0;
-         method2352(16);
-         method2352(16);
-         __cd_j[var12] = method2352(8);
+         noResidues[var12] = getBit() != 0;
+         getInt(16);
+         getInt(16);
+         __cd_j[var12] = getInt(8);
       }
 
    }
 
-   static boolean method2343(Index musicSampleIndex) {
-      if(!__cd_s) {
-         byte[] var1 = musicSampleIndex.getArchive(0).getFile(0).getData();
-         if(var1 == null) {
+   static boolean firstFileExists(Index musicSampleIndex) {
+      if(!initialized) {
+         byte[] fileData = musicSampleIndex.getArchive(0).getFile(0).getData();
+         if(fileData == null) {
             return false;
          }
 
-         method2341(var1);
-         __cd_s = true;
+         initData(fileData);
+         initialized = true;
       }
 
       return true;
    }
 
-   static MusicSample readMusicSample(Index musicSampleIndex, int var1, int var2) {
-      if(!method2343(musicSampleIndex)) {
-         if (musicSampleIndex.getArchive(var1).getFile(var2) != null) {
+   static MusicSample readMusicSample(Index musicSampleIndex, int archiveID, int fileID) {
+      if(!firstFileExists(musicSampleIndex)) {
+         if (musicSampleIndex.getArchive(archiveID).getFile(fileID) != null) {
             return null;
          }
       } else {
-         byte[] var3 = musicSampleIndex.getArchive(var1).getFile(var2).getData();
-         return var3 == null?null:new MusicSample(var3);
+         byte[] fileData = musicSampleIndex.getArchive(archiveID).getFile(fileID).getData();
+         return fileData == null?null:new MusicSample(fileData);
       }
       return null;
    }
 
    static {
-      __cd_s = false;
+      initialized = false;
    }
 }

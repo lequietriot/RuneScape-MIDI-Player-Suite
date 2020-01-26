@@ -2,10 +2,6 @@ package main;
 
 import com.sun.media.sound.SF2Soundbank;
 
-import main.MusicPatch;
-import main.RawSound;
-import main.SoundBankCache;
-
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -20,11 +16,11 @@ public class MakeSoundFont {
 
         for (int index = 0; index < 128; index++) {
 
-            RawSound rawSound = musicPatch.rawSounds[index];
-            byte[] newSound = mixTo16Bit(rawSound.samples);
+            AudioBuffer audioBuffer = musicPatch.audioBuffers[index];
+            byte[] newSound = mixTo16Bit(audioBuffer.samples);
 
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(newSound), new AudioFormat(rawSound.sampleRate, 16, 1, true, false), newSound.length);
+            AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(newSound), new AudioFormat(audioBuffer.sampleRate, 16, 1, true, false), newSound.length);
             try {
                 AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
                 FileOutputStream fileOutputStream = new FileOutputStream(new File("./Soundbank/" + index + ".wav/"));

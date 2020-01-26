@@ -7,7 +7,7 @@ public class MusicPatchNode extends Node {
     static int cameraYaw;
     int volumeValue;
     MusicPatch patch;
-    RawSound rawSound;
+    AudioBuffer audioBuffer;
     MusicPatchNode2 __w;
     int __o;
     int __u;
@@ -27,9 +27,9 @@ public class MusicPatchNode extends Node {
     int __y;
     int __b;
 
-    void __m_370() {
+    void clearAudioBuffer() {
         this.patch = null;
-        this.rawSound = null;
+        this.audioBuffer = null;
         this.__w = null;
         this.stream = null;
     }

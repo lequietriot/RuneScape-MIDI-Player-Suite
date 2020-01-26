@@ -18,11 +18,11 @@ public class RawPcmStream extends PcmStream {
     int __a;
     int __z;
 
-    RawPcmStream(RawSound var1, int var2, int var3, int var4) {
+    RawPcmStream(AudioBuffer var1, int var2, int var3, int var4) {
         super.sound = var1;
         this.start = var1.start;
         this.end = var1.end;
-        this.enableEffects = var1.effectsEnabled;
+        this.enableEffects = var1.bool;
         this.notePitchFactor = var2;
         this.noteVelocityFactor = var3;
         this.__o = var4;
@@ -30,11 +30,11 @@ public class RawPcmStream extends PcmStream {
         this.__o_180();
     }
 
-    RawPcmStream(RawSound var1, int var2, int var3) {
+    RawPcmStream(AudioBuffer var1, int var2, int var3) {
         super.sound = var1;
         this.start = var1.start;
         this.end = var1.end;
-        this.enableEffects = var1.effectsEnabled;
+        this.enableEffects = var1.bool;
         this.notePitchFactor = var2;
         this.noteVelocityFactor = var3;
         this.__o = 8192;
@@ -64,7 +64,7 @@ public class RawPcmStream extends PcmStream {
         if(this.noteVelocityFactor == 0 && this.surfaceOffsetY == 0) {
             this.__d_173(var3);
         } else {
-            RawSound var4 = (RawSound)super.sound;
+            AudioBuffer var4 = (AudioBuffer)super.sound;
             int var5 = this.start << 8;
             int var6 = this.end << 8;
             int var7 = var4.samples.length << 8;
@@ -268,7 +268,7 @@ public class RawPcmStream extends PcmStream {
             }
         }
 
-        RawSound var2 = (RawSound)super.sound;
+        AudioBuffer var2 = (AudioBuffer)super.sound;
         int var3 = this.start << 8;
         int var4 = this.end << 8;
         int var5 = var2.samples.length << 8;
@@ -442,7 +442,7 @@ public class RawPcmStream extends PcmStream {
     }
 
     public synchronized void __y_187(int var1) {
-        int var2 = ((RawSound)super.sound).samples.length << 8;
+        int var2 = ((AudioBuffer)super.sound).samples.length << 8;
         if(var1 < -1) {
             var1 = -1;
         }
@@ -578,7 +578,7 @@ public class RawPcmStream extends PcmStream {
     }
 
     public boolean __ae_195() {
-        return this.attackEnvelopeFactor < 0 || this.attackEnvelopeFactor >= ((RawSound)super.sound).samples.length << 8;
+        return this.attackEnvelopeFactor < 0 || this.attackEnvelopeFactor >= ((AudioBuffer)super.sound).samples.length << 8;
     }
 
     public boolean __at_196() {
@@ -596,14 +596,14 @@ public class RawPcmStream extends PcmStream {
                 this.surfaceOffsetY += var2;
                 if(this.notePitchFactor == 256 && (this.attackEnvelopeFactor & 255) == 0) {
                     if(AudioConstants.isStereo) {
-                        var2 = method2533(0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, this.__a, this.__z, 0, var6, var3, this);
+                        var2 = method2533(0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, this.__a, this.__z, 0, var6, var3, this);
                     } else {
-                        var2 = method2532(((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, this.__i, 0, var6, var3, this);
+                        var2 = method2532(((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, this.__i, 0, var6, var3, this);
                     }
                 } else if(AudioConstants.isStereo) {
-                    var2 = method2504(0, 0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, this.__a, this.__z, 0, var6, var3, this, this.notePitchFactor, var5);
+                    var2 = method2504(0, 0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, this.__a, this.__z, 0, var6, var3, this, this.notePitchFactor, var5);
                 } else {
-                    var2 = method2536(0, 0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, this.__i, 0, var6, var3, this, this.notePitchFactor, var5);
+                    var2 = method2536(0, 0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, this.__i, 0, var6, var3, this, this.notePitchFactor, var5);
                 }
 
                 this.surfaceOffsetY -= var2;
@@ -620,17 +620,17 @@ public class RawPcmStream extends PcmStream {
 
             if(this.notePitchFactor == 256 && (this.attackEnvelopeFactor & 255) == 0) {
                 if(AudioConstants.isStereo) {
-                    return method2525(0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, 0, var4, var3, this);
+                    return method2525(0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, 0, var4, var3, this);
                 }
 
-                return method2563(((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, 0, var4, var3, this);
+                return method2563(((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, 0, var4, var3, this);
             }
 
             if(AudioConstants.isStereo) {
-                return method2529(0, 0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, 0, var4, var3, this, this.notePitchFactor, var5);
+                return method2529(0, 0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, 0, var4, var3, this, this.notePitchFactor, var5);
             }
 
-            return method2528(0, 0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, 0, var4, var3, this, this.notePitchFactor, var5);
+            return method2528(0, 0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, 0, var4, var3, this, this.notePitchFactor, var5);
         }
     }
 
@@ -645,14 +645,14 @@ public class RawPcmStream extends PcmStream {
                 this.surfaceOffsetY += var2;
                 if(this.notePitchFactor == -256 && (this.attackEnvelopeFactor & 255) == 0) {
                     if(AudioConstants.isStereo) {
-                        var2 = method2547(0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, this.__a, this.__z, 0, var6, var3, this);
+                        var2 = method2547(0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, this.__a, this.__z, 0, var6, var3, this);
                     } else {
-                        var2 = method2534(((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, this.__i, 0, var6, var3, this);
+                        var2 = method2534(((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, this.__i, 0, var6, var3, this);
                     }
                 } else if(AudioConstants.isStereo) {
-                    var2 = method2624(0, 0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, this.__a, this.__z, 0, var6, var3, this, this.notePitchFactor, var5);
+                    var2 = method2624(0, 0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, this.__a, this.__z, 0, var6, var3, this, this.notePitchFactor, var5);
                 } else {
-                    var2 = method2538(0, 0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, this.__i, 0, var6, var3, this, this.notePitchFactor, var5);
+                    var2 = method2538(0, 0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, this.__i, 0, var6, var3, this, this.notePitchFactor, var5);
                 }
 
                 this.surfaceOffsetY -= var2;
@@ -669,17 +669,17 @@ public class RawPcmStream extends PcmStream {
 
             if(this.notePitchFactor == -256 && (this.attackEnvelopeFactor & 255) == 0) {
                 if(AudioConstants.isStereo) {
-                    return method2496(0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, 0, var4, var3, this);
+                    return method2496(0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, 0, var4, var3, this);
                 }
 
-                return method2636(((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, 0, var4, var3, this);
+                return method2636(((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, 0, var4, var3, this);
             }
 
             if(AudioConstants.isStereo) {
-                return method2531(0, 0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, 0, var4, var3, this, this.notePitchFactor, var5);
+                return method2531(0, 0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.rightChannelPan, this.leftChannelPan, 0, var4, var3, this, this.notePitchFactor, var5);
             }
 
-            return method2509(0, 0, ((RawSound)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, 0, var4, var3, this, this.notePitchFactor, var5);
+            return method2509(0, 0, ((AudioBuffer)super.sound).samples, var1, this.attackEnvelopeFactor, var2, this.__u, 0, var4, var3, this, this.notePitchFactor, var5);
         }
     }
 
@@ -687,9 +687,9 @@ public class RawPcmStream extends PcmStream {
         int var1 = this.__u * 3 >> 6;
         var1 = (var1 ^ var1 >> 31) + (var1 >>> 31);
         if(this.loopValue == 0) {
-            var1 -= var1 * this.attackEnvelopeFactor / (((RawSound)super.sound).samples.length << 8);
+            var1 -= var1 * this.attackEnvelopeFactor / (((AudioBuffer)super.sound).samples.length << 8);
         } else if(this.loopValue >= 0) {
-            var1 -= var1 * this.start / ((RawSound)super.sound).samples.length;
+            var1 -= var1 * this.start / ((AudioBuffer)super.sound).samples.length;
         }
 
         return var1 > 255?255:var1;
@@ -771,11 +771,11 @@ public class RawPcmStream extends PcmStream {
         return var1 < 0?-var0:(int)((double)var0 * Math.sqrt((double)var1 * 1.220703125E-4D) + 0.5D);
     }
 
-    public static RawPcmStream method2497(RawSound rawSample, int var1, int var2) {
+    public static RawPcmStream method2497(AudioBuffer rawSample, int var1, int var2) {
         return rawSample.samples != null && rawSample.samples.length != 0?new RawPcmStream(rawSample, (int)((long)rawSample.sampleRate * 256L * (long)var1 / (long)(AudioConstants.systemSampleRate * 100)), var2 << 6):null;
     }
 
-    public static RawPcmStream method2524(RawSound rawSample, int samplePitch, int velocityLeftChannel, int velocityRightChannel) {
+    public static RawPcmStream method2524(AudioBuffer rawSample, int samplePitch, int velocityLeftChannel, int velocityRightChannel) {
         return rawSample.samples != null && rawSample.samples.length != 0?new RawPcmStream(rawSample, samplePitch, velocityLeftChannel, velocityRightChannel):null;
     }
 
