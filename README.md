@@ -27,9 +27,10 @@ Since you set the preference for your soundfont, it should remember what you wan
 - A feature that comes in the form of check-boxes to enable fixing MIDI files when rendering and/or playing the song. **NOTE: This feature is intended to work on weird-sounding RuneScape MIDI files, when used on regular sounding ones they may sound weird.**
 - This program supports fixing and resaving Old School RuneScape MIDI files, handling and converting custom instruments to basic ones. The notes are corrected to the normal sound, and all tracks are labelled according to instrument used.
 - This program supports fixing and resaving RuneScape HD MIDI files, handling and converting custom instruments to basic ones. The notes are corrected to the normal sound, and all tracks are labelled according to instrument used.
+- Can dump all raw soundbank-related data.
+- Can pack all raw soundbank-related data.
+Yes, go ahead and experiment with the soundbank dumping and packing, you can mix old with new or vice versa!
 
 # To do list (Ideas)
 - Sound tools (Sound Effects, Sound Bank...)
 - Automatic soundfont creating from cache
-- Packing encoded MIDI to cache instead of new file
-- Custom MIDI Playlists
