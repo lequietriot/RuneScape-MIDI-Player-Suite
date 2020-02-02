@@ -2,53 +2,53 @@ package main;
 
 public class MusicSampleResidue {
 
-   int field1409;
-   int field1406;
-   int field1407;
-   int field1408;
-   int field1405;
-   int field1411;
-   int[] field1410;
+   int type;
+   int end;
+   int begin;
+   int partitionSize;
+   int classifications;
+   int classBook;
+   int[] books;
 
    MusicSampleResidue() {
-      this.field1409 = MusicSample.getInt(16);
-      this.field1406 = MusicSample.getInt(24);
-      this.field1407 = MusicSample.getInt(24);
-      this.field1408 = MusicSample.getInt(24) + 1;
-      this.field1405 = MusicSample.getInt(6) + 1;
-      this.field1411 = MusicSample.getInt(8);
-      int[] var1 = new int[this.field1405];
+      this.type = MusicSample.getBits(16);
+      this.end = MusicSample.getBits(24);
+      this.begin = MusicSample.getBits(24);
+      this.partitionSize = MusicSample.getBits(24) + 1;
+      this.classifications = MusicSample.getBits(6) + 1;
+      this.classBook = MusicSample.getBits(8);
+      int[] cascade = new int[this.classifications];
 
-      int var2;
-      for(var2 = 0; var2 < this.field1405; ++var2) {
-         int var3 = 0;
-         int var4 = MusicSample.getInt(3);
-         boolean var5 = MusicSample.getBit() != 0;
-         if(var5) {
-            var3 = MusicSample.getInt(5);
+      int acc;
+      for(acc = 0; acc < this.classifications; ++acc) {
+         int highBits = 0;
+         int lowBits = MusicSample.getBits(3);
+         boolean validBit = MusicSample.getBit() != 0;
+         if(validBit) {
+            highBits = MusicSample.getBits(5);
          }
 
-         var1[var2] = var3 << 3 | var4;
+         cascade[acc] = highBits << 3 | lowBits;
       }
 
-      this.field1410 = new int[this.field1405 * 8];
+      this.books = new int[this.classifications * 8];
 
-      for(var2 = 0; var2 < this.field1405 * 8; ++var2) {
-         this.field1410[var2] = (var1[var2 >> 3] & 1 << (var2 & 7)) != 0?MusicSample.getInt(8):-1;
+      for(acc = 0; acc < this.classifications * 8; ++acc) {
+         this.books[acc] = (cascade[acc >> 3] & 1 << (acc & 7)) != 0? MusicSample.getBits(8) : -1;
       }
 
    }
 
-   void method2473(float[] var1, int var2, boolean var3) {
+   void decodeResidue(float[] var1, int var2, boolean var3) {
       int var4;
       for(var4 = 0; var4 < var2; ++var4) {
          var1[var4] = 0.0F;
       }
 
       if(!var3) {
-         var4 = MusicSample.codebooks[this.field1411].dimensions;
-         int var5 = this.field1407 - this.field1406;
-         int var6 = var5 / this.field1408;
+         var4 = MusicSample.codebooks[this.classBook].dimensions;
+         int var5 = this.begin - this.end;
+         int var6 = var5 / this.partitionSize;
          int[] var7 = new int[var6];
 
          for(int var8 = 0; var8 < 8; ++var8) {
@@ -58,26 +58,26 @@ public class MusicSampleResidue {
                int var10;
                int var11;
                if(var8 == 0) {
-                  var10 = MusicSample.codebooks[this.field1411].getHuffmanRoot();
+                  var10 = MusicSample.codebooks[this.classBook].getHuffmanRoot();
 
                   for(var11 = var4 - 1; var11 >= 0; --var11) {
                      if(var9 + var11 < var6) {
-                        var7[var9 + var11] = var10 % this.field1405;
+                        var7[var9 + var11] = var10 % this.classifications;
                      }
 
-                     var10 /= this.field1405;
+                     var10 /= this.classifications;
                   }
                }
 
                for(var10 = 0; var10 < var4; ++var10) {
                   var11 = var7[var9];
-                  int var12 = this.field1410[var8 + var11 * 8];
+                  int var12 = this.books[var8 + var11 * 8];
                   if(var12 >= 0) {
-                     int var13 = var9 * this.field1408 + this.field1406;
+                     int var13 = var9 * this.partitionSize + this.end;
                      MusicSampleCodebook var14 = MusicSample.codebooks[var12];
                      int var15;
-                     if(this.field1409 == 0) {
-                        var15 = this.field1408 / var14.dimensions;
+                     if(this.type == 0) {
+                        var15 = this.partitionSize / var14.dimensions;
 
                         for(int var19 = 0; var19 < var15; ++var19) {
                            float[] var20 = var14.method2307();
@@ -89,7 +89,7 @@ public class MusicSampleResidue {
                      } else {
                         var15 = 0;
 
-                        while(var15 < this.field1408) {
+                        while(var15 < this.partitionSize) {
                            float[] var16 = var14.method2307();
 
                            for(int var17 = 0; var17 < var14.dimensions; ++var17) {

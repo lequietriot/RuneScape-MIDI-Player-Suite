@@ -1,9 +1,10 @@
 package main;
 
-import main.utils.ByteBufferUtils;
+import main.utils.class212;
 
 public class PcmPlayer {
 
+   static boolean isStereo;
    int[] samples;
    PcmStream stream0;
    int __z;
@@ -45,7 +46,7 @@ public class PcmPlayer {
       return this.capacity;
    }
 
-   void write() {
+   void write() throws Exception {
    }
 
    void close() {
@@ -54,11 +55,11 @@ public class PcmPlayer {
    void discard() throws Exception {
    }
 
-   final synchronized void setStream(PcmStream var1) {
+   public final synchronized void setStream(PcmStream var1) {
       this.stream0 = var1;
    }
 
-   final synchronized void run() {
+   public final synchronized void run() {
       if(this.samples != null) {
          long var1 = System.currentTimeMillis();
 
@@ -98,7 +99,7 @@ public class PcmPlayer {
                   this.__y = var4 - this.frequency;
                }
             }
-            
+
             while(var3 < var4) {
                this.fill(this.samples, 256);
                this.write();
@@ -138,7 +139,7 @@ public class PcmPlayer {
                this.skip(256);
                this.timeMs += (long)(256000 / AudioConstants.systemSampleRate);
             }
-          	
+
          } catch (Exception var5) {
             this.timeMs = var1;
          }
@@ -176,11 +177,11 @@ public class PcmPlayer {
 
    final void fill(int[] var1, int var2) {
       int var3 = var2;
-      if(AudioConstants.isStereo) {
+      if(isStereo) {
          var3 = var2 << 1;
       }
 
-      ByteBufferUtils.clearIntArray(var1, 0, var3);
+      class212.clearIntArray(var1, 0, var3);
       this.__ac -= var2;
       if(this.stream0 != null && this.__ac <= 0) {
          this.__ac += AudioConstants.systemSampleRate >> 4;

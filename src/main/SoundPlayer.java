@@ -61,7 +61,7 @@ public class SoundPlayer extends PcmPlayer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        //this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);
+        this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);
     }
 
     void close() {

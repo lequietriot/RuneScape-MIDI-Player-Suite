@@ -18,18 +18,18 @@ public class MusicSampleFloor {
    int[][] subclassBooks;
 
    MusicSampleFloor() {
-      int type = MusicSample.getInt(16);
+      int type = MusicSample.getBits(16);
       if(type != 1) {
          throw new RuntimeException();
       } else {
-         int partitions = MusicSample.getInt(5);
+         int partitions = MusicSample.getBits(5);
          int maximumClass = 0;
          this.partitionClassList = new int[partitions];
 
          int rangeBits;
          int partitionClass;
          for(rangeBits = 0; rangeBits < partitions; ++rangeBits) {
-            partitionClass = MusicSample.getInt(4);
+            partitionClass = MusicSample.getBits(4);
             this.partitionClassList[rangeBits] = partitionClass;
             if(partitionClass >= maximumClass) {
                maximumClass = partitionClass + 1;
@@ -43,10 +43,10 @@ public class MusicSampleFloor {
 
          int i;
          for(rangeBits = 0; rangeBits < maximumClass; ++rangeBits) {
-            this.classDimensions[rangeBits] = MusicSample.getInt(3) + 1;
-            partitionClass = this.classSubClasses[rangeBits] = MusicSample.getInt(2);
+            this.classDimensions[rangeBits] = MusicSample.getBits(3) + 1;
+            partitionClass = this.classSubClasses[rangeBits] = MusicSample.getBits(2);
             if(partitionClass != 0) {
-               this.classMasterbooks[rangeBits] = MusicSample.getInt(8);
+               this.classMasterbooks[rangeBits] = MusicSample.getBits(8);
             }
 
             partitionClass = 1 << partitionClass;
@@ -54,12 +54,12 @@ public class MusicSampleFloor {
             this.subclassBooks[rangeBits] = var7;
 
             for(i = 0; i < partitionClass; ++i) {
-               var7[i] = MusicSample.getInt(8) - 1;
+               var7[i] = MusicSample.getBits(8) - 1;
             }
          }
 
-         this.multiplier = MusicSample.getInt(2) + 1;
-         rangeBits = MusicSample.getInt(4);
+         this.multiplier = MusicSample.getBits(2) + 1;
+         rangeBits = MusicSample.getBits(4);
          partitionClass = 2;
 
          int j;
@@ -76,7 +76,7 @@ public class MusicSampleFloor {
             i = this.partitionClassList[j];
 
             for(int i_2 = 0; i_2 < this.classDimensions[i]; ++i_2) {
-               this.alXList[partitionClass++] = MusicSample.getInt(rangeBits);
+               this.alXList[partitionClass++] = MusicSample.getBits(rangeBits);
             }
          }
 
@@ -155,7 +155,7 @@ public class MusicSampleFloor {
 
    }
 
-   boolean method2367() {
+   boolean decodeFloor() {
       boolean var1 = MusicSample.getBit() != 0;
       if(!var1) {
          return false;
@@ -169,8 +169,8 @@ public class MusicSampleFloor {
 
          var3 = ranges[this.multiplier - 1];
          int var4 = ByteBufferUtils.method634(var3 - 1);
-         lowNeighbor[0] = MusicSample.getInt(var4);
-         lowNeighbor[1] = MusicSample.getInt(var4);
+         lowNeighbor[0] = MusicSample.getBits(var4);
+         lowNeighbor[1] = MusicSample.getBits(var4);
          int var5 = 2;
 
          for (int var7 : this.partitionClassList) {
@@ -193,7 +193,7 @@ public class MusicSampleFloor {
       }
    }
 
-   void method2375(float[] var1, int var2) {
+   void computeFloor(float[] var1, int var2) {
       int var3 = this.alXList.length;
       int var4 = ranges[this.multiplier - 1];
       boolean[] var5 = step2Flags;

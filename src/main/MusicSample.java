@@ -4,6 +4,10 @@ import main.utils.ByteBufferUtils;
 import main.utils.Node;
 import org.displee.cache.index.Index;
 
+import javax.sound.sampled.AudioInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class MusicSample extends Node {
@@ -11,16 +15,16 @@ public class MusicSample extends Node {
    static byte[] source;
    static int byteIndex;
    static int root;
-   static int __cd_x;
-   static int __cd_d;
+   static int blockSize_0;
+   static int blockSize_1;
    static MusicSampleCodebook[] codebooks;
    static MusicSampleFloor[] floors;
    static MusicSampleResidue[] residues;
    static MusicSampleMapping[] mappings;
    static boolean[] noResidues;
-   static int[] __cd_j;
+   static int[] modes;
    static boolean initialized;
-   static float[] __cd_c;
+   static float[] window;
    static float[] __cd_r;
    static float[] __cd_p;
    static float[] __cd_v;
@@ -29,7 +33,7 @@ public class MusicSample extends Node {
    static float[] __cd_aj;
    static int[] __cd_av;
    static int[] __cd_ar;
-   byte[][] windows;
+   byte[][] packets;
    int sampleRate;
    int sampleCount;
    int start;
@@ -47,6 +51,10 @@ public class MusicSample extends Node {
       this.read(var1);
    }
 
+   MusicSample(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, int loopStart) {
+      this.encode(audioInputStream, dataOutputStream, loopStart);
+   }
+
    void read(byte[] var1) {
       ByteBuffer buffer = ByteBuffer.wrap(var1);
       this.sampleRate = buffer.getInt();
@@ -58,154 +66,179 @@ public class MusicSample extends Node {
          this.loopConsistency = true;
       }
 
-      int soundIndex = buffer.getInt();
-      this.windows = new byte[soundIndex][];
+      int packetCount = buffer.getInt();
+      this.packets = new byte[packetCount][];
 
-      for(int soundCount = 0; soundCount < soundIndex; ++soundCount) {
-         int encodedSize = 0;
+      for(int packet = 0; packet < packetCount; ++packet) {
+         int size = 0;
 
-         int sampleIndex;
+         int offset;
          do {
-            sampleIndex = buffer.get() & 0xFF;
-            encodedSize += sampleIndex;
-         } while(sampleIndex >= 255);
+            offset = buffer.get() & 0xFF;
+            size += offset;
+         } while(offset >= 255);
 
-         byte[] encoded = new byte[encodedSize];
-         buffer.get(encoded, 0, encodedSize);
-         this.windows[soundCount] = encoded;
+         byte[] packetData = new byte[size];
+         buffer.get(packetData, 0, size);
+         this.packets[packet] = packetData;
       }
 
    }
 
-   float[] mix(int var1) {
-      setData(this.windows[var1], 0);
+   private void encode(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, int loopStart) {
+      try {
+         this.sampleRate = (int) audioInputStream.getFormat().getSampleRate();
+         this.sampleCount = audioInputStream.available();
+         this.start = loopStart;
+         this.end = this.sampleCount;
+
+         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+
+
+         dataOutputStream.writeInt(sampleRate);
+         dataOutputStream.writeInt(sampleCount);
+         dataOutputStream.writeInt(start);
+         dataOutputStream.writeInt(end);
+         dataOutputStream.writeInt(sampleCount / 256);
+         dataOutputStream.write(byteArrayOutputStream.toByteArray());
+
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+
+   }
+
+   float[] mdctFloatCompute(int var1) {
+      setData(this.packets[var1], 0);
       getBit();
-      int var2 = getInt(ByteBufferUtils.method634(__cd_j.length - 1));
-      boolean var3 = noResidues[var2];
-      int var4 = var3?__cd_d:__cd_x;
-      boolean var5 = false;
-      boolean var6 = false;
-      if(var3) {
-         var5 = getBit() != 0;
-         var6 = getBit() != 0;
+      int modeNumber = getBits(ByteBufferUtils.method634(modes.length - 1));
+      boolean blockFlag = noResidues[modeNumber];
+      int n = blockFlag ? blockSize_1 : blockSize_0;
+      boolean previousWindowFlag = false;
+      boolean nextWindowFlag = false;
+
+      if(blockFlag) {
+         previousWindowFlag = getBit() != 0;
+         nextWindowFlag = getBit() != 0;
       }
 
-      int var7 = var4 >> 1;
-      int var8;
-      int var9;
-      int var10;
-      if(var3 && !var5) {
-         var8 = (var4 >> 2) - (__cd_x >> 2);
-         var9 = (__cd_x >> 2) + (var4 >> 2);
-         var10 = __cd_x >> 1;
+      int windowCenter = n >> 1;
+      int leftWindowStart;
+      int leftWindowEnd;
+      int leftN;
+      if(blockFlag && !previousWindowFlag) {
+         leftWindowStart = (n >> 2) - (blockSize_0 >> 2);
+         leftWindowEnd = (blockSize_0 >> 2) + (n >> 2);
+         leftN = blockSize_0 >> 1;
       } else {
-         var8 = 0;
-         var9 = var7;
-         var10 = var4 >> 1;
+         leftWindowStart = 0;
+         leftWindowEnd = windowCenter;
+         leftN = n >> 1;
       }
 
-      int var11;
-      int var12;
-      int var13;
-      if(var3 && !var6) {
-         var11 = var4 - (var4 >> 2) - (__cd_x >> 2);
-         var12 = (__cd_x >> 2) + (var4 - (var4 >> 2));
-         var13 = __cd_x >> 1;
+      int rightWindowStart;
+      int rightWindowEnd;
+      int rightN;
+      if(blockFlag && !nextWindowFlag) {
+         rightWindowStart = n - (n >> 2) - (blockSize_0 >> 2);
+         rightWindowEnd = (blockSize_0 >> 2) + (n - (n >> 2));
+         rightN = blockSize_0 >> 1;
       } else {
-         var11 = var7;
-         var12 = var4;
-         var13 = var4 >> 1;
+         rightWindowStart = windowCenter;
+         rightWindowEnd = n;
+         rightN = n >> 1;
       }
 
-      MusicSampleMapping var14 = mappings[__cd_j[var2]];
-      int var15 = var14.field1454;
-      int var16 = var14.field1452[var15];
-      boolean var17 = !floors[var16].method2367();
-      boolean var18 = var17;
+      MusicSampleMapping mapping = mappings[modes[modeNumber]];
+      int submapNumber = mapping.mux;
+      int floorNumber = mapping.submapFloors[submapNumber];
 
-      for(var16 = 0; var16 < var14.field1453; ++var16) {
-         MusicSampleResidue var19 = residues[var14.field1455[var16]];
-         float[] var20 = __cd_c;
-         var19.method2473(var20, var4 >> 1, var18);
+      boolean allFloorsEmpty = !floors[floorNumber].decodeFloor();
+
+      for(floorNumber = 0; floorNumber < mapping.submaps; ++floorNumber) {
+         MusicSampleResidue residue = residues[mapping.submapResidues[floorNumber]];
+         float[] pcm = window;
+         residue.decodeResidue(pcm, n >> 1, allFloorsEmpty);
       }
 
-      int var48;
-      if(!var17) {
-         var16 = var14.field1454;
-         var48 = var14.field1452[var16];
-         floors[var48].method2375(__cd_c, var4 >> 1);
+      int floorIndex;
+      if (!allFloorsEmpty) {
+         floorNumber = mapping.mux;
+         floorIndex = mapping.submapFloors[floorNumber];
+         floors[floorIndex].computeFloor(window, n >> 1);
       }
 
       float[] var21;
       int var22;
       int var49;
-      if(var17) {
-         for(var16 = var4 >> 1; var16 < var4; ++var16) {
-            __cd_c[var16] = 0.0F;
+      if(allFloorsEmpty) {
+         for(floorNumber = n >> 1; floorNumber < n; ++floorNumber) {
+            window[floorNumber] = 0.0F;
          }
       } else {
-         var16 = var4 >> 1;
-         var48 = var4 >> 2;
-         var49 = var4 >> 3;
-         var21 = __cd_c;
+         floorNumber = n >> 1;
+         floorIndex = n >> 2;
+         var49 = n >> 3;
+         var21 = window;
 
-         for(var22 = 0; var22 < var16; ++var22) {
+         for(var22 = 0; var22 < floorNumber; ++var22) {
             var21[var22] *= 0.5F;
          }
 
-         for(var22 = var16; var22 < var4; ++var22) {
-            var21[var22] = -var21[var4 - var22 - 1];
+         for(var22 = floorNumber; var22 < n; ++var22) {
+            var21[var22] = -var21[n - var22 - 1];
          }
 
-         float[] var23 = var3?__cd_ag:__cd_r;
-         float[] var24 = var3?__cd_aq:__cd_p;
-         float[] var25 = var3?__cd_aj:__cd_v;
-         int[] var26 = var3?__cd_ar:__cd_av;
+         float[] var23 = blockFlag ? __cd_ag : __cd_r;
+         float[] var24 = blockFlag ? __cd_aq : __cd_p;
+         float[] var25 = blockFlag ? __cd_aj : __cd_v;
+         int[] var26 = blockFlag ? __cd_ar : __cd_av;
 
          int var27;
          float var28;
-         float var29;
+         float x;
          float var30;
          float var31;
-         for(var27 = 0; var27 < var48; ++var27) {
-            var28 = var21[var27 * 4] - var21[var4 - var27 * 4 - 1];
-            var29 = var21[var27 * 4 + 2] - var21[var4 - var27 * 4 - 3];
+         for(var27 = 0; var27 < floorIndex; ++var27) {
+            var28 = var21[var27 * 4] - var21[n - var27 * 4 - 1];
+            x = var21[var27 * 4 + 2] - var21[n - var27 * 4 - 3];
             var30 = var23[var27 * 2];
             var31 = var23[var27 * 2 + 1];
-            var21[var4 - var27 * 4 - 1] = var28 * var30 - var29 * var31;
-            var21[var4 - var27 * 4 - 3] = var28 * var31 + var29 * var30;
+            var21[n - var27 * 4 - 1] = var28 * var30 - x * var31;
+            var21[n - var27 * 4 - 3] = var28 * var31 + x * var30;
          }
 
          float var32;
          float var33;
          for(var27 = 0; var27 < var49; ++var27) {
-            var28 = var21[var16 + var27 * 4 + 3];
-            var29 = var21[var16 + var27 * 4 + 1];
+            var28 = var21[floorNumber + var27 * 4 + 3];
+            x = var21[floorNumber + var27 * 4 + 1];
             var30 = var21[var27 * 4 + 3];
             var31 = var21[var27 * 4 + 1];
-            var21[var16 + var27 * 4 + 3] = var28 + var30;
-            var21[var16 + var27 * 4 + 1] = var29 + var31;
-            var32 = var23[var16 - 4 - var27 * 4];
-            var33 = var23[var16 - 3 - var27 * 4];
-            var21[var27 * 4 + 3] = (var28 - var30) * var32 - (var29 - var31) * var33;
-            var21[var27 * 4 + 1] = (var29 - var31) * var32 + (var28 - var30) * var33;
+            var21[floorNumber + var27 * 4 + 3] = var28 + var30;
+            var21[floorNumber + var27 * 4 + 1] = x + var31;
+            var32 = var23[floorNumber - 4 - var27 * 4];
+            var33 = var23[floorNumber - 3 - var27 * 4];
+            var21[var27 * 4 + 3] = (var28 - var30) * var32 - (x - var31) * var33;
+            var21[var27 * 4 + 1] = (x - var31) * var32 + (var28 - var30) * var33;
          }
 
-         var27 = ByteBufferUtils.method634(var4 - 1);
+         var27 = ByteBufferUtils.method634(n - 1);
 
          int var34;
          int var35;
          int var36;
          int var37;
          for(var34 = 0; var34 < var27 - 3; ++var34) {
-            var35 = var4 >> var34 + 2;
+            var35 = n >> var34 + 2;
             var36 = 8 << var34;
 
             for(var37 = 0; var37 < 2 << var34; ++var37) {
-               int var38 = var4 - var35 * var37 * 2;
-               int var39 = var4 - var35 * (var37 * 2 + 1);
+               int var38 = n - var35 * var37 * 2;
+               int var39 = n - var35 * (var37 * 2 + 1);
 
-               for(int var40 = 0; var40 < var4 >> var34 + 4; ++var40) {
+               for(int var40 = 0; var40 < n >> var34 + 4; ++var40) {
                   int var41 = var40 * 4;
                   float var42 = var21[var38 - 1 - var41];
                   float var43 = var21[var38 - 3 - var41];
@@ -241,68 +274,68 @@ public class MusicSample extends Node {
             }
          }
 
-         for(var34 = 0; var34 < var16; ++var34) {
+         for(var34 = 0; var34 < floorNumber; ++var34) {
             var21[var34] = var21[var34 * 2 + 1];
          }
 
          for(var34 = 0; var34 < var49; ++var34) {
-            var21[var4 - 1 - var34 * 2] = var21[var34 * 4];
-            var21[var4 - 2 - var34 * 2] = var21[var34 * 4 + 1];
-            var21[var4 - var48 - 1 - var34 * 2] = var21[var34 * 4 + 2];
-            var21[var4 - var48 - 2 - var34 * 2] = var21[var34 * 4 + 3];
+            var21[n - 1 - var34 * 2] = var21[var34 * 4];
+            var21[n - 2 - var34 * 2] = var21[var34 * 4 + 1];
+            var21[n - floorIndex - 1 - var34 * 2] = var21[var34 * 4 + 2];
+            var21[n - floorIndex - 2 - var34 * 2] = var21[var34 * 4 + 3];
          }
 
          for(var34 = 0; var34 < var49; ++var34) {
-            var29 = var25[var34 * 2];
+            x = var25[var34 * 2];
             var30 = var25[var34 * 2 + 1];
-            var31 = var21[var16 + var34 * 2];
-            var32 = var21[var16 + var34 * 2 + 1];
-            var33 = var21[var4 - 2 - var34 * 2];
-            float var51 = var21[var4 - 1 - var34 * 2];
-            float var52 = var30 * (var31 - var33) + var29 * (var32 + var51);
-            var21[var16 + var34 * 2] = (var31 + var33 + var52) * 0.5F;
-            var21[var4 - 2 - var34 * 2] = (var31 + var33 - var52) * 0.5F;
-            var52 = var30 * (var32 + var51) - var29 * (var31 - var33);
-            var21[var16 + var34 * 2 + 1] = (var32 - var51 + var52) * 0.5F;
-            var21[var4 - 1 - var34 * 2] = (-var32 + var51 + var52) * 0.5F;
+            var31 = var21[floorNumber + var34 * 2];
+            var32 = var21[floorNumber + var34 * 2 + 1];
+            var33 = var21[n - 2 - var34 * 2];
+            float var51 = var21[n - 1 - var34 * 2];
+            float var52 = var30 * (var31 - var33) + x * (var32 + var51);
+            var21[floorNumber + var34 * 2] = (var31 + var33 + var52) * 0.5F;
+            var21[n - 2 - var34 * 2] = (var31 + var33 - var52) * 0.5F;
+            var52 = var30 * (var32 + var51) - x * (var31 - var33);
+            var21[floorNumber + var34 * 2 + 1] = (var32 - var51 + var52) * 0.5F;
+            var21[n - 1 - var34 * 2] = (-var32 + var51 + var52) * 0.5F;
          }
 
-         for(var34 = 0; var34 < var48; ++var34) {
-            var21[var34] = var21[var16 + var34 * 2] * var24[var34 * 2] + var21[var16 + var34 * 2 + 1] * var24[var34 * 2 + 1];
-            var21[var16 - 1 - var34] = var21[var16 + var34 * 2] * var24[var34 * 2 + 1] - var21[var16 + var34 * 2 + 1] * var24[var34 * 2];
+         for(var34 = 0; var34 < floorIndex; ++var34) {
+            var21[var34] = var21[floorNumber + var34 * 2] * var24[var34 * 2] + var21[floorNumber + var34 * 2 + 1] * var24[var34 * 2 + 1];
+            var21[floorNumber - 1 - var34] = var21[floorNumber + var34 * 2] * var24[var34 * 2 + 1] - var21[floorNumber + var34 * 2 + 1] * var24[var34 * 2];
          }
 
-         for(var34 = 0; var34 < var48; ++var34) {
-            var21[var34 + (var4 - var48)] = -var21[var34];
+         for(var34 = 0; var34 < floorIndex; ++var34) {
+            var21[var34 + (n - floorIndex)] = -var21[var34];
          }
 
-         for(var34 = 0; var34 < var48; ++var34) {
-            var21[var34] = var21[var48 + var34];
+         for(var34 = 0; var34 < floorIndex; ++var34) {
+            var21[var34] = var21[floorIndex + var34];
          }
 
-         for(var34 = 0; var34 < var48; ++var34) {
-            var21[var48 + var34] = -var21[var48 - var34 - 1];
+         for(var34 = 0; var34 < floorIndex; ++var34) {
+            var21[floorIndex + var34] = -var21[floorIndex - var34 - 1];
          }
 
-         for(var34 = 0; var34 < var48; ++var34) {
-            var21[var16 + var34] = var21[var4 - var34 - 1];
+         for(var34 = 0; var34 < floorIndex; ++var34) {
+            var21[floorNumber + var34] = var21[n - var34 - 1];
          }
 
-         for(var34 = var8; var34 < var9; ++var34) {
-            var29 = (float)Math.sin(((double)(var34 - var8) + 0.5D) / (double)var10 * 0.5D * 3.141592653589793D);
-            __cd_c[var34] *= (float)Math.sin(1.5707963267948966D * (double)var29 * (double)var29);
+         for(var34 = leftWindowStart; var34 < leftWindowEnd; ++var34) {
+            x = (float)Math.sin(((double)(var34 - leftWindowStart) + 0.5D) / (double)leftN * 0.5D * 3.141592653589793D);
+            window[var34] *= (float)Math.sin(1.5707963267948966D * (double)x * (double)x);
          }
 
-         for(var34 = var11; var34 < var12; ++var34) {
-            var29 = (float)Math.sin(((double)(var34 - var11) + 0.5D) / (double)var13 * 0.5D * 3.141592653589793D + 1.5707963267948966D);
-            __cd_c[var34] *= (float)Math.sin(1.5707963267948966D * (double)var29 * (double)var29);
+         for(var34 = rightWindowStart; var34 < rightWindowEnd; ++var34) {
+            x = (float)Math.sin(((double)(var34 - rightWindowStart) + 0.5D) / (double)rightN * 0.5D * 3.141592653589793D + 1.5707963267948966D);
+            window[var34] *= (float)Math.sin(1.5707963267948966D * (double)x * (double)x);
          }
       }
 
       var21 = null;
       if(this.__y > 0) {
-         var48 = var4 + this.__y >> 2;
-         var21 = new float[var48];
+         floorIndex = n + this.__y >> 2;
+         var21 = new float[floorIndex];
          if(!this.blockFlag) {
             for(var49 = 0; var49 < this.__h; ++var49) {
                var22 = var49 + (this.__y >> 1);
@@ -310,20 +343,21 @@ public class MusicSample extends Node {
             }
          }
 
-         if(!var17) {
-            for(var49 = var8; var49 < var4 >> 1; ++var49) {
-               var22 = var21.length - (var4 >> 1) + var49;
-               var21[var22] += __cd_c[var49];
+         if(!allFloorsEmpty) {
+            for(var49 = leftWindowStart; var49 < n >> 1; ++var49) {
+               var22 = var21.length - (n >> 1) + var49;
+               var21[var22] += window[var49];
             }
          }
       }
 
       float[] var50 = this.__t;
-      this.__t = __cd_c;
-      __cd_c = var50;
-      this.__y = var4;
-      this.__h = var12 - (var4 >> 1);
-      this.blockFlag = var17;
+      this.__t = window;
+      window = var50;
+      this.__y = n;
+      this.__h = rightWindowEnd - (n >> 1);
+      this.blockFlag = allFloorsEmpty;
+
       return var21;
    }
 
@@ -333,18 +367,18 @@ public class MusicSample extends Node {
       } else {
          if(this.samples == null) {
             this.__y = 0;
-            this.__t = new float[__cd_d];
+            this.__t = new float[blockSize_1];
             this.samples = new byte[this.sampleCount];
             this.sampleLength = 0;
             this.soundIndices = 0;
          }
 
-         for(; this.soundIndices < this.windows.length; ++this.soundIndices) {
+         for(; this.soundIndices < this.packets.length; ++this.soundIndices) {
             if(var1 != null && var1[0] <= 0) {
                return null;
             }
 
-            float[] var2 = this.mix(this.soundIndices);
+            float[] var2 = this.mdctFloatCompute(this.soundIndices);
             if(var2 != null) {
                int var3 = this.sampleLength;
                int var4 = var2.length;
@@ -400,7 +434,7 @@ public class MusicSample extends Node {
       return bit;
    }
 
-   static int getInt(int bits) {
+   static int getBits(int bits) {
       int res = 0;
 
       int index;
@@ -423,106 +457,106 @@ public class MusicSample extends Node {
       return res;
    }
 
-   static void initData(byte[] var0) {
+   static void setupHeader(byte[] var0) {
       setData(var0, 0);
-      __cd_x = 1 << getInt(4);
-      __cd_d = 1 << getInt(4);
-      __cd_c = new float[__cd_d];
+      blockSize_0 = 1 << getBits(4);
+      blockSize_1 = 1 << getBits(4);
+      window = new float[blockSize_1];
 
-      int var1;
-      int var2;
-      int var3;
-      int var4;
-      int var5;
-      for(var1 = 0; var1 < 2; ++var1) {
-         var2 = var1 != 0?__cd_d:__cd_x;
-         var3 = var2 >> 1;
-         var4 = var2 >> 2;
-         var5 = var2 >> 3;
-         float[] var6 = new float[var3];
+      int codebookCount;
+      int floorCount;
+      int residueCount;
+      int mappingCount;
+      int timeCount;
+      for(codebookCount = 0; codebookCount < 2; ++codebookCount) {
+         floorCount = codebookCount != 0 ? blockSize_1 : blockSize_0;
+         residueCount = floorCount >> 1;
+         mappingCount = floorCount >> 2;
+         timeCount = floorCount >> 3;
+         float[] trig1 = new float[residueCount];
 
-         for(int var7 = 0; var7 < var4; ++var7) {
-            var6[var7 * 2] = (float)Math.cos((double)(var7 * 4) * 3.141592653589793D / (double)var2);
-            var6[var7 * 2 + 1] = -((float)Math.sin((double)(var7 * 4) * 3.141592653589793D / (double)var2));
+         for(int var7 = 0; var7 < mappingCount; ++var7) {
+            trig1[var7 * 2] = (float)Math.cos((double)(var7 * 4) * 3.141592653589793D / (double)floorCount);
+            trig1[var7 * 2 + 1] = -((float)Math.sin((double)(var7 * 4) * 3.141592653589793D / (double)floorCount));
          }
 
-         float[] var13 = new float[var3];
+         float[] trig2 = new float[residueCount];
 
-         for(int var8 = 0; var8 < var4; ++var8) {
-            var13[var8 * 2] = (float)Math.cos((double)(var8 * 2 + 1) * 3.141592653589793D / (double)(var2 * 2));
-            var13[var8 * 2 + 1] = (float)Math.sin((double)(var8 * 2 + 1) * 3.141592653589793D / (double)(var2 * 2));
+         for(int var8 = 0; var8 < mappingCount; ++var8) {
+            trig2[var8 * 2] = (float)Math.cos((double)(var8 * 2 + 1) * 3.141592653589793D / (double)(floorCount * 2));
+            trig2[var8 * 2 + 1] = (float)Math.sin((double)(var8 * 2 + 1) * 3.141592653589793D / (double)(floorCount * 2));
          }
 
-         float[] var14 = new float[var4];
+         float[] trig3 = new float[mappingCount];
 
-         for(int var9 = 0; var9 < var5; ++var9) {
-            var14[var9 * 2] = (float)Math.cos((double)(var9 * 4 + 2) * 3.141592653589793D / (double)var2);
-            var14[var9 * 2 + 1] = -((float)Math.sin((double)(var9 * 4 + 2) * 3.141592653589793D / (double)var2));
+         for(int var9 = 0; var9 < timeCount; ++var9) {
+            trig3[var9 * 2] = (float)Math.cos((double)(var9 * 4 + 2) * 3.141592653589793D / (double)floorCount);
+            trig3[var9 * 2 + 1] = -((float)Math.sin((double)(var9 * 4 + 2) * 3.141592653589793D / (double)floorCount));
          }
 
-         int[] var15 = new int[var5];
-         int var10 = ByteBufferUtils.method634(var5 - 1);
+         int[] var15 = new int[timeCount];
+         int var10 = ByteBufferUtils.method634(timeCount - 1);
 
-         for(int var11 = 0; var11 < var5; ++var11) {
+         for(int var11 = 0; var11 < timeCount; ++var11) {
             var15[var11] = ByteBufferUtils.method87(var11, var10);
          }
 
-         if(var1 != 0) {
-            __cd_ag = var6;
-            __cd_aq = var13;
-            __cd_aj = var14;
+         if(codebookCount != 0) {
+            __cd_ag = trig1;
+            __cd_aq = trig2;
+            __cd_aj = trig3;
             __cd_ar = var15;
          } else {
-            __cd_r = var6;
-            __cd_p = var13;
-            __cd_v = var14;
+            __cd_r = trig1;
+            __cd_p = trig2;
+            __cd_v = trig3;
             __cd_av = var15;
          }
       }
 
-      var1 = getInt(8) + 1;
-      codebooks = new MusicSampleCodebook[var1];
+      codebookCount = getBits(8) + 1;
+      codebooks = new MusicSampleCodebook[codebookCount];
 
-      for(var2 = 0; var2 < var1; ++var2) {
-         codebooks[var2] = new MusicSampleCodebook();
+      for(floorCount = 0; floorCount < codebookCount; ++floorCount) {
+         codebooks[floorCount] = new MusicSampleCodebook();
       }
 
-      var2 = getInt(6) + 1;
+      floorCount = getBits(6) + 1;
 
-      for(var3 = 0; var3 < var2; ++var3) {
-         getInt(16);
+      for(residueCount = 0; residueCount < floorCount; ++residueCount) {
+         getBits(16);
       }
 
-      var2 = getInt(6) + 1;
-      floors = new MusicSampleFloor[var2];
+      floorCount = getBits(6) + 1;
+      floors = new MusicSampleFloor[floorCount];
 
-      for(var3 = 0; var3 < var2; ++var3) {
-         floors[var3] = new MusicSampleFloor();
+      for(residueCount = 0; residueCount < floorCount; ++residueCount) {
+         floors[residueCount] = new MusicSampleFloor();
       }
 
-      var3 = getInt(6) + 1;
-      residues = new MusicSampleResidue[var3];
+      residueCount = getBits(6) + 1;
+      residues = new MusicSampleResidue[residueCount];
 
-      for(var4 = 0; var4 < var3; ++var4) {
-         residues[var4] = new MusicSampleResidue();
+      for(mappingCount = 0; mappingCount < residueCount; ++mappingCount) {
+         residues[mappingCount] = new MusicSampleResidue();
       }
 
-      var4 = getInt(6) + 1;
-      mappings = new MusicSampleMapping[var4];
+      mappingCount = getBits(6) + 1;
+      mappings = new MusicSampleMapping[mappingCount];
 
-      for(var5 = 0; var5 < var4; ++var5) {
-         mappings[var5] = new MusicSampleMapping();
+      for(timeCount = 0; timeCount < mappingCount; ++timeCount) {
+         mappings[timeCount] = new MusicSampleMapping();
       }
 
-      var5 = getInt(6) + 1;
-      noResidues = new boolean[var5];
-      __cd_j = new int[var5];
+      timeCount = getBits(6) + 1;
+      noResidues = new boolean[timeCount];
+      modes = new int[timeCount];
 
-      for(int var12 = 0; var12 < var5; ++var12) {
-         noResidues[var12] = getBit() != 0;
-         getInt(16);
-         getInt(16);
-         __cd_j[var12] = getInt(8);
+      for(int index = 0; index < timeCount; ++index) {
+         noResidues[index] = getBit() != 0;
+         getBits(16);
+         getBits(16);
+         modes[index] = getBits(8);
       }
 
    }
@@ -534,7 +568,7 @@ public class MusicSample extends Node {
             return false;
          }
 
-         initData(fileData);
+         setupHeader(fileData);
          initialized = true;
       }
 

@@ -4,7 +4,6 @@ import main.utils.Node;
 
 public class MusicPatchNode extends Node {
 
-    static int cameraYaw;
     int volumeValue;
     MusicPatch patch;
     AudioBuffer audioBuffer;
@@ -17,7 +16,6 @@ public class MusicPatchNode extends Node {
     int __x;
     int __d;
     int __k;
-    int surfaceOffsetY;
     int __i;
     int __a;
     int __z;

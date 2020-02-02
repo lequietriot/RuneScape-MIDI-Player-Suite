@@ -33,7 +33,7 @@ public class SoundEffect {
         end = buffer.getShort() & 0xFFFF;
     }
 
-    public static AudioBuffer toRawSound() {
+    public AudioBuffer toRawSound() {
         final byte[] mix = mix();
         return new AudioBuffer(22050, mix, start * 22050 / 1000, end * 22050 / 1000);
     }

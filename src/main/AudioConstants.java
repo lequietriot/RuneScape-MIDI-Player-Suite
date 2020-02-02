@@ -2,6 +2,6 @@ package main;
 
 public class AudioConstants {
 
-    static boolean isStereo = true;
-    static int systemSampleRate = 22050;
+    public static boolean isStereo = true;
+    public static int systemSampleRate = 22050;
 }

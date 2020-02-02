@@ -2,7 +2,6 @@ package main;
 
 public class MusicPatchNode2 {
 
-    static long __hd_fc;
     byte[] __m;
     byte[] __f;
     int __q;

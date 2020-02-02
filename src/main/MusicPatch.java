@@ -1,14 +1,11 @@
 package main;
 
-import main.utils.ByteBufferUtils;
+import main.utils.Buffer;
 import main.utils.Node;
 import org.displee.cache.index.Index;
 
-import java.nio.ByteBuffer;
-
 public class MusicPatch extends Node {
 
-    int unknownInt;
     AudioBuffer[] audioBuffers;
     short[] generators;
     byte[] __w;
@@ -16,14 +13,17 @@ public class MusicPatch extends Node {
     MusicPatchNode2[] parameters;
     byte[] notes;
     int[] containerIDs;
+    int unknownInt;
+
+    int patchID;
     int[] notePitches;
 
-    static MusicPatch getMusicPatch(Index patchIndex, int archiveID, int fileID) {
-        byte[] patchData = patchIndex.getArchive(archiveID).getFile(fileID).getData();
-        return new MusicPatch(ByteBuffer.wrap(patchData));
+    public static MusicPatch getMusicPatch(Index index, int archiveID, int fileID) {
+        byte[] data = index.getArchive(archiveID).getFile(fileID).getData();
+        return new MusicPatch(data, archiveID);
     }
 
-    MusicPatch(ByteBuffer buffer) {
+    MusicPatch(byte[] var1, int var2) {
         this.audioBuffers = new AudioBuffer[128];
         this.generators = new short[128];
         this.__w = new byte[128];
@@ -31,10 +31,14 @@ public class MusicPatch extends Node {
         this.parameters = new MusicPatchNode2[128];
         this.notes = new byte[128];
         this.containerIDs = new int[128];
-        this.notePitches = new int[128];
+
+        this.notePitches = new int[128]; //custom
+        this.patchID = var2; //custom
+
+        Buffer buffer = new Buffer(var1);
 
         int var3;
-        for(var3 = 0; buffer.array()[var3 + buffer.position()] != 0; ++var3) {
+        for(var3 = 0; buffer.array[var3 + buffer.index] != 0; ++var3) {
             ;
         }
 
@@ -42,16 +46,16 @@ public class MusicPatch extends Node {
 
         int var5;
         for(var5 = 0; var5 < var3; ++var5) {
-            var4[var5] = (byte) (buffer.get() & 0xFF);
+            var4[var5] = buffer.readByte();
         }
 
-        buffer.position(buffer.position() + 1);
+        ++buffer.index;
         ++var3;
-        var5 = buffer.position();
-        buffer.position(buffer.position() + var3);
+        var5 = buffer.index;
+        buffer.index += var3;
 
         int var6;
-        for(var6 = 0; buffer.array()[var6 + buffer.position()] != 0; ++var6) {
+        for(var6 = 0; buffer.array[var6 + buffer.index] != 0; ++var6) {
             ;
         }
 
@@ -59,26 +63,26 @@ public class MusicPatch extends Node {
 
         int var8;
         for(var8 = 0; var8 < var6; ++var8) {
-            var7[var8] = (byte) (buffer.get() & 0xFF);
+            var7[var8] = buffer.readByte();
         }
 
-        buffer.position(buffer.position() + 1);
+        ++buffer.index;
         ++var6;
-        var8 = buffer.position();
-        buffer.position(buffer.position() + var6);
+        var8 = buffer.index;
+        buffer.index += var6;
 
         int var9;
-        for(var9 = 0; buffer.array()[var9 + buffer.position()] != 0; ++var9) {
+        for(var9 = 0; buffer.array[var9 + buffer.index] != 0; ++var9) {
             ;
         }
 
         byte[] var10 = new byte[var9];
 
         for(int var11 = 0; var11 < var9; ++var11) {
-            var10[var11] = (byte) (buffer.get() & 0xFF);
+            var10[var11] = buffer.readByte();
         }
 
-        buffer.position(buffer.position() + 1);
+        ++buffer.index;
         ++var9;
         byte[] var42 = new byte[var9];
         int var12;
@@ -89,7 +93,7 @@ public class MusicPatch extends Node {
             var12 = 2;
 
             for(var13 = 2; var13 < var9; ++var13) {
-                int var15 = buffer.get() & 0xFF;
+                int var15 = buffer.readUnsignedByte();
                 if(var15 == 0) {
                     var14 = var12++;
                 } else {
@@ -111,25 +115,25 @@ public class MusicPatch extends Node {
         MusicPatchNode2 var44;
         for(var13 = 0; var13 < var43.length; ++var13) {
             var44 = var43[var13] = new MusicPatchNode2();
-            int var16 = buffer.get() & 0xFF;
+            int var16 = buffer.readUnsignedByte();
             if(var16 > 0) {
                 var44.__m = new byte[var16 * 2];
             }
 
-            var16 = buffer.get() & 0xFF;
+            var16 = buffer.readUnsignedByte();
             if(var16 > 0) {
                 var44.__f = new byte[var16 * 2 + 2];
                 var44.__f[1] = 64;
             }
         }
 
-        var13 = buffer.get() & 0xFF;
+        var13 = buffer.readUnsignedByte();
         byte[] var45 = var13 > 0?new byte[var13 * 2]:null;
-        var13 = buffer.get() & 0xFF;
+        var13 = buffer.readUnsignedByte();
         byte[] var17 = var13 > 0?new byte[var13 * 2]:null;
 
         int var18;
-        for(var18 = 0; buffer.array()[var18 + buffer.position()] != 0; ++var18) {
+        for(var18 = 0; buffer.array[var18 + buffer.index] != 0; ++var18) {
             ;
         }
 
@@ -137,23 +141,23 @@ public class MusicPatch extends Node {
 
         int notePitch;
         for(notePitch = 0; notePitch < var18; ++notePitch) {
-            var19[notePitch] = (byte) (buffer.get() & 0xFF);
+            var19[notePitch] = buffer.readByte();
         }
 
-        buffer.position(buffer.position() + 1);
+        ++buffer.index;
         ++var18;
         notePitch = 0;
 
         int noteRangeCount;
         for(noteRangeCount = 0; noteRangeCount < 128; ++noteRangeCount) {
-            notePitch += buffer.get() & 0xFF;
+            notePitch += buffer.readUnsignedByte();
             this.generators[noteRangeCount] = (short) notePitch;
         }
 
         notePitch = 0;
 
         for(noteRangeCount = 0; noteRangeCount < 128; ++noteRangeCount) {
-            notePitch += buffer.get() & 0xFF;
+            notePitch += buffer.readUnsignedByte();
             this.generators[noteRangeCount] = (short)(this.generators[noteRangeCount] + (notePitch << 8));
 
             notePitches[noteRangeCount] = notePitch;
@@ -172,7 +176,7 @@ public class MusicPatch extends Node {
                     noteRangeCount = -1;
                 }
 
-                containerID = ByteBufferUtils.__as_311(buffer);
+                containerID = buffer.__as_311();
             }
 
             this.generators[containerNoteRanges] = (short)(this.generators[containerNoteRanges] + ((containerID - 1 & 2) << 14));
@@ -194,7 +198,7 @@ public class MusicPatch extends Node {
                         noteRangeCount = -1;
                     }
 
-                    containerNoteRanges = buffer.array()[var5++] - 1;
+                    containerNoteRanges = buffer.array[var5++] - 1;
                 }
 
                 this.notes[var25] = (byte)containerNoteRanges;
@@ -215,7 +219,7 @@ public class MusicPatch extends Node {
                         noteRangeCount = -1;
                     }
 
-                    var25 = buffer.array()[var8++] + 16 << 2;
+                    var25 = buffer.array[var8++] + 16 << 2;
                 }
 
                 this.__o[var26] = (byte)var25;
@@ -259,7 +263,7 @@ public class MusicPatch extends Node {
                 }
 
                 if(this.containerIDs[var28] > 0) {
-                    var27 = buffer.get() & 0xFF + 1;
+                    var27 = buffer.readUnsignedByte() + 1;
                 }
             }
 
@@ -267,7 +271,7 @@ public class MusicPatch extends Node {
             --noteRangeCount;
         }
 
-        this.unknownInt = buffer.get() & 0xFF + 1;
+        this.unknownInt = buffer.readUnsignedByte() + 1;
 
         MusicPatchNode2 var29;
         int var30;
@@ -275,26 +279,26 @@ public class MusicPatch extends Node {
             var29 = var43[var28];
             if(var29.__m != null) {
                 for(var30 = 1; var30 < var29.__m.length; var30 += 2) {
-                    var29.__m[var30] = (byte) (buffer.get() & 0xFF);
+                    var29.__m[var30] = buffer.readByte();
                 }
             }
 
             if(var29.__f != null) {
                 for(var30 = 3; var30 < var29.__f.length - 2; var30 += 2) {
-                    var29.__f[var30] = (byte) (buffer.get() & 0xFF);
+                    var29.__f[var30] = buffer.readByte();
                 }
             }
         }
 
         if(var45 != null) {
             for(var28 = 1; var28 < var45.length; var28 += 2) {
-                var45[var28] = (byte) (buffer.get() & 0xFF);
+                var45[var28] = buffer.readByte();
             }
         }
 
         if(var17 != null) {
             for(var28 = 1; var28 < var17.length; var28 += 2) {
-                var17[var28] = (byte) (buffer.get() & 0xFF);
+                var17[var28] = buffer.readByte();
             }
         }
 
@@ -304,7 +308,7 @@ public class MusicPatch extends Node {
                 notePitch = 0;
 
                 for(var30 = 2; var30 < var29.__f.length; var30 += 2) {
-                    notePitch = 1 + notePitch + buffer.get() & 0xFF;
+                    notePitch = 1 + notePitch + buffer.readUnsignedByte();
                     var29.__f[var30] = (byte)notePitch;
                 }
             }
@@ -316,7 +320,7 @@ public class MusicPatch extends Node {
                 notePitch = 0;
 
                 for(var30 = 2; var30 < var29.__m.length; var30 += 2) {
-                    notePitch = 1 + notePitch + buffer.get() & 0xFF;
+                    notePitch = 1 + notePitch + buffer.readUnsignedByte();
                     var29.__m[var30] = (byte)notePitch;
                 }
             }
@@ -331,11 +335,11 @@ public class MusicPatch extends Node {
         int var37;
         byte var38;
         if(var45 != null) {
-            notePitch = buffer.get() & 0xFF;
+            notePitch = buffer.readUnsignedByte();
             var45[0] = (byte)notePitch;
 
             for(var28 = 2; var28 < var45.length; var28 += 2) {
-                notePitch = 1 + notePitch + buffer.get() & 0xFF;
+                notePitch = 1 + notePitch + buffer.readUnsignedByte();
                 var45[var28] = (byte)notePitch;
             }
 
@@ -371,11 +375,11 @@ public class MusicPatch extends Node {
         }
 
         if(var17 != null) {
-            notePitch = buffer.get() & 0xFF;
+            notePitch = buffer.readUnsignedByte();
             var17[0] = (byte)notePitch;
 
             for(var28 = 2; var28 < var17.length; var28 += 2) {
-                notePitch = 1 + notePitch + buffer.get() & 0xFF;
+                notePitch = 1 + notePitch + buffer.readUnsignedByte();
                 var17[var28] = (byte)notePitch;
             }
 
@@ -439,45 +443,44 @@ public class MusicPatch extends Node {
         }
 
         for(var28 = 0; var28 < var12; ++var28) {
-            var43[var28].__q = buffer.get() & 0xFF;
+            var43[var28].__q = buffer.readUnsignedByte();
         }
 
         for(var28 = 0; var28 < var12; ++var28) {
             var29 = var43[var28];
             if(var29.__m != null) {
-                var29.__w = buffer.get() & 0xFF;
+                var29.__w = buffer.readUnsignedByte();
             }
 
             if(var29.__f != null) {
-                var29.__o = buffer.get() & 0xFF;
+                var29.__o = buffer.readUnsignedByte();
             }
 
             if(var29.__q > 0) {
-                var29.__u = buffer.get() & 0xFF;
+                var29.__u = buffer.readUnsignedByte();
             }
         }
 
         for(var28 = 0; var28 < var12; ++var28) {
-            var43[var28].__x = buffer.get() & 0xFF;
+            var43[var28].__x = buffer.readUnsignedByte();
         }
 
         for(var28 = 0; var28 < var12; ++var28) {
             var29 = var43[var28];
             if(var29.__x > 0) {
-                var29.__g = buffer.get() & 0xFF;
+                var29.__g = buffer.readUnsignedByte();
             }
         }
 
         for(var28 = 0; var28 < var12; ++var28) {
             var29 = var43[var28];
             if(var29.__g > 0) {
-                var29.__e = buffer.get() & 0xFF;
+                var29.__e = buffer.readUnsignedByte();
             }
         }
     }
 
     boolean loadPatchSamples(SoundBankCache var1, byte[] var2, int[] var3) {
-
         boolean var4 = true;
         int var5 = 0;
         AudioBuffer var6 = null;

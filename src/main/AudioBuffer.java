@@ -23,4 +23,19 @@ public class AudioBuffer extends AbstractSound {
         end = loopEnd;
         bool = effect;
     }
+
+    public AudioBuffer resample(Resampler resampler) {
+        this.samples = resampler.resample(this.samples);
+        this.sampleRate = resampler.scaleRate(this.sampleRate);
+        if(this.start == this.end) {
+            this.start = this.end = resampler.scalePosition(this.start);
+        } else {
+            this.start = resampler.scalePosition(this.start);
+            this.end = resampler.scalePosition(this.end);
+            if(this.start == this.end) {
+                --this.start;
+            }
+        }
+        return this;
+    }
 }

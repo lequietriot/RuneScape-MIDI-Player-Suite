@@ -2,7 +2,6 @@ package main;
 
 public class MusicPatchPcmStream extends PcmStream {
 
-   static int __hq_qg;
    MidiPcmStream superStream;
    NodeDeque queue;
    PcmStreamMixer mixer;

@@ -12,9 +12,9 @@ public class MusicSampleCodebook {
    int[] field1307;
 
    MusicSampleCodebook() {
-      MusicSample.getInt(24);
-      this.dimensions = MusicSample.getInt(16);
-      this.entries = MusicSample.getInt(24);
+      MusicSample.getBits(24);
+      this.dimensions = MusicSample.getBits(16);
+      this.entries = MusicSample.getBits(24);
       this.entryLengths = new int[this.entries];
       boolean ordered = MusicSample.getBit() != 0;
       int codebookLookupType;
@@ -23,8 +23,8 @@ public class MusicSampleCodebook {
       if(ordered) {
          codebookLookupType = 0;
 
-         for(i_2 = MusicSample.getInt(5) + 1; codebookLookupType < this.entries; ++i_2) {
-            int number = MusicSample.getInt(ByteBufferUtils.method634(this.entries - codebookLookupType));
+         for(i_2 = MusicSample.getBits(5) + 1; codebookLookupType < this.entries; ++i_2) {
+            int number = MusicSample.getBits(ByteBufferUtils.method634(this.entries - codebookLookupType));
 
             for(codebookValueBits = 0; codebookValueBits < number; ++codebookValueBits) {
                this.entryLengths[codebookLookupType++] = i_2;
@@ -37,17 +37,17 @@ public class MusicSampleCodebook {
             if(sparse && MusicSample.getBit() == 0) {
                this.entryLengths[i_2] = 0;
             } else {
-               this.entryLengths[i_2] = MusicSample.getInt(5) + 1;
+               this.entryLengths[i_2] = MusicSample.getBits(5) + 1;
             }
          }
       }
 
       this.createHuffmanTree();
-      codebookLookupType = MusicSample.getInt(4);
+      codebookLookupType = MusicSample.getBits(4);
       if(codebookLookupType > 0) {
-         float codebookMinimumValue = MusicSample.float32Unpack(MusicSample.getInt(32));
-         float codebookDeltaValue = MusicSample.float32Unpack(MusicSample.getInt(32));
-         codebookValueBits = MusicSample.getInt(4) + 1;
+         float codebookMinimumValue = MusicSample.float32Unpack(MusicSample.getBits(32));
+         float codebookDeltaValue = MusicSample.float32Unpack(MusicSample.getBits(32));
+         codebookValueBits = MusicSample.getBits(4) + 1;
          boolean codebookSequenceP = MusicSample.getBit() != 0;
          int codebookLookupValues;
          if(codebookLookupType == 1) {
@@ -60,7 +60,7 @@ public class MusicSampleCodebook {
 
          int i;
          for(i = 0; i < codebookLookupValues; ++i) {
-            this.codebookMultiplicands[i] = MusicSample.getInt(codebookValueBits);
+            this.codebookMultiplicands[i] = MusicSample.getBits(codebookValueBits);
          }
 
          this.valueVector = new float[this.entries][this.dimensions];
@@ -104,7 +104,7 @@ public class MusicSampleCodebook {
    }
 
    void createHuffmanTree() {
-      int[] var1 = new int[this.entries];
+      int[] entryLengths = new int[this.entries];
       int[] var2 = new int[33];
 
       int var3;
@@ -120,7 +120,7 @@ public class MusicSampleCodebook {
          if(var4 != 0) {
             var5 = 1 << 32 - var4;
             var6 = var2[var4];
-            var1[var3] = var6;
+            entryLengths[var3] = var6;
             if((var6 & var5) != 0) {
                var7 = var2[var4 - 1];
             } else {
@@ -159,7 +159,7 @@ public class MusicSampleCodebook {
       for(var3 = 0; var3 < this.entries; ++var3) {
          var4 = this.entryLengths[var3];
          if(var4 != 0) {
-            var5 = var1[var3];
+            var5 = entryLengths[var3];
             var6 = 0;
 
             for(var7 = 0; var7 < var4; ++var7) {

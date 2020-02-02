@@ -2595,7 +2595,7 @@ public class GUI implements ControllerEventListener {
 						System.out.println("Created new directory: /Sounds/Sound Effects/");
 						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-						AudioBuffer audioBuffer = SoundEffect.toRawSound();
+						AudioBuffer audioBuffer = soundEffect.toRawSound();
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
@@ -2605,7 +2605,7 @@ public class GUI implements ControllerEventListener {
 						System.out.println("Couldn't create new directory (It might already exist).");
 						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-						AudioBuffer audioBuffer = SoundEffect.toRawSound();
+						AudioBuffer audioBuffer = soundEffect.toRawSound();
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
@@ -2632,7 +2632,7 @@ public class GUI implements ControllerEventListener {
 						System.out.println("Created new directory: /Sounds/Sound Effects/");
 						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-						AudioBuffer audioBuffer = SoundEffect.toRawSound();
+						AudioBuffer audioBuffer = soundEffect.toRawSound();
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
@@ -2642,7 +2642,7 @@ public class GUI implements ControllerEventListener {
 						System.out.println("Couldn't create new directory (It might already exist).");
 						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-						AudioBuffer audioBuffer = SoundEffect.toRawSound();
+						AudioBuffer audioBuffer = soundEffect.toRawSound();
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
@@ -3003,7 +3003,9 @@ public class GUI implements ControllerEventListener {
 			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
 
 			MusicPatch musicPatch = MusicPatch.getMusicPatch(cacheLibrary.getIndex(15), 0, 0);
-			musicPatch.loadPatchSamples(soundBankCache, null, null);
+
+			MakeSoundFont makeSoundFont = new MakeSoundFont();
+			makeSoundFont.createSoundFont(musicPatch, soundBankCache);
 		}
 	}
 
@@ -3181,27 +3183,21 @@ public class GUI implements ControllerEventListener {
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
-
-			ByteBuffer midiBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(0).getFile(0).getData());
-			MidiTrack midiTrack = new MidiTrack(midiBuffer, false);
 			MidiPcmStream midiPcmStream = new MidiPcmStream();
+			MidiTrack midiTrack = MidiTrack.getMidiTrack(ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(1).getFile(0).getData()));
 			midiPcmStream.setMusicTrack(midiTrack, false);
 			midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-			midiPcmStream.setMidiStreamVolume(256);
-			midiPcmStream.__ai_367();
+			midiPcmStream.setMidiStreamVolume(128);
 
 			SoundPlayer soundPlayer = new SoundPlayer();
 			soundPlayer.setStream(midiPcmStream);
-			AudioConstants.isStereo = true;
-			AudioConstants.systemSampleRate = 22050;
-			soundPlayer.samples = new int[1024];
 			soundPlayer.frequency = AudioConstants.systemSampleRate;
-			soundPlayer.timeMs = System.currentTimeMillis();
-			soundPlayer.retryTimeMs = 1;
+			soundPlayer.samples = new int[1024];
+			soundPlayer.capacity = 16384;
 			soundPlayer.init();
-			soundPlayer.open(16384);
+			soundPlayer.open(soundPlayer.capacity);
 
-			while (midiPcmStream.active) {
+			while (soundPlayer.stream0.active) {
 				soundPlayer.run();
 			}
 		}
@@ -3336,13 +3332,14 @@ public class GUI implements ControllerEventListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			File file = new File("./samples/1.wav/");
+			File file = new File("./samples/0.wav/");
 
 			try {
 				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
+				FileOutputStream fileOutputStream = new FileOutputStream(new File("./samples/1e.dat/"));
+				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
 
-				DataOutputStream dataOutputStream = new DataOutputStream(new FileOutputStream(new File("./samples/encoded/0.dat/")));
-
+				MusicSample musicSample = new MusicSample(audioInputStream, dataOutputStream, 0);
 
 			} catch (UnsupportedAudioFileException | IOException ex) {
 				ex.printStackTrace();

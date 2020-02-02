@@ -8,7 +8,5 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Displee-RS-Cache-Library" level="project" />
-    <orderEntry type="library" name="slf4j-api-1.7.4" level="project" />
-    <orderEntry type="library" name="vorbis-java-1.0.0-beta" level="project" />
   </component>
 </module>
