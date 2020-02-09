@@ -20,7 +20,7 @@ public class SoundBankCache {
     AudioBuffer getSoundEffect0(int var1, int var2, int[] var3) {
         int var4 = var2 ^ (var1 << 4 & 65535 | var1 >>> 12);
         var4 |= var1 << 16;
-        long var5 = (long)var4;
+        long var5 = var4;
         AudioBuffer var7 = (AudioBuffer)this.rawSounds.get(var5);
         if(var7 != null) {
             return var7;
@@ -45,7 +45,7 @@ public class SoundBankCache {
     AudioBuffer getMusicSample0(int var1, int var2, int[] var3) {
         int var4 = var2 ^ (var1 << 4 & 65535 | var1 >>> 12);
         var4 |= var1 << 16;
-        long var5 = (long)var4 ^ 4294967296L;
+        long var5 = (long) var4 ^ 4294967296L; //32-bit value range possibility
         AudioBuffer var7 = (AudioBuffer) this.rawSounds.get(var5);
         if(var7 != null) {
             return var7;

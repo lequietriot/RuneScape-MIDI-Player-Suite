@@ -11,7 +11,7 @@ public class MusicPatch extends Node {
     byte[] __w;
     byte[] __o;
     MusicPatchNode2[] parameters;
-    byte[] notes;
+    byte[] loopMode;
     int[] containerIDs;
     int unknownInt;
 
@@ -29,7 +29,7 @@ public class MusicPatch extends Node {
         this.__w = new byte[128];
         this.__o = new byte[128];
         this.parameters = new MusicPatchNode2[128];
-        this.notes = new byte[128];
+        this.loopMode = new byte[128];
         this.containerIDs = new int[128];
 
         this.notePitches = new int[128]; //custom
@@ -201,7 +201,7 @@ public class MusicPatch extends Node {
                     containerNoteRanges = buffer.array[var5++] - 1;
                 }
 
-                this.notes[var25] = (byte)containerNoteRanges;
+                this.loopMode[var25] = (byte)containerNoteRanges;
                 --noteRangeCount;
             }
         }
@@ -371,7 +371,6 @@ public class MusicPatch extends Node {
                 this.__w[var37] = (byte)(var39 * this.__w[var37] + 32 >> 6);
             }
 
-            var44 = null;
         }
 
         if(var17 != null) {
@@ -439,7 +438,6 @@ public class MusicPatch extends Node {
                 this.__o[var37] = (byte)var48;
             }
 
-            Object var49 = null;
         }
 
         for(var28 = 0; var28 < var12; ++var28) {

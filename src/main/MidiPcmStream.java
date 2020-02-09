@@ -246,7 +246,7 @@ public class MidiPcmStream extends PcmStream {
                 var6.patch = var9;
                 var6.audioBuffer = var8;
                 var6.__w = var9.parameters[var2];
-                var6.__o = var9.notes[var2];
+                var6.__o = var9.loopMode[var2];
                 var6.__u = var2;
                 var6.__g = var3 * var3 * var9.__w[var2] * var9.unknownInt + 1024 >> 11;
                 var6.panValue = var9.__o[var2] & 255;

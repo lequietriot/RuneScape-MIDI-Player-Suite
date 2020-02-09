@@ -5,8 +5,8 @@ import java.nio.ByteBuffer;
 class ToneFilter {
     private static final float[][] minimisedCoefficients;
     static final int[][] coefficients;
-    private static float fowardMinimisedCoefficientMultiplier;
-    static int fowardMultiplier;
+    private static float forwardMinimisedCoefficientMultiplier;
+    static int forwardMultiplier;
     int[] pairs;
     private int[][][] phases;
     private int[][][] magnitudes;
@@ -24,7 +24,7 @@ class ToneFilter {
         this.unity = new int[2];
     }
 
-    private float interpolateMagniture(final int var1, final int var2, final float var3) {
+    private float interpolateMagnitude(final int var1, final int var2, final float var3) {
         float var4 = this.magnitudes[var1][0][var2] + var3 * (this.magnitudes[var1][1][var2] - this.magnitudes[var1][0][var2]);
         var4 *= 0.0015258789F;
         return 1.0F - (float)Math.pow(10.0D, (-var4 / 20.0F));
@@ -41,20 +41,20 @@ class ToneFilter {
         if(var1 == 0) {
             var3 = this.unity[0] + (this.unity[1] - this.unity[0]) * var2;
             var3 *= 0.0030517578F;
-            fowardMinimisedCoefficientMultiplier = (float)Math.pow(0.1D, (var3 / 20.0F));
-            fowardMultiplier = (int)(fowardMinimisedCoefficientMultiplier * 65536.0F);
+            forwardMinimisedCoefficientMultiplier = (float)Math.pow(0.1D, (var3 / 20.0F));
+            forwardMultiplier = (int)(forwardMinimisedCoefficientMultiplier * 65536.0F);
         }
 
         if(this.pairs[var1] == 0) {
             return 0;
         } else {
-            var3 = this.interpolateMagniture(var1, 0, var2);
+            var3 = this.interpolateMagnitude(var1, 0, var2);
             minimisedCoefficients[var1][0] = -2.0F * var3 * (float)Math.cos(this.interpolatePhase(var1, 0, var2));
             minimisedCoefficients[var1][1] = var3 * var3;
 
             int var4;
             for(var4 = 1; var4 < this.pairs[var1]; ++var4) {
-                var3 = this.interpolateMagniture(var1, var4, var2);
+                var3 = this.interpolateMagnitude(var1, var4, var2);
                 final float var5 = -2.0F * var3 * (float)Math.cos(this.interpolatePhase(var1, var4, var2));
                 final float var6 = var3 * var3;
                 minimisedCoefficients[var1][var4 * 2 + 1] = minimisedCoefficients[var1][var4 * 2 - 1] * var6;
@@ -70,7 +70,7 @@ class ToneFilter {
 
             if(var1 == 0) {
                 for(var4 = 0; var4 < this.pairs[0] * 2; ++var4) {
-                    minimisedCoefficients[0][var4] *= fowardMinimisedCoefficientMultiplier;
+                    minimisedCoefficients[0][var4] *= forwardMinimisedCoefficientMultiplier;
                 }
             }
 

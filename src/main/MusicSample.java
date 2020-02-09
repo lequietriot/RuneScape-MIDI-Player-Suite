@@ -94,13 +94,22 @@ public class MusicSample extends Node {
 
          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-
-
          dataOutputStream.writeInt(sampleRate);
          dataOutputStream.writeInt(sampleCount);
          dataOutputStream.writeInt(start);
          dataOutputStream.writeInt(end);
-         dataOutputStream.writeInt(sampleCount / 256);
+
+         int count = 0;
+         while (audioInputStream.available() > 0) {
+            byte[] samples = new byte[510];
+            for (int index = 0; index < samples.length; index++) {
+
+            }
+            count++;
+            byteArrayOutputStream.write(samples);
+         }
+
+         dataOutputStream.writeInt(count);
          dataOutputStream.write(byteArrayOutputStream.toByteArray());
 
       } catch (IOException e) {
@@ -457,7 +466,7 @@ public class MusicSample extends Node {
       return res;
    }
 
-   static void setupHeader(byte[] var0) {
+   static void initData(byte[] var0) {
       setData(var0, 0);
       blockSize_0 = 1 << getBits(4);
       blockSize_1 = 1 << getBits(4);
@@ -568,7 +577,7 @@ public class MusicSample extends Node {
             return false;
          }
 
-         setupHeader(fileData);
+         initData(fileData);
          initialized = true;
       }
 

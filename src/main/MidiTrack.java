@@ -759,7 +759,7 @@ public class MidiTrack extends Node {
     static void encode(File midiFile) throws InvalidMidiDataException, IOException {
 
         Sequence sequence = MidiSystem.getSequence(midiFile);
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./" + midiFile.getName() + ".dat/")));
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./data.dat/")));
 
         for (Track track : sequence.getTracks()) {
             int prevChannel = 0;
@@ -1180,7 +1180,7 @@ public class MidiTrack extends Node {
         dos.flush();
         dos.close();
 
-        Path path = Paths.get("./" + midiFile.getName() + ".dat/");
+        Path path = Paths.get("./data.dat/");
         encoded = Files.readAllBytes(path);
     }
 

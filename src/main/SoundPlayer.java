@@ -7,7 +7,7 @@ public class SoundPlayer extends PcmPlayer {
 
     AudioFormat audioFormat;
     SourceDataLine sourceDataLine;
-    int capacity;
+    int capacity2;
     byte[] byteSamples;
     DataOutputStream dataOutputStream;
 
@@ -30,7 +30,7 @@ public class SoundPlayer extends PcmPlayer {
             sourceDataLine = (SourceDataLine) AudioSystem.getLine(var2);
             sourceDataLine.open();
             sourceDataLine.start();
-            capacity = available;
+            capacity2 = available;
         } catch (LineUnavailableException e) {
             e.printStackTrace();
             this.open(available);
@@ -38,7 +38,7 @@ public class SoundPlayer extends PcmPlayer {
     }
 
     int position() {
-        return this.capacity - (this.sourceDataLine.available() >> (AudioConstants.isStereo?2:1));
+        return this.capacity2 - (this.sourceDataLine.available() >> (AudioConstants.isStereo?2:1));
     }
 
     void write() {

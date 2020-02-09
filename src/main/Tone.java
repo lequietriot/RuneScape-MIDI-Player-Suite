@@ -184,7 +184,7 @@ class Tone {
 
                     int var17;
                     while (var14 < var15) {
-                        var16 = (int) ((long) samples[var14 + var12] * ToneFilter.fowardMultiplier >> 16);
+                        var16 = (int) ((long) samples[var14 + var12] * ToneFilter.forwardMultiplier >> 16);
 
                         for (var17 = 0; var17 < var12; ++var17) {
                             var16 += (int) ((long) samples[var14 + var12 - 1 - var17] * ToneFilter.coefficients[0][var17] >> 16);
@@ -208,7 +208,7 @@ class Tone {
 
                         int var18;
                         while (var14 < var15) {
-                            var17 = (int) ((long) samples[var14 + var12] * ToneFilter.fowardMultiplier >> 16);
+                            var17 = (int) ((long) samples[var14 + var12] * ToneFilter.forwardMultiplier >> 16);
 
                             for (var18 = 0; var18 < var12; ++var18) {
                                 var17 += (int) ((long) samples[var14 + var12 - 1 - var18] * ToneFilter.coefficients[0][var18] >> 16);

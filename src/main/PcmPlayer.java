@@ -61,7 +61,7 @@ public class PcmPlayer {
 
    public final synchronized void run() {
       if(this.samples != null) {
-         long var1 = System.currentTimeMillis();
+         long var1 = 0;// System.currentTimeMillis();
 
          try {
             if(0L != this.retryTimeMs) {
