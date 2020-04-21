@@ -4,31 +4,36 @@ import main.utils.Node;
 
 public class MusicPatchNode extends Node {
 
-    int volumeValue;
+    int field2452;
     MusicPatch patch;
     AudioBuffer audioBuffer;
-    MusicPatchNode2 __w;
-    int __o;
-    int __u;
-    int __g;
-    int panValue;
-    int __e;
-    int __x;
-    int __d;
-    int __k;
-    int __i;
-    int __a;
-    int __z;
-    int __j;
-    int __s;
+    MusicPatchNode2 musicPatchInfo;
+    int field2467;
+    int field2464;
+    int field2451;
+    int field2465;
+    int field2445;
+    int field2454;
+    int field2455;
+    int field2456;
+    int field2457;
+    int field2458;
+    int field2459;
+    int field2448;
+    int field2461;
+    int field2449;
     RawPcmStream stream;
-    int __y;
-    int __b;
+    int field2453;
+    int field2462;
 
-    void clearAudioBuffer() {
+    MusicPatchNode() {
+    }
+
+    void clearMusicPatchNode() {
         this.patch = null;
         this.audioBuffer = null;
-        this.__w = null;
+        this.musicPatchInfo = null;
         this.stream = null;
     }
+
 }

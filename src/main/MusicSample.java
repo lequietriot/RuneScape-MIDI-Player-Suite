@@ -370,7 +370,7 @@ public class MusicSample extends Node {
       return var21;
    }
 
-   AudioBuffer toRawSound(int[] var1) {
+   AudioBuffer toAudioBuffer(int[] var1) {
       if(var1 != null && var1[0] <= 0) {
          return null;
       } else {

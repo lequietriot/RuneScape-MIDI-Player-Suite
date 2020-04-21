@@ -4,476 +4,475 @@ import main.utils.Buffer;
 import main.utils.Node;
 import org.displee.cache.index.Index;
 
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.io.IOException;
+
 public class MusicPatch extends Node {
 
     AudioBuffer[] audioBuffers;
-    short[] generators;
-    byte[] __w;
-    byte[] __o;
-    MusicPatchNode2[] parameters;
+    short[] pitchOffset;
+    byte[] volume;
+    byte[] panOffset;
+    MusicPatchNode2[] musicPatchNode2;
     byte[] loopMode;
-    int[] containerIDs;
-    int unknownInt;
+    int[] sampleOffset;
+    int velocity;
 
-    int patchID;
-    int[] notePitches;
+    static File localSoundBankSamples;
+    static File localSoundBankPatches;
+    static File localSoundEffects;
 
     public static MusicPatch getMusicPatch(Index index, int archiveID, int fileID) {
         byte[] data = index.getArchive(archiveID).getFile(fileID).getData();
-        return new MusicPatch(data, archiveID);
+        return new MusicPatch(data);
     }
 
-    MusicPatch(byte[] var1, int var2) {
+    MusicPatch(byte[] var1) {
         this.audioBuffers = new AudioBuffer[128];
-        this.generators = new short[128];
-        this.__w = new byte[128];
-        this.__o = new byte[128];
-        this.parameters = new MusicPatchNode2[128];
+        this.pitchOffset = new short[128];
+        this.volume = new byte[128];
+        this.panOffset = new byte[128];
+        this.musicPatchNode2 = new MusicPatchNode2[128];
         this.loopMode = new byte[128];
-        this.containerIDs = new int[128];
-
-        this.notePitches = new int[128]; //custom
-        this.patchID = var2; //custom
-
-        Buffer buffer = new Buffer(var1);
+        this.sampleOffset = new int[128];
+        Buffer var2 = new Buffer(var1);
 
         int var3;
-        for(var3 = 0; buffer.array[var3 + buffer.index] != 0; ++var3) {
-            ;
+        for (var3 = 0; var2.array[var3 + var2.index] != 0; ++var3) {
         }
 
         byte[] var4 = new byte[var3];
 
         int var5;
-        for(var5 = 0; var5 < var3; ++var5) {
-            var4[var5] = buffer.readByte();
+        for (var5 = 0; var5 < var3; ++var5) {
+            var4[var5] = var2.readByte();
         }
 
-        ++buffer.index;
+        ++var2.index;
         ++var3;
-        var5 = buffer.index;
-        buffer.index += var3;
+        var5 = var2.index;
+        var2.index += var3;
 
         int var6;
-        for(var6 = 0; buffer.array[var6 + buffer.index] != 0; ++var6) {
-            ;
+        for (var6 = 0; var2.array[var6 + var2.index] != 0; ++var6) {
         }
 
         byte[] var7 = new byte[var6];
 
         int var8;
-        for(var8 = 0; var8 < var6; ++var8) {
-            var7[var8] = buffer.readByte();
+        for (var8 = 0; var8 < var6; ++var8) {
+            var7[var8] = var2.readByte();
         }
 
-        ++buffer.index;
+        ++var2.index;
         ++var6;
-        var8 = buffer.index;
-        buffer.index += var6;
+        var8 = var2.index;
+        var2.index += var6;
 
         int var9;
-        for(var9 = 0; buffer.array[var9 + buffer.index] != 0; ++var9) {
-            ;
+        for (var9 = 0; var2.array[var9 + var2.index] != 0; ++var9) {
         }
 
         byte[] var10 = new byte[var9];
 
-        for(int var11 = 0; var11 < var9; ++var11) {
-            var10[var11] = buffer.readByte();
+        for (int var11 = 0; var11 < var9; ++var11) {
+            var10[var11] = var2.readByte();
         }
 
-        ++buffer.index;
+        ++var2.index;
         ++var9;
-        byte[] var42 = new byte[var9];
+        byte[] var38 = new byte[var9];
         int var12;
-        int var13;
-        if(var9 > 1) {
-            var42[1] = 1;
-            int var14 = 1;
+        int var14;
+        if (var9 > 1) {
+            var38[1] = 1;
+            int var13 = 1;
             var12 = 2;
 
-            for(var13 = 2; var13 < var9; ++var13) {
-                int var15 = buffer.readUnsignedByte();
-                if(var15 == 0) {
-                    var14 = var12++;
+            for (var14 = 2; var14 < var9; ++var14) {
+                int var15 = var2.readUnsignedByte();
+                if (var15 == 0) {
+                    var13 = var12++;
                 } else {
-                    if(var15 <= var14) {
+                    if (var15 <= var13) {
                         --var15;
                     }
 
-                    var14 = var15;
+                    var13 = var15;
                 }
 
-                var42[var13] = (byte)var14;
+                var38[var14] = (byte)var13;
             }
         } else {
             var12 = var9;
         }
 
-        MusicPatchNode2[] var43 = new MusicPatchNode2[var12];
+        MusicPatchNode2[] var39 = new MusicPatchNode2[var12];
 
-        MusicPatchNode2 var44;
-        for(var13 = 0; var13 < var43.length; ++var13) {
-            var44 = var43[var13] = new MusicPatchNode2();
-            int var16 = buffer.readUnsignedByte();
-            if(var16 > 0) {
-                var44.__m = new byte[var16 * 2];
+        MusicPatchNode2 var40;
+        for (var14 = 0; var14 < var39.length; ++var14) {
+            var40 = var39[var14] = new MusicPatchNode2();
+            int var16 = var2.readUnsignedByte();
+            if (var16 > 0) {
+                var40.field2402 = new byte[var16 * 2];
             }
 
-            var16 = buffer.readUnsignedByte();
-            if(var16 > 0) {
-                var44.__f = new byte[var16 * 2 + 2];
-                var44.__f[1] = 64;
+            var16 = var2.readUnsignedByte();
+            if (var16 > 0) {
+                var40.field2398 = new byte[var16 * 2 + 2];
+                var40.field2398[1] = 64;
             }
         }
 
-        var13 = buffer.readUnsignedByte();
-        byte[] var45 = var13 > 0?new byte[var13 * 2]:null;
-        var13 = buffer.readUnsignedByte();
-        byte[] var17 = var13 > 0?new byte[var13 * 2]:null;
+        var14 = var2.readUnsignedByte();
+        byte[] var47 = var14 > 0 ? new byte[var14 * 2] : null;
+        var14 = var2.readUnsignedByte();
+        byte[] var41 = var14 > 0 ? new byte[var14 * 2] : null;
 
-        int var18;
-        for(var18 = 0; buffer.array[var18 + buffer.index] != 0; ++var18) {
-            ;
+        int var17;
+        for (var17 = 0; var2.array[var17 + var2.index] != 0; ++var17) {
         }
 
-        byte[] var19 = new byte[var18];
+        byte[] var18 = new byte[var17];
 
-        int notePitch;
-        for(notePitch = 0; notePitch < var18; ++notePitch) {
-            var19[notePitch] = buffer.readByte();
+        int var19;
+        for (var19 = 0; var19 < var17; ++var19) {
+            var18[var19] = var2.readByte();
         }
 
-        ++buffer.index;
-        ++var18;
-        notePitch = 0;
+        ++var2.index;
+        ++var17;
+        var19 = 0;
 
-        int noteRangeCount;
-        for(noteRangeCount = 0; noteRangeCount < 128; ++noteRangeCount) {
-            notePitch += buffer.readUnsignedByte();
-            this.generators[noteRangeCount] = (short) notePitch;
+        int var20;
+        for (var20 = 0; var20 < 128; ++var20) {
+            var19 += var2.readUnsignedByte();
+            this.pitchOffset[var20] = (short)var19;
         }
 
-        notePitch = 0;
+        var19 = 0;
 
-        for(noteRangeCount = 0; noteRangeCount < 128; ++noteRangeCount) {
-            notePitch += buffer.readUnsignedByte();
-            this.generators[noteRangeCount] = (short)(this.generators[noteRangeCount] + (notePitch << 8));
-
-            notePitches[noteRangeCount] = notePitch;
+        short[] var50;
+        for (var20 = 0; var20 < 128; ++var20) {
+            var19 += var2.readUnsignedByte();
+            var50 = this.pitchOffset;
+            var50[var20] = (short)(var50[var20] + (var19 << 8));
         }
 
-        noteRangeCount = 0;
+        var20 = 0;
+        int var21 = 0;
         int var22 = 0;
-        int containerID = 0;
 
-        int containerNoteRanges;
-        for(containerNoteRanges = 0; containerNoteRanges < 128; ++containerNoteRanges) {
-            if(noteRangeCount == 0) {
-                if(var22 < var19.length) {
-                    noteRangeCount = var19[var22++];
+        int var23;
+        for (var23 = 0; var23 < 128; ++var23) {
+            if (var20 == 0) {
+                if (var21 < var18.length) {
+                    var20 = var18[var21++];
                 } else {
-                    noteRangeCount = -1;
+                    var20 = -1;
                 }
 
-                containerID = buffer.__as_311();
+                var22 = var2.readVarInt();
             }
 
-            this.generators[containerNoteRanges] = (short)(this.generators[containerNoteRanges] + ((containerID - 1 & 2) << 14));
-            this.containerIDs[containerNoteRanges] = containerID;
-            --noteRangeCount;
+            var50 = this.pitchOffset;
+            var50[var23] = (short)(var50[var23] + ((var22 - 1 & 2) << 14));
+            this.sampleOffset[var23] = var22;
+            --var20;
         }
 
-        noteRangeCount = 0;
-        var22 = 0;
-        containerNoteRanges = 0;
+        var20 = 0;
+        var21 = 0;
+        var23 = 0;
 
-        int var25;
-        for(var25 = 0; var25 < 128; ++var25) {
-            if(this.containerIDs[var25] != 0) {
-                if(noteRangeCount == 0) {
-                    if(var22 < var4.length) {
-                        noteRangeCount = var4[var22++];
+        int var24;
+        for (var24 = 0; var24 < 128; ++var24) {
+            if (this.sampleOffset[var24] != 0) {
+                if (var20 == 0) {
+                    if (var21 < var4.length) {
+                        var20 = var4[var21++];
                     } else {
-                        noteRangeCount = -1;
+                        var20 = -1;
                     }
 
-                    containerNoteRanges = buffer.array[var5++] - 1;
+                    var23 = var2.array[var5++] - 1;
                 }
 
-                this.loopMode[var25] = (byte)containerNoteRanges;
-                --noteRangeCount;
+                this.loopMode[var24] = (byte)var23;
+                --var20;
             }
         }
 
-        noteRangeCount = 0;
-        var22 = 0;
-        var25 = 0;
+        var20 = 0;
+        var21 = 0;
+        var24 = 0;
 
-        for(int var26 = 0; var26 < 128; ++var26) {
-            if(this.containerIDs[var26] != 0) {
-                if(noteRangeCount == 0) {
-                    if(var22 < var7.length) {
-                        noteRangeCount = var7[var22++];
+        for (int var25 = 0; var25 < 128; ++var25) {
+            if (this.sampleOffset[var25] != 0) {
+                if (var20 == 0) {
+                    if (var21 < var7.length) {
+                        var20 = var7[var21++];
                     } else {
-                        noteRangeCount = -1;
+                        var20 = -1;
                     }
 
-                    var25 = buffer.array[var8++] + 16 << 2;
+                    var24 = var2.array[var8++] + 16 << 2;
                 }
 
-                this.__o[var26] = (byte)var25;
-                --noteRangeCount;
+                this.panOffset[var25] = (byte)var24;
+                --var20;
             }
         }
 
+        var20 = 0;
+        var21 = 0;
+        MusicPatchNode2 var42 = null;
 
-        noteRangeCount = 0;
-        var22 = 0;
-        MusicPatchNode2 var46 = null;
+        int var26;
+        for (var26 = 0; var26 < 128; ++var26) {
+            if (this.sampleOffset[var26] != 0) {
+                if (var20 == 0) {
+                    var42 = var39[var38[var21]];
+                    if (var21 < var10.length) {
+                        var20 = var10[var21++];
+                    } else {
+                        var20 = -1;
+                    }
+                }
+
+                this.musicPatchNode2[var26] = var42;
+                --var20;
+            }
+        }
+
+        var20 = 0;
+        var21 = 0;
+        var26 = 0;
 
         int var27;
-        for(var27 = 0; var27 < 128; ++var27) {
-            if(this.containerIDs[var27] != 0) {
-                if(noteRangeCount == 0) {
-                    var46 = var43[var42[var22]];
-                    if(var22 < var10.length) {
-                        noteRangeCount = var10[var22++];
-                    } else {
-                        noteRangeCount = -1;
-                    }
-                }
-
-                this.parameters[var27] = var46;
-                --noteRangeCount;
-            }
-        }
-
-        noteRangeCount = 0;
-        var22 = 0;
-        var27 = 0;
-
-        int var28;
-        for(var28 = 0; var28 < 128; ++var28) {
-            if(noteRangeCount == 0) {
-                if(var22 < var19.length) {
-                    noteRangeCount = var19[var22++];
+        for (var27 = 0; var27 < 128; ++var27) {
+            if (var20 == 0) {
+                if (var21 < var18.length) {
+                    var20 = var18[var21++];
                 } else {
-                    noteRangeCount = -1;
+                    var20 = -1;
                 }
 
-                if(this.containerIDs[var28] > 0) {
-                    var27 = buffer.readUnsignedByte() + 1;
-                }
-            }
-
-            this.__w[var28] = (byte)var27;
-            --noteRangeCount;
-        }
-
-        this.unknownInt = buffer.readUnsignedByte() + 1;
-
-        MusicPatchNode2 var29;
-        int var30;
-        for(var28 = 0; var28 < var12; ++var28) {
-            var29 = var43[var28];
-            if(var29.__m != null) {
-                for(var30 = 1; var30 < var29.__m.length; var30 += 2) {
-                    var29.__m[var30] = buffer.readByte();
+                if (this.sampleOffset[var27] > 0) {
+                    var26 = var2.readUnsignedByte() + 1;
                 }
             }
 
-            if(var29.__f != null) {
-                for(var30 = 3; var30 < var29.__f.length - 2; var30 += 2) {
-                    var29.__f[var30] = buffer.readByte();
+            this.volume[var27] = (byte)var26;
+            --var20;
+        }
+
+        this.velocity = var2.readUnsignedByte() + 1;
+
+        MusicPatchNode2 var28;
+        int var29;
+        for (var27 = 0; var27 < var12; ++var27) {
+            var28 = var39[var27];
+            if (var28.field2402 != null) {
+                for (var29 = 1; var29 < var28.field2402.length; var29 += 2) {
+                    var28.field2402[var29] = var2.readByte();
                 }
             }
-        }
 
-        if(var45 != null) {
-            for(var28 = 1; var28 < var45.length; var28 += 2) {
-                var45[var28] = buffer.readByte();
-            }
-        }
-
-        if(var17 != null) {
-            for(var28 = 1; var28 < var17.length; var28 += 2) {
-                var17[var28] = buffer.readByte();
-            }
-        }
-
-        for(var28 = 0; var28 < var12; ++var28) {
-            var29 = var43[var28];
-            if(var29.__f != null) {
-                notePitch = 0;
-
-                for(var30 = 2; var30 < var29.__f.length; var30 += 2) {
-                    notePitch = 1 + notePitch + buffer.readUnsignedByte();
-                    var29.__f[var30] = (byte)notePitch;
+            if (var28.field2398 != null) {
+                for (var29 = 3; var29 < var28.field2398.length - 2; var29 += 2) {
+                    var28.field2398[var29] = var2.readByte();
                 }
             }
         }
 
-        for(var28 = 0; var28 < var12; ++var28) {
-            var29 = var43[var28];
-            if(var29.__m != null) {
-                notePitch = 0;
+        if (var47 != null) {
+            for (var27 = 1; var27 < var47.length; var27 += 2) {
+                var47[var27] = var2.readByte();
+            }
+        }
 
-                for(var30 = 2; var30 < var29.__m.length; var30 += 2) {
-                    notePitch = 1 + notePitch + buffer.readUnsignedByte();
-                    var29.__m[var30] = (byte)notePitch;
+        if (var41 != null) {
+            for (var27 = 1; var27 < var41.length; var27 += 2) {
+                var41[var27] = var2.readByte();
+            }
+        }
+
+        for (var27 = 0; var27 < var12; ++var27) {
+            var28 = var39[var27];
+            if (var28.field2398 != null) {
+                var19 = 0;
+
+                for (var29 = 2; var29 < var28.field2398.length; var29 += 2) {
+                    var19 = var19 + 1 + var2.readUnsignedByte();
+                    var28.field2398[var29] = (byte)var19;
                 }
             }
         }
 
-        byte var31;
+        for (var27 = 0; var27 < var12; ++var27) {
+            var28 = var39[var27];
+            if (var28.field2402 != null) {
+                var19 = 0;
+
+                for (var29 = 2; var29 < var28.field2402.length; var29 += 2) {
+                    var19 = 1 + var19 + var2.readUnsignedByte();
+                    var28.field2402[var29] = (byte)var19;
+                }
+            }
+        }
+
+        byte var30;
         int var32;
         int var33;
         int var34;
         int var35;
         int var36;
-        int var37;
-        byte var38;
-        if(var45 != null) {
-            notePitch = buffer.readUnsignedByte();
-            var45[0] = (byte)notePitch;
+        int var44;
+        byte var46;
+        if (var47 != null) {
+            var19 = var2.readUnsignedByte();
+            var47[0] = (byte)var19;
 
-            for(var28 = 2; var28 < var45.length; var28 += 2) {
-                notePitch = 1 + notePitch + buffer.readUnsignedByte();
-                var45[var28] = (byte)notePitch;
+            for (var27 = 2; var27 < var47.length; var27 += 2) {
+                var19 = 1 + var19 + var2.readUnsignedByte();
+                var47[var27] = (byte)var19;
             }
 
-            var38 = var45[0];
-            byte var39 = var45[1];
+            var46 = var47[0];
+            byte var43 = var47[1];
 
-            for(var30 = 0; var30 < var38; ++var30) {
-                this.__w[var30] = (byte)(var39 * this.__w[var30] + 32 >> 6);
+            for (var29 = 0; var29 < var46; ++var29) {
+                this.volume[var29] = (byte)(var43 * this.volume[var29] + 32 >> 6);
             }
 
-            for(var30 = 2; var30 < var45.length; var30 += 2) {
-                var31 = var45[var30];
-                byte var40 = var45[var30 + 1];
-                var32 = var39 * (var31 - var38) + (var31 - var38) / 2;
+            for (var29 = 2; var29 < var47.length; var29 += 2) {
+                var30 = var47[var29];
+                byte var31 = var47[var29 + 1];
+                var32 = var43 * (var30 - var46) + (var30 - var46) / 2;
 
-                for(var33 = var38; var33 < var31; ++var33) {
-                    var35 = var31 - var38;
+                for (var33 = var46; var33 < var30; ++var33) {
+                    var35 = var30 - var46;
                     var36 = var32 >>> 31;
-                    var34 = (var32 + var36) / var35 - var36;
-                    this.__w[var33] = (byte)(var34 * this.__w[var33] + 32 >> 6);
-                    var32 += var40 - var39;
+                    var34 = (var36 + var32) / var35 - var36;
+                    this.volume[var33] = (byte)(var34 * this.volume[var33] + 32 >> 6);
+                    var32 += var31 - var43;
                 }
 
-                var38 = var31;
-                var39 = var40;
+                var46 = var30;
+                var43 = var31;
             }
 
-            for(var37 = var38; var37 < 128; ++var37) {
-                this.__w[var37] = (byte)(var39 * this.__w[var37] + 32 >> 6);
+            for (var44 = var46; var44 < 128; ++var44) {
+                this.volume[var44] = (byte)(var43 * this.volume[var44] + 32 >> 6);
             }
 
+            var40 = null;
         }
 
-        if(var17 != null) {
-            notePitch = buffer.readUnsignedByte();
-            var17[0] = (byte)notePitch;
+        if (var41 != null) {
+            var19 = var2.readUnsignedByte();
+            var41[0] = (byte)var19;
 
-            for(var28 = 2; var28 < var17.length; var28 += 2) {
-                notePitch = 1 + notePitch + buffer.readUnsignedByte();
-                var17[var28] = (byte)notePitch;
+            for (var27 = 2; var27 < var41.length; var27 += 2) {
+                var19 = 1 + var19 + var2.readUnsignedByte();
+                var41[var27] = (byte)var19;
             }
 
-            var38 = var17[0];
-            int var47 = var17[1] << 1;
+            var46 = var41[0];
+            int var49 = var41[1] << 1;
 
-            for(var30 = 0; var30 < var38; ++var30) {
-                var37 = var47 + (this.__o[var30] & 255);
-                if(var37 < 0) {
-                    var37 = 0;
+            for (var29 = 0; var29 < var46; ++var29) {
+                var44 = var49 + (this.panOffset[var29] & 255);
+                if (var44 < 0) {
+                    var44 = 0;
                 }
 
-                if(var37 > 128) {
-                    var37 = 128;
+                if (var44 > 128) {
+                    var44 = 128;
                 }
 
-                this.__o[var30] = (byte)var37;
+                this.panOffset[var29] = (byte)var44;
             }
 
-            int var48;
-            for(var30 = 2; var30 < var17.length; var30 += 2) {
-                var31 = var17[var30];
-                var48 = var17[var30 + 1] << 1;
-                var32 = var47 * (var31 - var38) + (var31 - var38) / 2;
+            int var45;
+            for (var29 = 2; var29 < var41.length; var29 += 2) {
+                var30 = var41[var29];
+                var45 = var41[var29 + 1] << 1;
+                var32 = var49 * (var30 - var46) + (var30 - var46) / 2;
 
-                for(var33 = var38; var33 < var31; ++var33) {
-                    var35 = var31 - var38;
+                for (var33 = var46; var33 < var30; ++var33) {
+                    var35 = var30 - var46;
                     var36 = var32 >>> 31;
-                    var34 = (var32 + var36) / var35 - var36;
-                    int var41 = var34 + (this.__o[var33] & 255);
-                    if(var41 < 0) {
-                        var41 = 0;
+                    var34 = (var36 + var32) / var35 - var36;
+                    int var37 = var34 + (this.panOffset[var33] & 255);
+                    if (var37 < 0) {
+                        var37 = 0;
                     }
 
-                    if(var41 > 128) {
-                        var41 = 128;
+                    if (var37 > 128) {
+                        var37 = 128;
                     }
 
-                    this.__o[var33] = (byte)var41;
-                    var32 += var48 - var47;
+                    this.panOffset[var33] = (byte)var37;
+                    var32 += var45 - var49;
                 }
 
-                var38 = var31;
-                var47 = var48;
+                var46 = var30;
+                var49 = var45;
             }
 
-            for(var37 = var38; var37 < 128; ++var37) {
-                var48 = var47 + (this.__o[var37] & 255);
-                if(var48 < 0) {
-                    var48 = 0;
+            for (var44 = var46; var44 < 128; ++var44) {
+                var45 = var49 + (this.panOffset[var44] & 255);
+                if (var45 < 0) {
+                    var45 = 0;
                 }
 
-                if(var48 > 128) {
-                    var48 = 128;
+                if (var45 > 128) {
+                    var45 = 128;
                 }
 
-                this.__o[var37] = (byte)var48;
+                this.panOffset[var44] = (byte)var45;
             }
 
+            Object var48 = null;
         }
 
-        for(var28 = 0; var28 < var12; ++var28) {
-            var43[var28].__q = buffer.readUnsignedByte();
+        for (var27 = 0; var27 < var12; ++var27) {
+            var39[var27].volEnvDecay = var2.readUnsignedByte();
         }
 
-        for(var28 = 0; var28 < var12; ++var28) {
-            var29 = var43[var28];
-            if(var29.__m != null) {
-                var29.__w = buffer.readUnsignedByte();
+        for (var27 = 0; var27 < var12; ++var27) {
+            var28 = var39[var27];
+            if (var28.field2402 != null) {
+                var28.volEnvAttack = var2.readUnsignedByte();
             }
 
-            if(var29.__f != null) {
-                var29.__o = buffer.readUnsignedByte();
+            if (var28.field2398 != null) {
+                var28.vibratoLFODelay = var2.readUnsignedByte();
             }
 
-            if(var29.__q > 0) {
-                var29.__u = buffer.readUnsignedByte();
-            }
-        }
-
-        for(var28 = 0; var28 < var12; ++var28) {
-            var43[var28].__x = buffer.readUnsignedByte();
-        }
-
-        for(var28 = 0; var28 < var12; ++var28) {
-            var29 = var43[var28];
-            if(var29.__x > 0) {
-                var29.__g = buffer.readUnsignedByte();
+            if (var28.volEnvDecay > 0) {
+                var28.vibratoLFOFrequency = var2.readUnsignedByte();
             }
         }
 
-        for(var28 = 0; var28 < var12; ++var28) {
-            var29 = var43[var28];
-            if(var29.__g > 0) {
-                var29.__e = buffer.readUnsignedByte();
+        for (var27 = 0; var27 < var12; ++var27) {
+            var39[var27].field2401 = var2.readUnsignedByte();
+        }
+
+        for (var27 = 0; var27 < var12; ++var27) {
+            var28 = var39[var27];
+            if (var28.field2401 > 0) {
+                var28.vibratoLFOPitch = var2.readUnsignedByte();
+            }
+        }
+
+        for (var27 = 0; var27 < var12; ++var27) {
+            var28 = var39[var27];
+            if (var28.vibratoLFOPitch > 0) {
+                var28.field2394 = var2.readUnsignedByte();
             }
         }
     }
@@ -485,7 +484,7 @@ public class MusicPatch extends Node {
 
         for(int var7 = 0; var7 < 128; ++var7) {
             if(var2 == null || var2[var7] != 0) {
-                int var8 = this.containerIDs[var7];
+                int var8 = this.sampleOffset[var7];
                 if(var8 != 0) {
                     if(var8 != var5) {
                         var5 = var8--;
@@ -502,7 +501,7 @@ public class MusicPatch extends Node {
 
                     if(var6 != null) {
                         this.audioBuffers[var7] = var6;
-                        this.containerIDs[var7] = 0;
+                        this.sampleOffset[var7] = 0;
                     }
                 }
             }
@@ -510,7 +509,48 @@ public class MusicPatch extends Node {
         return var4;
     }
 
+    public boolean localPatchLoader(SoundBankCache soundBankCache, byte[] byteArray, int[] var3) throws IOException, UnsupportedAudioFileException {
+        boolean var4 = true;
+        int var5 = 0;
+        AudioBuffer var6 = null;
+
+        for (int var7 = 0; var7 < 128; ++var7) {
+            if (byteArray == null || byteArray[var7] != 0) {
+                int var8 = this.sampleOffset[var7];
+                if (var8 != 0) {
+                    if (var5 != var8) {
+                        var5 = var8--;
+                        if ((var8 & 1) == 0) {
+                            var6 = soundBankCache.getSoundEffect(0, var3);
+                            if (var6 != null) {
+                                var6 = soundBankCache.getCustomSoundEffect(localSoundEffects, var8 >> 2, var3);
+                            }
+                        } else
+
+                        {
+                            var6 = soundBankCache.getMusicSample(1, var3);
+                            if (var6 != null) {
+                                var6 = soundBankCache.getCustomMusicSample(localSoundBankSamples, var8 >> 2);
+                            }
+                        }
+
+                        if (var6 == null) {
+                            var4 = false;
+                        }
+                    }
+
+                    if (var6 != null) {
+                        this.audioBuffers[var7] = var6;
+                        this.sampleOffset[var7] = 0;
+                    }
+                }
+            }
+        }
+
+        return var4;
+    }
+
     void clear() {
-        this.containerIDs = null;
+        this.sampleOffset = null;
     }
 }

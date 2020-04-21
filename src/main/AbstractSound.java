@@ -4,6 +4,6 @@ import main.utils.Node;
 
 public abstract class AbstractSound extends Node {
 
-    int position;
+    public int position;
 
 }

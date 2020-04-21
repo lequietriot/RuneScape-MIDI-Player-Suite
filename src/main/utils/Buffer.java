@@ -597,4 +597,20 @@ public class Buffer extends Node {
       }
 
    }
+
+   public int readVarInt() {
+      byte var1 = this.array[++this.index - 1];
+
+      int var2;
+      for (var2 = 0; var1 < 0; var1 = this.array[++this.index - 1]) {
+         var2 = (var2 | var1 & 127) << 7;
+      }
+
+      return var2 | var1;
+   }
+
+   public int readUnsignedShort() {
+      this.index += 2;
+      return (this.array[this.index - 1] & 255) + ((this.array[this.index - 2] & 255) << 8);
+   }
 }

@@ -28,11 +28,11 @@ public class MidiTrack extends Node {
     private static final int END_OF_TRACK = 0x2F;
     private static final int SET_TEMPO = 0x51;
 
-    static byte[] midi;
+    public static byte[] midi;
 
-    static byte[] encoded;
+    public static byte[] encoded;
 
-    NodeHashTable table;
+    static NodeHashTable table;
 
     /**
      * The class to decode RuneScape's custom encoded MIDI data.
@@ -1618,6 +1618,10 @@ public class MidiTrack extends Node {
         return new MidiTrack(buffer, true);
     }
 
+    public static MidiTrack getMidiTrackData(ByteBuffer buffer) {
+        return new MidiTrack(buffer, false);
+    }
+
     /**
      * The method to return decoded MIDI data.
      * @return returns the decoded MIDI file.
@@ -1634,86 +1638,87 @@ public class MidiTrack extends Node {
         return encoded;
     }
 
-    void loadMidiTrackInfo() {
-        if(this.table == null) {
-            this.table = new NodeHashTable(16);
+    public static void loadMidiTrackInfo() {
+        if (table == null) {
+            table = new NodeHashTable(16);
             int[] var1 = new int[16];
             int[] var2 = new int[16];
             var2[9] = 128;
             var1[9] = 128;
-            MidiFileReader var3 = new MidiFileReader(midi);
-            int var4 = var3.trackCount();
+            MidiFileReader var4 = new MidiFileReader(midi);
+            int var5 = var4.trackCount();
 
-            int var5;
-            for(var5 = 0; var5 < var4; ++var5) {
-                var3.gotoTrack(var5);
-                var3.readTrackLength(var5);
-                var3.markTrackPosition(var5);
+            int var6;
+            for (var6 = 0; var6 < var5; ++var6) {
+                var4.gotoTrack(var6);
+                var4.readTrackLength(var6);
+                var4.markTrackPosition(var6);
             }
 
-            label56:
+            label53:
             do {
-                while(true) {
-                    var5 = var3.getPrioritizedTrack();
-                    int var6 = var3.trackLengths[var5];
+                while (true) {
+                    var6 = var4.getPrioritizedTrack();
+                    int var7 = var4.trackLengths[var6];
 
-                    while(var6 == var3.trackLengths[var5]) {
-                        var3.gotoTrack(var5);
-                        int var7 = var3.readMessage(var5);
-                        if(var7 == 1) {
-                            var3.setTrackDone();
-                            var3.markTrackPosition(var5);
-                            continue label56;
+                    while (var7 == var4.trackLengths[var6]) {
+                        var4.gotoTrack(var6);
+                        int var8 = var4.readMessage(var6);
+                        if (var8 == 1) {
+                            var4.setTrackDone();
+                            var4.markTrackPosition(var6);
+                            continue label53;
                         }
 
-                        int var8 = var7 & 240;
-                        int var9;
+                        int var9 = var8 & 240;
                         int var10;
                         int var11;
-                        if(var8 == 176) {
-                            var9 = var7 & 15;
-                            var10 = var7 >> 8 & 127;
-                            var11 = var7 >> 16 & 127;
-                            if(var10 == 0) {
-                                var1[var9] = (var11 << 14) + (var1[var9] & -2080769);
+                        int var12;
+                        if (var9 == 176) {
+                            var10 = var8 & 15;
+                            var11 = var8 >> 8 & 127;
+                            var12 = var8 >> 16 & 127;
+                            if (var11 == 0) {
+                                var1[var10] = (var12 << 14) + (var1[var10] & -2080769);
                             }
 
-                            if(var10 == 32) {
-                                var1[var9] = (var1[var9] & -16257) + (var11 << 7);
+                            if (var11 == 32) {
+                                var1[var10] = (var1[var10] & -16257) + (var12 << 7);
                             }
                         }
 
-                        if(var8 == 192) {
-                            var9 = var7 & 15;
-                            var10 = var7 >> 8 & 127;
-                            var2[var9] = var10 + var1[var9];
+                        if (var9 == 192) {
+                            var10 = var8 & 15;
+                            var11 = var8 >> 8 & 127;
+                            var2[var10] = var11 + var1[var10];
                         }
 
-                        if(var8 == 144) {
-                            var9 = var7 & 15;
-                            var10 = var7 >> 8 & 127;
-                            var11 = var7 >> 16 & 127;
-                            if(var11 > 0) {
-                                int var12 = var2[var9];
-                                ByteArrayNode var13 = (ByteArrayNode)this.table.get(var12);
-                                if(var13 == null) {
-                                    var13 = new ByteArrayNode(new byte[128]);
-                                    this.table.put(var13, var12);
+                        if (var9 == 144) {
+                            var10 = var8 & 15;
+                            var11 = var8 >> 8 & 127;
+                            var12 = var8 >> 16 & 127;
+                            if (var12 > 0) {
+                                int var13 = var2[var10];
+                                ByteArrayNode var14 = (ByteArrayNode) table.get(var13);
+                                if (var14 == null) {
+                                    var14 = new ByteArrayNode(new byte[128]);
+                                    table.put(var14, var13);
                                 }
 
-                                var13.byteArray[var10] = 1;
+                                var14.byteArray[var11] = 1;
                             }
                         }
 
-                        var3.readTrackLength(var5);
-                        var3.markTrackPosition(var5);
+                        var4.readTrackLength(var6);
+                        var4.markTrackPosition(var6);
                     }
                 }
-            } while(!var3.isDone());
+            } while(!var4.isDone());
+
         }
     }
 
-    void clear() {
-        this.table = null;
+    static void clear() {
+        table = null;
     }
 }

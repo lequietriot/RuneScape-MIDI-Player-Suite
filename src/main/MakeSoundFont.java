@@ -1,23 +1,12 @@
 package main;
 
-import com.sun.media.sound.*;
-
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
 public class MakeSoundFont {
-
-    private byte[][] ranges;
 
     void createSoundFont(MusicPatch musicPatch, SoundBankCache soundBankCache) {
 
+        /**
         SF2Soundbank sf2Soundbank = new SF2Soundbank();
-        sf2Soundbank.setName("Patch " + musicPatch.patchID + " (RuneScape)");
+        sf2Soundbank.setName("Patch RuneScape");
         sf2Soundbank.setRomName("RuneScape MIDI Suite");
         sf2Soundbank.setRomVersionMajor(1);
         sf2Soundbank.setRomVersionMinor(0);
@@ -75,7 +64,7 @@ public class MakeSoundFont {
         sf2Layer.setName("Patch " + musicPatch.patchID);
         sf2Soundbank.addResource(sf2Layer);
 
-        ranges = new byte[sf2Soundbank.getSamples().length][2];
+        byte[][] ranges = new byte[sf2Soundbank.getSamples().length][2];
 
         int position = 0;
         int lastPosition = 0;
@@ -85,9 +74,8 @@ public class MakeSoundFont {
 
             for (int keys = lastPosition; keys < 128; keys++) {
 
-                switch (musicPatch.notePitches[keys]) {
-                    case 0:
-                        position++;
+                if (musicPatch.notePitches[keys] == 0) {
+                    position++;
                 }
 
                 if (musicPatch.notePitches[keys] == musicPatch.notePitches[keys]) {
@@ -131,5 +119,6 @@ public class MakeSoundFont {
         } catch (IOException e) {
             e.printStackTrace();
         }
+         **/
     }
 }

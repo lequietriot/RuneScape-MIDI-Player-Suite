@@ -2,13 +2,17 @@ package main;
 
 public class MusicPatchNode2 {
 
-    byte[] __m;
-    byte[] __f;
-    int __q;
-    int __w;
-    int __o;
-    int __u;
-    int __g;
-    int __x;
-    int __e;
+    byte[] field2402;
+    byte[] field2398;
+    int volEnvDecay;
+    int volEnvAttack;
+    int vibratoLFODelay;
+    int vibratoLFOFrequency;
+    int vibratoLFOPitch;
+    int field2401;
+    int field2394;
+
+    MusicPatchNode2() {
+
+    }
 }

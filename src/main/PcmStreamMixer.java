@@ -57,19 +57,24 @@ public class PcmStreamMixer extends PcmStream {
 
    }
 
-   protected PcmStream firstSubStream() {
+   public PcmStream firstSubStream() {
       return (PcmStream)this.subStreams.last();
    }
 
-   protected PcmStream nextSubStream() {
+   public PcmStream nextSubStream() {
       return (PcmStream)this.subStreams.previous();
+   }
+
+   @Override
+   protected int vmethod3984() {
+      return 0;
    }
 
    protected int __l_171() {
       return 0;
    }
 
-   public final synchronized void __e_172(int[] var1, int var2, int var3) {
+   public final synchronized void fill(int[] var1, int var2, int var3) {
       do {
          if(this.__o < 0) {
             this.updateSubStreams(var1, var2, var3);
@@ -110,7 +115,7 @@ public class PcmStreamMixer extends PcmStream {
 
    }
 
-   public final synchronized void __d_173(int var1) {
+   public final synchronized void skip(int var1) {
       do {
          if(this.__o < 0) {
             this.skipSubStreams(var1);
@@ -145,7 +150,7 @@ public class PcmStreamMixer extends PcmStream {
 
    void skipSubStreams(int var1) {
       for(PcmStream var2 = (PcmStream)this.subStreams.last(); var2 != null; var2 = (PcmStream)this.subStreams.previous()) {
-         var2.__d_173(var1);
+         var2.skip(var1);
       }
 
    }
