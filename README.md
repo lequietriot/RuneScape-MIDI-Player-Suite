@@ -1,11 +1,16 @@
 # RuneScape MIDI Player
-With this tool, choose any MIDI file and hear it in any of the Old RuneScape Soundfonts. (Higher quality audio than in-game!)
+With this tool, you can hear any MIDI file in the RuneScape SoundBanks! You can also choose to use any custom SoundFonts.
 
-Setup instructions:
+Setup instructions (Custom SoundFont):
 1. In the File tab, you want to load a MIDI file. It can be any MIDI.
-2. Next, you want to go to the Preferences tab and set a default soundfont. It can be any soundfont as well.
+2. Next, you want to go to the Preferences tab and set a default SoundFont. It can be any SoundFont as well.
 
-Since you set the preference for your soundfont, it should remember what you wanted when you re-open the application!
+Since you set the preference for your SoundFont, it should remember what you wanted when you re-open the application!
+
+Setup instructions (Official SoundBank):
+1. In the File tab, you want to load a RuneScape cache. These are typically found online, or if you play Old School RuneScape, it can be found in your user home folder under the path "jagexcache/oldschool/LIVE".
+2. Now, you can simply go to the File tab again and load a MIDI file.
+3. Lastly, you can go to the Tools tab, and Test the MIDI with your selected SoundBank, using the cache.
 
 # Credits/Thanks
 
@@ -20,7 +25,7 @@ Since you set the preference for your soundfont, it should remember what you wan
 - Loop Mode button to easily loop your songs. If the MIDI has metadata messages named "loopStart" & "loopEnd", it will loop from those positions.
 - The program now supports pausing, and stopping instead of just playing. 
 - Rendering a MIDI file to Waveform Audio was carried on from the previous versions into this new revamp.
-- A refined custom HQ soundfont based on the Old School RuneScape soundbanks is included.
+- A refined custom HQ SoundFont based on the Old School RuneScape soundbanks is included.
 - The program can actually remember what soundfont you chose by writing the path to a text file and reading it on startup.
 - A time slider along with some hints and tooltips! You can now see where your position is in the song playback.
 - The ability to utilize the tools menu and save the loaded MIDI as an attempt to fix it.
