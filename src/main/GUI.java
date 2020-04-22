@@ -89,7 +89,12 @@ public class GUI implements ControllerEventListener {
 	private ControllerEventListener retriggerListener;
 	private boolean retriggerEffect = false;
 	private int retriggerValue;
+
+	private JTextPane volumeInfo;
+	private int volume = 256;
+
 	private boolean loopMode = false;
+	private MidiPcmStream midiPcmStream;
 
 	GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException {
 
@@ -131,6 +136,7 @@ public class GUI implements ControllerEventListener {
 			preferencesMenu.setVisible(true);
 			
 			preferencesMenu.add("Set Default SoundFont").addActionListener(new DefaultSoundFontSetter());
+			preferencesMenu.add("Set SoundBank Volume").addActionListener(new SoundBankVolumeSetter());
 
 			utilityMenu = new JMenu();
 			utilityMenu.setText("Tools");
@@ -156,6 +162,7 @@ public class GUI implements ControllerEventListener {
 
 			utilityMenu.add("---");
 			utilityMenu.add("Test MIDI with selected Soundbank").addActionListener(new SoundBankSongTester());
+			utilityMenu.add("Test MIDI with a custom Soundbank").addActionListener(new CustomSoundBankSongTester());
 			utilityMenu.add("Write song to file (with original game quality)").addActionListener(new SoundBankSongDumper());
 			utilityMenu.add("Write song to file (with higher quality)").addActionListener(new SoundBankSongDumperHQ());
 			//utilityMenu.add("Encode Data - Soundbank Sample...").addActionListener(new SoundBankEncoder());
@@ -216,7 +223,9 @@ public class GUI implements ControllerEventListener {
 	}
 
 	private void init(JPanel buttonsPanel) {
-		
+
+		JPanel infoPanel = new JPanel();
+
 		startButton = new JButton();
 		pauseButton = new JButton();
 		stopButton = new JButton();
@@ -262,6 +271,7 @@ public class GUI implements ControllerEventListener {
 		songPanel = new JPanel();
 		songSlider = new JSlider();
 		songSliderInfo = new JTextPane();
+		volumeInfo = new JTextPane();
 		
 		if (midiFile == null) {
 			songSlider.setEnabled(false);
@@ -275,11 +285,22 @@ public class GUI implements ControllerEventListener {
 		if (midiFile == null) {
 			songSliderInfo.setText("We're not playing anything! Try loading a MIDI.");
 		}
+
 		songSliderInfo.setBackground(Color.LIGHT_GRAY);
 		songSliderInfo.setSelectedTextColor(Color.BLACK);
 		songSliderInfo.setEnabled(true);
 		songSliderInfo.setEditable(false);
 		songSliderInfo.setVisible(true);
+
+		volumeInfo.setBackground(Color.LIGHT_GRAY);
+		volumeInfo.setSelectedTextColor(Color.BLACK);
+		volumeInfo.setText("Sound Bank Volume is: " + volume + " (" + ((volume / 256) * 100) + "%)");
+		volumeInfo.setEnabled(true);
+		volumeInfo.setEditable(false);
+		volumeInfo.setVisible(true);
+		volumeInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
+		volumeInfo.setAlignmentY(Component.BOTTOM_ALIGNMENT);
+
 		songPanel.add(songSliderInfo);
 		songPanel.setBackground(Color.LIGHT_GRAY);
 		songPanel.setAlignmentX(0);
@@ -300,6 +321,13 @@ public class GUI implements ControllerEventListener {
 		buttonsPanel.add(songPanel);
 		buttonsPanel.add(fixAttemptOS);
 		buttonsPanel.add(fixAttemptHD);
+
+		infoPanel.setBounds(0, 0, frame.getWidth(), frame.getHeight());
+		infoPanel.setLocation(0, 120);
+		infoPanel.setBackground(Color.LIGHT_GRAY);
+		infoPanel.add(volumeInfo);
+
+		frame.add(infoPanel);
 		frame.add(buttonsPanel);
 		frame.pack();
 	}
@@ -3148,6 +3176,65 @@ public class GUI implements ControllerEventListener {
 		}
 	}
 
+	private class CustomSoundBankSongTester implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			Index soundEffectIndex = cacheLibrary.getIndex(4);
+			Index musicIndex = cacheLibrary.getIndex(6);
+			Index soundBankIndex = cacheLibrary.getIndex(14);
+			Index musicPatchIndex = cacheLibrary.getIndex(15);
+
+			MusicPatch.localSoundBankSamples = new File("./Sounds/Sound Bank Samples/");
+			MusicPatch.localSoundBankPatches = new File("./Sounds/Sound Bank Patches/");
+			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
+
+			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
+			midiPcmStream = new MidiPcmStream();
+			Path path = Paths.get(midiFile.toURI());
+
+			try {
+
+				PcmPlayer.pcmPlayer_sampleRate = 44100;
+				PcmPlayer.pcmPlayer_stereo = true;
+
+				Sequence sequence = MidiSystem.getSequence(midiFile);
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				MidiTrack.midi = Files.readAllBytes(path);
+				MidiTrack.loadMidiTrackInfo();
+
+				midiPcmStream.method3800(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				midiPcmStream.loadMusicTrackFiles(midiTrack, soundBankCache, MusicPatch.localSoundBankPatches, 0);
+
+				SoundPlayer soundPlayer = new SoundPlayer();
+				soundPlayer.setStream(midiPcmStream);
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 16384;
+				soundPlayer.init();
+				soundPlayer.open(soundPlayer.capacity);
+
+				Thread songThread = new Thread(() -> {
+					while (midiPcmStream.active) {
+						soundPlayer.fill(soundPlayer.samples, 256);
+						soundPlayer.write();
+						if (midiPcmStream.midiFile.isDone()) {
+							break;
+						}
+					}
+				});
+
+				songThread.start();
+
+			} catch (IOException | InvalidMidiDataException | UnsupportedAudioFileException ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
 	private class SoundBankSongTester implements ActionListener {
 
 		@Override
@@ -3163,7 +3250,7 @@ public class GUI implements ControllerEventListener {
 			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
-			MidiPcmStream midiPcmStream = new MidiPcmStream();
+			midiPcmStream = new MidiPcmStream();
 			Path path = Paths.get(midiFile.toURI());
 
 			try {
@@ -3180,9 +3267,8 @@ public class GUI implements ControllerEventListener {
 
 				midiPcmStream.method3800(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
-				midiPcmStream.setPcmStreamVolume(256);
+				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-				//midiPcmStream.loadMusicTrackFiles(midiTrack, soundBankCache, MusicPatch.localSoundBankPatches, 0);
 
 				SoundPlayer soundPlayer = new SoundPlayer();
 				soundPlayer.setStream(midiPcmStream);
@@ -3388,7 +3474,7 @@ public class GUI implements ControllerEventListener {
 			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
-			MidiPcmStream midiPcmStream = new MidiPcmStream();
+			midiPcmStream = new MidiPcmStream();
 			Path path = Paths.get(midiFile.toURI());
 
 			try {
@@ -3405,7 +3491,7 @@ public class GUI implements ControllerEventListener {
 
 				midiPcmStream.method3800(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
-				midiPcmStream.setPcmStreamVolume(256);
+				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
 				//midiPcmStream.loadMusicTrackFiles(midiTrack, soundBankCache, MusicPatch.localSoundBankPatches, 0);
 
@@ -3449,7 +3535,6 @@ public class GUI implements ControllerEventListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-
 			Index soundEffectIndex = cacheLibrary.getIndex(4);
 			Index musicIndex = cacheLibrary.getIndex(6);
 			Index soundBankIndex = cacheLibrary.getIndex(14);
@@ -3460,7 +3545,7 @@ public class GUI implements ControllerEventListener {
 			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
-			MidiPcmStream midiPcmStream = new MidiPcmStream();
+			midiPcmStream = new MidiPcmStream();
 			Path path = Paths.get(midiFile.toURI());
 
 			try {
@@ -3477,7 +3562,7 @@ public class GUI implements ControllerEventListener {
 
 				midiPcmStream.method3800(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
-				midiPcmStream.setPcmStreamVolume(256);
+				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
 				//midiPcmStream.loadMusicTrackFiles(midiTrack, soundBankCache, MusicPatch.localSoundBankPatches, 0);
 
@@ -3513,6 +3598,46 @@ public class GUI implements ControllerEventListener {
 				}
 			} catch (IOException | InvalidMidiDataException ex) {
 				ex.printStackTrace();
+			}
+		}
+	}
+
+	private class SoundBankVolumeSetter implements ActionListener {
+
+		private JTextField volumeTextField;
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			JFrame volumeFrame = new JFrame("SoundBank Volume");
+
+			JPanel volumePanel = new JPanel();
+			volumePanel.setVisible(true);
+
+			volumeTextField = new JTextField("Enter the volume value here...");
+			volumeTextField.setVisible(true);
+			volumeTextField.addActionListener(actionEvent -> checkForInput(this.volumeTextField));
+
+			volumePanel.add(volumeTextField);
+
+			volumeFrame.setLayout(null);
+			volumeFrame.setResizable(false);
+			volumeFrame.setMaximumSize(new Dimension(50, 400));
+			volumeFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			volumeFrame.setContentPane(volumePanel);
+			volumeFrame.setLocationRelativeTo(null);
+			volumeFrame.setVisible(true);
+			volumeFrame.pack();
+		}
+
+		private void checkForInput(JTextField volumeTextField) {
+
+			String volumeInput = volumeTextField.getText();
+			volume = Integer.parseInt(volumeInput);
+			volumeInfo.setText("Sound Bank Volume is: " + volume + " (" + (volume / 256.00) * 100.00 + "%)");
+
+			if (midiPcmStream != null) {
+				midiPcmStream.setPcmStreamVolume(volume);
 			}
 		}
 	}
