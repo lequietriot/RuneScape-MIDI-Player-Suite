@@ -3199,7 +3199,6 @@ public class GUI implements ControllerEventListener {
 				PcmPlayer.pcmPlayer_sampleRate = 44100;
 				PcmPlayer.pcmPlayer_stereo = true;
 
-				Sequence sequence = MidiSystem.getSequence(midiFile);
 				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
 
 				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
@@ -3230,7 +3229,7 @@ public class GUI implements ControllerEventListener {
 
 				songThread.start();
 
-			} catch (IOException | InvalidMidiDataException | UnsupportedAudioFileException ex) {
+			} catch (IOException | UnsupportedAudioFileException ex) {
 				ex.printStackTrace();
 			}
 		}
