@@ -3313,7 +3313,7 @@ public class GUI implements ControllerEventListener {
 		}
 	}
 
-	private class SoundDumper implements ActionListener {
+	private static class SoundDumper implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
