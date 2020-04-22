@@ -189,11 +189,13 @@ public class MidiFileReader {
     }
 
     boolean isDone() {
-        int var1 = this.trackPositions.length;
+        if (trackPositions != null) {
+            int var1 = this.trackPositions.length;
 
-        for (int var2 = 0; var2 < var1; ++var2) {
-            if (this.trackPositions[var2] >= 0) {
-                return false;
+            for (int var2 = 0; var2 < var1; ++var2) {
+                if (this.trackPositions[var2] >= 0) {
+                    return false;
+                }
             }
         }
 

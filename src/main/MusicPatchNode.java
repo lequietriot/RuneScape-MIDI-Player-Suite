@@ -4,14 +4,14 @@ import main.utils.Node;
 
 public class MusicPatchNode extends Node {
 
-    int field2452;
+    int currentTrack;
     MusicPatch patch;
     AudioBuffer audioBuffer;
     MusicPatchNode2 musicPatchInfo;
     int field2467;
-    int field2464;
+    int currentNotePitch;
     int field2451;
-    int field2465;
+    int currentPanValue;
     int field2445;
     int field2454;
     int field2455;

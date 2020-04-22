@@ -13,8 +13,8 @@ public class MusicPatchPcmStream extends PcmStream {
    }
 
    void method3992(MusicPatchNode var1, int[] var2, int var3, int var4, int var5) {
-      if ((this.superStream.field2428[var1.field2452] & 4) != 0 && var1.field2459 < 0) {
-         int var6 = this.superStream.field2433[var1.field2452] / PcmPlayer.pcmPlayer_sampleRate;
+      if ((this.superStream.field2428[var1.currentTrack] & 4) != 0 && var1.field2459 < 0) {
+         int var6 = this.superStream.field2433[var1.currentTrack] / PcmPlayer.pcmPlayer_sampleRate;
 
          while (true) {
             int var7 = (var6 + 1048575 - var1.field2462) / var6;
@@ -34,15 +34,15 @@ public class MusicPatchPcmStream extends PcmStream {
             }
 
             RawPcmStream var10 = var1.stream;
-            if (this.superStream.field2431[var1.field2452] == 0) {
+            if (this.superStream.field2431[var1.currentTrack] == 0) {
                var1.stream = RawPcmStream.method2685(var1.audioBuffer, var10.method2670(), var10.method2662(), var10.method2663());
             } else {
                var1.stream = RawPcmStream.method2685(var1.audioBuffer, var10.method2670(), 0, var10.method2663());
-               this.superStream.method3852(var1, var1.patch.pitchOffset[var1.field2464] < 0);
+               this.superStream.method3852(var1, var1.patch.pitchOffset[var1.currentNotePitch] < 0);
                var1.stream.method2666(var8, var10.method2662());
             }
 
-            if (var1.patch.pitchOffset[var1.field2464] < 0) {
+            if (var1.patch.pitchOffset[var1.currentNotePitch] < 0) {
                var1.stream.setNumLoops(-1);
             }
 
@@ -58,19 +58,19 @@ public class MusicPatchPcmStream extends PcmStream {
    }
 
    void method3989(MusicPatchNode var1, int var2) {
-      if ((this.superStream.field2428[var1.field2452] & 4) != 0 && var1.field2459 < 0) {
-         int var3 = this.superStream.field2433[var1.field2452] / PcmPlayer.pcmPlayer_sampleRate;
+      if ((this.superStream.field2428[var1.currentTrack] & 4) != 0 && var1.field2459 < 0) {
+         int var3 = this.superStream.field2433[var1.currentTrack] / PcmPlayer.pcmPlayer_sampleRate;
          int var4 = (var3 + 1048575 - var1.field2462) / var3;
          var1.field2462 = var3 * var2 + var1.field2462 & 1048575;
          if (var4 <= var2) {
-            if (this.superStream.field2431[var1.field2452] == 0) {
+            if (this.superStream.field2431[var1.currentTrack] == 0) {
                var1.stream = RawPcmStream.method2685(var1.audioBuffer, var1.stream.method2670(), var1.stream.method2662(), var1.stream.method2663());
             } else {
                var1.stream = RawPcmStream.method2685(var1.audioBuffer, var1.stream.method2670(), 0, var1.stream.method2663());
-               this.superStream.method3852(var1, var1.patch.pitchOffset[var1.field2464] < 0);
+               this.superStream.method3852(var1, var1.patch.pitchOffset[var1.currentNotePitch] < 0);
             }
 
-            if (var1.patch.pitchOffset[var1.field2464] < 0) {
+            if (var1.patch.pitchOffset[var1.currentNotePitch] < 0) {
                var1.stream.setNumLoops(-1);
             }
 

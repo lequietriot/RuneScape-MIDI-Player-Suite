@@ -12,7 +12,7 @@ public class RawPcmStream extends PcmStream {
     int numLoops;
     int start;
     int end;
-    boolean field1493;
+    boolean loop;
     int field1491;
     int field1485;
     int field1492;
@@ -22,7 +22,7 @@ public class RawPcmStream extends PcmStream {
         super.sound = var1;
         this.start = var1.start;
         this.end = var1.end;
-        this.field1493 = var1.enableLoop;
+        this.loop = var1.enableLoop;
         this.field1481 = var2;
         this.field1482 = var3;
         this.field1483 = var4;
@@ -34,7 +34,7 @@ public class RawPcmStream extends PcmStream {
         super.sound = var1;
         this.start = var1.start;
         this.end = var1.end;
-        this.field1493 = var1.enableLoop;
+        this.loop = var1.enableLoop;
         this.field1481 = var2;
         this.field1482 = var3;
         this.field1483 = 8192;
@@ -64,7 +64,7 @@ public class RawPcmStream extends PcmStream {
         if (this.field1482 == 0 && this.field1491 == 0) {
             this.skip(var3);
         } else {
-            AudioBuffer var4 = (AudioBuffer)super.sound;
+            AudioBuffer var4 = (AudioBuffer) super.sound;
             int var5 = this.start << 8;
             int var6 = this.end << 8;
             int var7 = var4.samples.length << 8;
@@ -96,7 +96,7 @@ public class RawPcmStream extends PcmStream {
             }
 
             if (this.numLoops < 0) {
-                if (this.field1493) {
+                if (this.loop) {
                     if (this.field1481 < 0) {
                         var9 = this.method2679(var1, var2, var5, var3, var4.samples[this.start]);
                         if (this.field1490 >= var5) {
@@ -144,7 +144,7 @@ public class RawPcmStream extends PcmStream {
                 }
             } else {
                 if (this.numLoops > 0) {
-                    if (this.field1493) {
+                    if (this.loop) {
                         label139: {
                             if (this.field1481 < 0) {
                                 var9 = this.method2679(var1, var2, var5, var3, var4.samples[this.start]);
@@ -297,7 +297,7 @@ public class RawPcmStream extends PcmStream {
 
         this.field1490 += this.field1481 * var1;
         if (this.numLoops < 0) {
-            if (!this.field1493) {
+            if (!this.loop) {
                 if (this.field1481 < 0) {
                     if (this.field1490 >= var3) {
                         return;
@@ -336,7 +336,7 @@ public class RawPcmStream extends PcmStream {
             }
         } else {
             if (this.numLoops > 0) {
-                if (this.field1493) {
+                if (this.loop) {
                     label123: {
                         if (this.field1481 < 0) {
                             if (this.field1490 >= var3) {

@@ -3195,6 +3195,25 @@ public class GUI implements ControllerEventListener {
 					while (midiPcmStream.active) {
 						soundPlayer.fill(soundPlayer.samples, 256);
 						soundPlayer.write();
+
+						for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
+							System.out.println();
+							System.out.println("Current Track: " + musicPatchNode.currentTrack);
+							System.out.println("field2459: " + musicPatchNode.field2459);
+							System.out.println("field2451: " + musicPatchNode.field2451);
+							System.out.println("field2449 (MIDI Tick Position?): " + musicPatchNode.field2449);
+							System.out.println("field2467 (Loop mode?): " + musicPatchNode.field2467);
+							System.out.println("Current Note/Key (Ranges 0-127): " + musicPatchNode.currentNotePitch);
+							System.out.println("Pan Value (Ranges 0-127): " + musicPatchNode.currentPanValue);
+							System.out.println("field2453: " + musicPatchNode.field2453);
+							System.out.println("field2445: " + musicPatchNode.field2445);
+							System.out.println("field2455: " + musicPatchNode.field2455);
+							System.out.println("field2448: " + musicPatchNode.field2448);
+							System.out.println("field2449: " + musicPatchNode.field2449);
+							System.out.println("field2462: " + musicPatchNode.field2462);
+							System.out.println();
+						}
+
 						if (midiPcmStream.midiFile.isDone()) {
 							break;
 						}
@@ -3202,6 +3221,7 @@ public class GUI implements ControllerEventListener {
 				});
 
 				songThread.start();
+
 			} catch (IOException | InvalidMidiDataException ex) {
 				ex.printStackTrace();
 			}
@@ -3402,21 +3422,21 @@ public class GUI implements ControllerEventListener {
 					if (midiPcmStream.midiFile.isDone()) {
 						break;
 					}
+				}
 
-					byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
 
-					File outFile = new File("./" + midiFile.getName() + ".wav/");
-					FileOutputStream fos;
+				File outFile = new File("./MIDI Audio/" + midiFile.getName() + ".wav/");
+				FileOutputStream fos;
 
-					try {
+				try {
 
-						fos = new FileOutputStream(outFile);
-						AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
-						AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
-						AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					}
+					fos = new FileOutputStream(outFile);
+					AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+					AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+					AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+				} catch (IOException ex) {
+					ex.printStackTrace();
 				}
 			} catch (IOException | InvalidMidiDataException ex) {
 				ex.printStackTrace();
@@ -3470,27 +3490,26 @@ public class GUI implements ControllerEventListener {
 
 				while (midiPcmStream.active) {
 					soundPlayer.fill(soundPlayer.samples, 256);
-					soundPlayer.write();
-					//soundPlayer.writeToFile();
+					soundPlayer.writeToFile();
 					if (midiPcmStream.midiFile.isDone()) {
 						break;
 					}
+				}
 
-					byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
 
-					File outFile = new File("./" + midiFile.getName() + ".wav/");
-					FileOutputStream fos;
+				File outFile = new File("./MIDI Audio/" + midiFile.getName() + ".wav/");
+				FileOutputStream fos;
 
-					try {
+				try {
 
-						fos = new FileOutputStream(outFile);
-						AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
-						AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
-						AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+					fos = new FileOutputStream(outFile);
+					AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+					AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+					AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
 
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
 				}
 			} catch (IOException | InvalidMidiDataException ex) {
 				ex.printStackTrace();
