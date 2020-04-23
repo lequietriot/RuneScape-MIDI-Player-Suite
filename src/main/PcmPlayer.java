@@ -6,7 +6,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public class PcmPlayer {
 
-   public static int pcmPlayer_sampleRate;
+   public static int pcmPlayer_sampleRate = 22050;
    protected static boolean pcmPlayer_stereo;
    static ScheduledExecutorService soundSystemExecutor;
    static int field1423;

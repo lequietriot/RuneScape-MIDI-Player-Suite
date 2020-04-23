@@ -134,9 +134,9 @@ public class GUI implements ControllerEventListener {
 			preferencesMenu.setText("Preferences");
 			preferencesMenu.setSize(100, 20);
 			preferencesMenu.setVisible(true);
-			
+
+			preferencesMenu.add("SoundBank - Audio Settings").addActionListener(new SoundBankSettings());
 			preferencesMenu.add("Set Default SoundFont").addActionListener(new DefaultSoundFontSetter());
-			preferencesMenu.add("Set SoundBank Volume").addActionListener(new SoundBankVolumeSetter());
 
 			utilityMenu = new JMenu();
 			utilityMenu.setText("Tools");
@@ -161,10 +161,10 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.add("Pack Raw Soundbank").addActionListener(new SoundPacker());
 
 			utilityMenu.add("---");
-			utilityMenu.add("Test MIDI with selected Soundbank").addActionListener(new SoundBankSongTester());
-			utilityMenu.add("Test MIDI with a custom Soundbank").addActionListener(new CustomSoundBankSongTester());
-			utilityMenu.add("Write song to file (with original game quality)").addActionListener(new SoundBankSongDumper());
-			utilityMenu.add("Write song to file (with higher quality)").addActionListener(new SoundBankSongDumperHQ());
+			utilityMenu.add("Test MIDI with selected SoundBank").addActionListener(new SoundBankSongTester());
+			utilityMenu.add("Test MIDI with a custom SoundBank").addActionListener(new CustomSoundBankSongTester());
+			utilityMenu.add("Write song to file using SoundBank").addActionListener(new SoundBankSongDumper());
+			utilityMenu.add("Batch Convert with SoundBank").addActionListener(new BatchConverter());
 			//utilityMenu.add("Encode Data - Soundbank Sample...").addActionListener(new SoundBankEncoder());
 
 			playlistMenu = new JMenu();
@@ -3196,7 +3196,6 @@ public class GUI implements ControllerEventListener {
 
 			try {
 
-				PcmPlayer.pcmPlayer_sampleRate = 44100;
 				PcmPlayer.pcmPlayer_stereo = true;
 
 				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
@@ -3254,7 +3253,6 @@ public class GUI implements ControllerEventListener {
 
 			try {
 
-				PcmPlayer.pcmPlayer_sampleRate = 22050;
 				PcmPlayer.pcmPlayer_stereo = true;
 
 				Sequence sequence = MidiSystem.getSequence(midiFile);
@@ -3478,7 +3476,6 @@ public class GUI implements ControllerEventListener {
 
 			try {
 
-				PcmPlayer.pcmPlayer_sampleRate = 22050;
 				PcmPlayer.pcmPlayer_stereo = true;
 
 				Sequence sequence = MidiSystem.getSequence(midiFile);
@@ -3529,107 +3526,46 @@ public class GUI implements ControllerEventListener {
 		}
 	}
 
-	private class SoundBankSongDumperHQ implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-
-			Index soundEffectIndex = cacheLibrary.getIndex(4);
-			Index musicIndex = cacheLibrary.getIndex(6);
-			Index soundBankIndex = cacheLibrary.getIndex(14);
-			Index musicPatchIndex = cacheLibrary.getIndex(15);
-
-			MusicPatch.localSoundBankSamples = new File("./Sounds/Sound Bank Samples/");
-			MusicPatch.localSoundBankPatches = new File("./Sounds/Sound Bank Patches/");
-			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
-
-			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
-			midiPcmStream = new MidiPcmStream();
-			Path path = Paths.get(midiFile.toURI());
-
-			try {
-
-				PcmPlayer.pcmPlayer_sampleRate = 44100;
-				PcmPlayer.pcmPlayer_stereo = true;
-
-				Sequence sequence = MidiSystem.getSequence(midiFile);
-				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
-
-				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-				MidiTrack.midi = Files.readAllBytes(path);
-				MidiTrack.loadMidiTrackInfo();
-
-				midiPcmStream.method3800(9, 128);
-				midiPcmStream.setMusicTrack(midiTrack, loopMode);
-				midiPcmStream.setPcmStreamVolume(volume);
-				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-				//midiPcmStream.loadMusicTrackFiles(midiTrack, soundBankCache, MusicPatch.localSoundBankPatches, 0);
-
-				SoundPlayer soundPlayer = new SoundPlayer();
-				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[512];
-				soundPlayer.capacity = 16384;
-				soundPlayer.init();
-				soundPlayer.open(soundPlayer.capacity);
-
-				while (midiPcmStream.active) {
-					soundPlayer.fill(soundPlayer.samples, 256);
-					soundPlayer.writeToFile();
-					if (midiPcmStream.midiFile.isDone()) {
-						break;
-					}
-				}
-
-				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
-
-				File outFile = new File("./MIDI Audio/" + midiFile.getName() + ".wav/");
-				FileOutputStream fos;
-
-				try {
-
-					fos = new FileOutputStream(outFile);
-					AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
-					AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
-					AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
-
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-			} catch (IOException | InvalidMidiDataException ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-
-	private class SoundBankVolumeSetter implements ActionListener {
+	private class SoundBankSettings implements ActionListener {
 
 		private JTextField volumeTextField;
+		private JTextField sampleRateTextField;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			JFrame volumeFrame = new JFrame("SoundBank Volume");
+			JFrame soundBankFrame = new JFrame("SoundBank - Audio Settings");
 
-			JPanel volumePanel = new JPanel();
-			volumePanel.setVisible(true);
+			JPanel settingsPanel = new JPanel();
+			settingsPanel.setVisible(true);
+
+			sampleRateTextField = new JTextField("Enter the sample rate here...");
+			sampleRateTextField.setVisible(true);
+			sampleRateTextField.addActionListener(actionEvent -> checkForRateInput(this.sampleRateTextField));
 
 			volumeTextField = new JTextField("Enter the volume value here...");
 			volumeTextField.setVisible(true);
-			volumeTextField.addActionListener(actionEvent -> checkForInput(this.volumeTextField));
+			volumeTextField.addActionListener(actionEvent -> checkForVolumeInput(this.volumeTextField));
 
-			volumePanel.add(volumeTextField);
+			settingsPanel.add(volumeTextField);
+			settingsPanel.add(sampleRateTextField);
 
-			volumeFrame.setLayout(null);
-			volumeFrame.setResizable(false);
-			volumeFrame.setMaximumSize(new Dimension(50, 400));
-			volumeFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-			volumeFrame.setContentPane(volumePanel);
-			volumeFrame.setLocationRelativeTo(null);
-			volumeFrame.setVisible(true);
-			volumeFrame.pack();
+			soundBankFrame.setLayout(null);
+			soundBankFrame.setResizable(false);
+			soundBankFrame.setMaximumSize(new Dimension(100, 400));
+			soundBankFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+			soundBankFrame.setContentPane(settingsPanel);
+			soundBankFrame.setLocationRelativeTo(null);
+			soundBankFrame.setVisible(true);
+			soundBankFrame.pack();
 		}
 
-		private void checkForInput(JTextField volumeTextField) {
+		private void checkForRateInput(JTextField sampleRateTextField) {
+			String sampleRateInput = sampleRateTextField.getText();
+			PcmPlayer.pcmPlayer_sampleRate = Integer.parseInt(sampleRateInput);
+		}
+
+		private void checkForVolumeInput(JTextField volumeTextField) {
 
 			String volumeInput = volumeTextField.getText();
 			volume = Integer.parseInt(volumeInput);
@@ -3638,6 +3574,14 @@ public class GUI implements ControllerEventListener {
 			if (midiPcmStream != null) {
 				midiPcmStream.setPcmStreamVolume(volume);
 			}
+		}
+	}
+
+	private class BatchConverter implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
 		}
 	}
 }
