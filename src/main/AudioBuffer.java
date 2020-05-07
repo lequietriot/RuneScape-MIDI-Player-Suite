@@ -6,7 +6,6 @@ public class AudioBuffer extends AbstractSound {
     public byte[] samples;
     public int start;
     public int end;
-
     boolean enableLoop;
 
     AudioBuffer(int sRate, byte[] data, int loopStart, int loopEnd) {

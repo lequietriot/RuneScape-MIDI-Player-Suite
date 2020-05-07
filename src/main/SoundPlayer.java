@@ -12,18 +12,13 @@ public class SoundPlayer extends PcmPlayer {
     DataOutputStream dataOutputStream;
     ByteArrayOutputStream byteArrayOutputStream;
 
+    int sixteenBitMax = Short.MAX_VALUE;
+    int eightBitMax = Byte.MAX_VALUE;
+
     public void init() {
         this.audioFormat = new AudioFormat((float) PcmPlayer.pcmPlayer_sampleRate, 16, PcmPlayer.pcmPlayer_stereo ? 2 : 1, true, false);
         this.byteSamples = new byte[256 << (PcmPlayer.pcmPlayer_stereo ? 2 : 1)];
-
-        try {
-            File file = new File("./output.dat/");
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            dataOutputStream = new DataOutputStream(fileOutputStream);
-            byteArrayOutputStream = new ByteArrayOutputStream();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        byteArrayOutputStream = new ByteArrayOutputStream();
     }
 
     public void open(int available) {
@@ -60,7 +55,7 @@ public class SoundPlayer extends PcmPlayer {
         this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);
     }
 
-    public void writeToFile() {
+    public void writeToBuffer() {
         int var1 = 256;
         if(pcmPlayer_stereo) {
             var1 <<= 1;

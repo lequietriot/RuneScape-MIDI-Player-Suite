@@ -1,124 +1,144 @@
 package main;
 
+import com.sun.media.sound.*;
+
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+
 public class MakeSoundFont {
 
-    void createSoundFont(MusicPatch musicPatch, SoundBankCache soundBankCache) {
+    void createSoundFont(MidiPcmStream midiPcmStream) throws IOException {
 
-        /**
+        PcmPlayer.pcmPlayer_stereo = false;
+        PcmPlayer.pcmPlayer_sampleRate = 22050;
+
         SF2Soundbank sf2Soundbank = new SF2Soundbank();
-        sf2Soundbank.setName("Patch RuneScape");
+        sf2Soundbank.setName("Patch");
         sf2Soundbank.setRomName("RuneScape MIDI Suite");
         sf2Soundbank.setRomVersionMajor(1);
         sf2Soundbank.setRomVersionMinor(0);
 
-        musicPatch.loadPatchSamples(soundBankCache, null, null);
+        SF2Sample sf2Sample = new SF2Sample();
+        SF2LayerRegion sf2LayerRegion = new SF2LayerRegion();
+        SF2Layer sf2Layer = new SF2Layer();
 
-        int previousRootPitch = 0;
+        SoundPlayer soundPlayer = new SoundPlayer();
+        soundPlayer.setStream(midiPcmStream);
+        soundPlayer.samples = new int[512];
+        soundPlayer.capacity = 16384;
+        soundPlayer.init();
+        soundPlayer.open(soundPlayer.capacity);
 
-        for (int index = 0; index < 128; index++) {
+        while (midiPcmStream.active) {
+            soundPlayer.fill(soundPlayer.samples, 256);
+            soundPlayer.writeToBuffer();
 
-            if (musicPatch.audioBuffers[index] == null) {
-                continue;
+            for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
+
+                AudioFormat audioFormat = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 1, true, false);
+
+                AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(soundPlayer.byteArrayOutputStream.toByteArray()), audioFormat, soundPlayer.byteArrayOutputStream.toByteArray().length);
+                ByteArrayOutputStream audioStream = new ByteArrayOutputStream();
+
+                try {
+                    AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, audioStream);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                sf2Sample.setName(musicPatchNode.patch.key + "_" + musicPatchNode.currentNotePitch);
+                sf2Sample.setData(audioStream.toByteArray());
+                sf2Sample.setSampleRate(musicPatchNode.audioBuffer.sampleRate);
+                sf2Sample.setOriginalPitch(musicPatchNode.currentNotePitch);
+                sf2Sample.setStartLoop(musicPatchNode.audioBuffer.start);
+                sf2Sample.setEndLoop(musicPatchNode.audioBuffer.end);
+                sf2Sample.setSampleType(1); //Mono
+                sf2Sample.setSampleLink(-1); //No Link
+                sf2Soundbank.addResource(sf2Sample);
+
+                sf2Layer.setName("Layer");
+
+                sf2LayerRegion.putInteger(SF2Region.GENERATOR_INITIALATTENUATION, musicPatchNode.attenuation / 4);
+                sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, musicPatchNode.loopVariable * -1);
+                sf2LayerRegion.putInteger(SF2Region.GENERATOR_RELEASEVOLENV, musicPatchNode.field2453);
+                sf2LayerRegion.setSample(sf2Sample);
+                sf2Layer.getRegions().add(sf2LayerRegion);
+
+                sf2Soundbank.addResource(sf2Layer);
             }
 
-            if (musicPatch.notePitches[index] == previousRootPitch) {
-                continue;
+            if (midiPcmStream.midiFile.isDone()) {
+                break;
             }
+        }
 
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        /**
+        for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
 
-            AudioFormat audioFormat = new AudioFormat(musicPatch.audioBuffers[index].sampleRate, 16, 1, true, false);
-            byte[] eightBitSamples = musicPatch.audioBuffers[index].samples;
-            byte[] newSamples = new byte[eightBitSamples.length * 2];
+            System.out.println();
+            System.out.println("Patch #" + musicPatchNode.patch.key);
+            System.out.println("Patch Volume 1: " + musicPatchNode.patch.velocity);
+            System.out.println("Patch Volume 2: " + musicPatchNode.patch.volume[musicPatchNode.currentNotePitch]);
+            System.out.println("offset: " + musicPatchNode.patch.pitchOffset[musicPatchNode.currentNotePitch]);
+            System.out.println();
+            System.out.println("Attack?: " + musicPatchNode.musicPatchInfo.volEnvAttack);
+            System.out.println("Decay?: " + musicPatchNode.musicPatchInfo.volEnvDecay);
+            System.out.println("2394: " + musicPatchNode.musicPatchInfo.field2394);
+            System.out.println("2401: " + musicPatchNode.musicPatchInfo.field2401);
+            System.out.println();
+            System.out.println("Active Track: " + musicPatchNode.currentTrack);
+            System.out.println("Attenuation: " + musicPatchNode.attenuation);
+            System.out.println("Loop Mode: " + musicPatchNode.loopVariable);
+            System.out.println("Note Pitch (0-127): " + musicPatchNode.currentNotePitch);
+            System.out.println("Pan (0-127): " + musicPatchNode.currentPanValue);
+            System.out.println("Frequency Correction: " + musicPatchNode.frequencyCorrection);
+            System.out.println("2454: " + musicPatchNode.field2454);
+            System.out.println("Sustain Pedal: " + musicPatchNode.sustainPedal);
+            System.out.println("2458: " + musicPatchNode.field2458);
+            System.out.println("2455: " + musicPatchNode.field2455);
+            System.out.println("Portamento: " + musicPatchNode.field2453);
+            System.out.println("2462: " + musicPatchNode.field2462);
+            System.out.println("2449: " + musicPatchNode.field2449);
+            System.out.println();
 
-            for (int byteIndex = 0; byteIndex < newSamples.length; byteIndex++) {
-                newSamples[byteIndex] = eightBitSamples[byteIndex / 2];
-            }
-            AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(newSamples), audioFormat, newSamples.length);
+            AudioFormat audioFormat = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 1, true, false);
+
+            AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(soundPlayer.byteArrayOutputStream.toByteArray()), audioFormat, soundPlayer.byteArrayOutputStream.toByteArray().length);
             try {
-                AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+                AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, soundPlayer.byteArrayOutputStream);
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            SF2Sample sf2Sample = new SF2Sample();
-
-            while (musicPatch.notePitches[index] > 128) {
-                musicPatch.notePitches[index] -= 128;
-            }
-
-            sf2Sample.setName(musicPatch.patchID + "_" + musicPatch.notePitches[index]);
-            sf2Sample.setData(byteArrayOutputStream.toByteArray());
-            sf2Sample.setSampleRate(musicPatch.audioBuffers[index].sampleRate);
-            sf2Sample.setOriginalPitch(musicPatch.notePitches[index]);
-            sf2Sample.setStartLoop(musicPatch.audioBuffers[index].start);
-            sf2Sample.setEndLoop(musicPatch.audioBuffers[index].end);
+            sf2Sample.setName(musicPatchNode.patch.key + "_" + musicPatchNode.currentNotePitch);
+            sf2Sample.setData(soundPlayer.byteArrayOutputStream.toByteArray());
+            sf2Sample.setSampleRate(musicPatchNode.audioBuffer.sampleRate);
+            sf2Sample.setOriginalPitch(musicPatchNode.currentNotePitch);
+            sf2Sample.setStartLoop(musicPatchNode.audioBuffer.start);
+            sf2Sample.setEndLoop(musicPatchNode.audioBuffer.end);
             sf2Sample.setSampleType(1); //Mono
             sf2Sample.setSampleLink(-1); //No Link
             sf2Soundbank.addResource(sf2Sample);
 
-            previousRootPitch = musicPatch.notePitches[index];
-        }
+            sf2Layer.setName("Layer");
 
-        SF2Layer sf2Layer = new SF2Layer(sf2Soundbank);
-        sf2Layer.setName("Patch " + musicPatch.patchID);
-        sf2Soundbank.addResource(sf2Layer);
-
-        byte[][] ranges = new byte[sf2Soundbank.getSamples().length][2];
-
-        int position = 0;
-        int lastPosition = 0;
-        int samplePosition = 0;
-
-        for (int range = 0; range < ranges.length; range++) {
-
-            for (int keys = lastPosition; keys < 128; keys++) {
-
-                if (musicPatch.notePitches[keys] == 0) {
-                    position++;
-                }
-
-                if (musicPatch.notePitches[keys] == musicPatch.notePitches[keys]) {
-                    position++;
-                }
-
-                else {
-                    break;
-                }
-            }
-
-            ranges[samplePosition][1] = (byte) lastPosition;
-            ranges[samplePosition][0] = (byte) position;
-
-            samplePosition++;
-            position++;
-
-            lastPosition = position;
-            System.out.println(position);
-        }
-
-        for (int samples = 0; samples < sf2Soundbank.getSamples().length; samples++) {
-
-            SF2LayerRegion sf2LayerRegion = new SF2LayerRegion();
-            sf2LayerRegion.putBytes(SF2Region.GENERATOR_KEYRANGE, ranges[samples]);
-
-            int loopType = -1;
-            if (musicPatch.loopMode[samples] == -1) {
-                loopType = 1; //Change RuneScape's loop mode (-1) to a SoundFont Loop Mode (1).
-            }
-
-            sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, loopType);
-            sf2LayerRegion.setSample(sf2Soundbank.getSamples()[samples]);
+            sf2LayerRegion.putInteger(SF2Region.GENERATOR_INITIALATTENUATION, musicPatchNode.attenuation / 4);
+            sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, musicPatchNode.loopVariable * -1);
+            sf2LayerRegion.putInteger(SF2Region.GENERATOR_RELEASEVOLENV, musicPatchNode.field2453);
+            sf2LayerRegion.setSample(sf2Sample);
             sf2Layer.getRegions().add(sf2LayerRegion);
+
+            sf2Soundbank.addResource(sf2Layer);
         }
 
-        try {
-
-            sf2Soundbank.save("./0.sf2/");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
          **/
+
+        sf2Soundbank.save(new File("./0.sf2/"));
     }
 }

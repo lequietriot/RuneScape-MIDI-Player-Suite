@@ -117,6 +117,7 @@ public class SoundBankCache {
             File sampleFile = new File(idx14.toString() + "/" + id + ".wav/");
             data = AudioSystem.getAudioInputStream(sampleFile).readAllBytes();
             sampleRate = (int) AudioSystem.getAudioInputStream(sampleFile).getFormat().getSampleRate();
+
             for (int l = 0; l < data.length; l++) {
                 data[l] = (byte) (data[l] ^ 127 & 0xFF);
             }

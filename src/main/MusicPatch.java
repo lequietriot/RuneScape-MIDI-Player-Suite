@@ -4,6 +4,8 @@ import main.utils.Buffer;
 import main.utils.Node;
 import org.displee.cache.index.Index;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +24,7 @@ public class MusicPatch extends Node {
     static File localSoundBankSamples;
     static File localSoundBankPatches;
     static File localSoundEffects;
+    static File localCustomSoundBank;
 
     public static MusicPatch getMusicPatch(Index index, int archiveID, int fileID) {
         byte[] data = index.getArchive(archiveID).getFile(fileID).getData();
@@ -548,6 +551,35 @@ public class MusicPatch extends Node {
         }
 
         return var4;
+    }
+
+    public boolean customPatchLoad(int patchID) throws IOException, UnsupportedAudioFileException {
+
+        boolean var4 = true;
+        AudioBuffer audioBuffer;
+        int notePosition = 0;
+
+        for (int note = 0; note < 128; note++) {
+
+            if (new File("./Sounds/Custom Sound Bank/" + patchID + "/" + note + ".wav/").exists()) {
+
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./Sounds/Custom Sound Bank/" + patchID + "/" + note + ".wav/"));
+                byte[] audioData = audioInputStream.readAllBytes();
+
+                for (int l = 0; l < audioData.length; l++) {
+                    audioData[l] = (byte) (audioData[l] ^ 127 & 0xFF);
+                }
+
+                audioBuffer = new AudioBuffer((int) audioInputStream.getFormat().getSampleRate(), audioData, 0, 0);
+                audioBuffers[note] = audioBuffer;
+                pitchOffset[note] = (short) (note * 256);
+
+            }
+
+        }
+
+        return var4;
+
     }
 
     void clear() {

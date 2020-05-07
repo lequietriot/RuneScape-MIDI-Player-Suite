@@ -96,7 +96,7 @@ public class GUI implements ControllerEventListener {
 	private boolean loopMode = false;
 	private MidiPcmStream midiPcmStream;
 
-	GUI() throws MidiUnavailableException, InvalidMidiDataException, IOException {
+	GUI() throws IOException {
 
 		frame = new JFrame("RuneScape MIDI Player");
 		JFrame.setDefaultLookAndFeelDecorated(true);
@@ -144,7 +144,9 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.setVisible(true);
 
 			utilityMenu.add("Encode Data - MIDI Music...").addActionListener(new MidiEncoder());
-			utilityMenu.add("Generate Sound - MIDI Music...").addActionListener(new MidiNoteGenerator());
+			//utilityMenu.add("Generate Sound - MIDI Note...").addActionListener(new MidiNoteGenerator());
+			//utilityMenu.add("Generate Random Music").addActionListener(new RandomMidiGenerator());
+			//utilityMenu.add("Modify Existing Music").addActionListener(new MidiTransposer());
 
 			utilityMenu.add("Dump Data - MIDI Music...").addActionListener(new MidiDumper());
 			utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
@@ -352,12 +354,6 @@ public class GUI implements ControllerEventListener {
 
 	private void initSynthesizers() throws MidiUnavailableException, InvalidMidiDataException, IOException {
 
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
 		System.out.println("Initializing Synthesizers, please wait...");
 
 		synth1 = MidiSystem.getSynthesizer();
@@ -413,7 +409,7 @@ public class GUI implements ControllerEventListener {
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
 			midiFile = chooseMID.getSelectedFile();
 			if (synth1 == null) {
-				//initSynthesizers();
+				initSynthesizers();
 			}
 		}
 	}
@@ -515,7 +511,7 @@ public class GUI implements ControllerEventListener {
 		public void actionPerformed(ActionEvent e) {
 
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(50);
 			} catch (InterruptedException ex) {
 				ex.printStackTrace();
 			}
@@ -528,30 +524,7 @@ public class GUI implements ControllerEventListener {
 
 				sequence = MidiSystem.getSequence(midiFile);
 
-				sequencer1 = MidiSystem.getSequencer(false);
-				sequencer1.open();
-				sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-				sequencer2 = MidiSystem.getSequencer(false);
-				sequencer2.open();
-				sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-				sequencer3 = MidiSystem.getSequencer(false);
-				sequencer3.open();
-				sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-				sequencer4 = MidiSystem.getSequencer(false);
-				sequencer4.open();
-				sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-				sequencer5 = MidiSystem.getSequencer(false);
-				sequencer5.open();
-				sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-
-				sequencer6 = MidiSystem.getSequencer(false);
-				sequencer6.open();
-				sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
-
+				setupSequencers(sequence.getTracks().length);
 				setSequencerSolo(sequence.getTracks().length);
 
 				if (!fixAttemptingOS) {
@@ -655,6 +628,350 @@ public class GUI implements ControllerEventListener {
 				}
 			} catch (MidiUnavailableException | InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
+			}
+		}
+
+		private void setupSequencers(int length) throws MidiUnavailableException {
+
+			switch (length) {
+				case 0:
+					return;
+				case 1:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+				case 2:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+				case 3:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+				case 4:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+				case 5:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+				case 6:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+				case 7:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+				case 8:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+				case 9:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+				case 10:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+				case 11:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+				case 12:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+				case 13:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+				case 14:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+				case 15:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+				case 16:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+				case 17:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+					sequencer5 = MidiSystem.getSequencer(false);
+					sequencer5.open();
+					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+				case 18:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+					sequencer5 = MidiSystem.getSequencer(false);
+					sequencer5.open();
+					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+				case 19:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+					sequencer5 = MidiSystem.getSequencer(false);
+					sequencer5.open();
+					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+				case 20:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+					sequencer5 = MidiSystem.getSequencer(false);
+					sequencer5.open();
+					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+				case 21:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+					sequencer5 = MidiSystem.getSequencer(false);
+					sequencer5.open();
+					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+
+					sequencer6 = MidiSystem.getSequencer(false);
+					sequencer6.open();
+					sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
+				case 22:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+					sequencer5 = MidiSystem.getSequencer(false);
+					sequencer5.open();
+					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+
+					sequencer6 = MidiSystem.getSequencer(false);
+					sequencer6.open();
+					sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
+				case 23:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+					sequencer5 = MidiSystem.getSequencer(false);
+					sequencer5.open();
+					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+
+					sequencer6 = MidiSystem.getSequencer(false);
+					sequencer6.open();
+					sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
+				case 24:
+					sequencer1 = MidiSystem.getSequencer(false);
+					sequencer1.open();
+					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
+
+					sequencer2 = MidiSystem.getSequencer(false);
+					sequencer2.open();
+					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
+
+					sequencer3 = MidiSystem.getSequencer(false);
+					sequencer3.open();
+					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
+
+					sequencer4 = MidiSystem.getSequencer(false);
+					sequencer4.open();
+					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
+
+					sequencer5 = MidiSystem.getSequencer(false);
+					sequencer5.open();
+					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
+
+					sequencer6 = MidiSystem.getSequencer(false);
+					sequencer6.open();
+					sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
 			}
 		}
 
@@ -3008,12 +3325,61 @@ public class GUI implements ControllerEventListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
+			PcmPlayer.pcmPlayer_stereo = false;
+
+			Index musicIndex = cacheLibrary.getIndex(6);
+			Index patchIndex = cacheLibrary.getIndex(15);
+
+			int program = 0;
+			int bank = 0;
+			int notePitch = 36;
+
 			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
 
-			MusicPatch musicPatch = MusicPatch.getMusicPatch(cacheLibrary.getIndex(15), 0, 0);
+			ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+			Sequence midiSeq;
+			try {
+				midiSeq = new Sequence(Sequence.PPQ, 960);
+				ShortMessage programChangeMsg = new ShortMessage();
+				ShortMessage noteOnMessage = new ShortMessage();
+				ShortMessage noteOffMessage = new ShortMessage();
+				ShortMessage bankMSBMessage = new ShortMessage();
+				ShortMessage bankLSBMessage = new ShortMessage();
+
+				programChangeMsg.setMessage(ShortMessage.PROGRAM_CHANGE, 0, program, 0);
+				bankMSBMessage.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 0);
+				bankLSBMessage.setMessage(ShortMessage.CONTROL_CHANGE, 0, 32, bank);
+				noteOnMessage.setMessage(ShortMessage.NOTE_ON, 0, notePitch, 127);
+				noteOffMessage.setMessage(ShortMessage.NOTE_OFF, 0, notePitch, 127);
+
+				midiSeq.createTrack().add(new MidiEvent(programChangeMsg, 2));
+				midiSeq.getTracks()[0].add(new MidiEvent(bankLSBMessage, 1));
+				midiSeq.getTracks()[0].add(new MidiEvent(bankMSBMessage, 1));
+				midiSeq.getTracks()[0].add(new MidiEvent(noteOnMessage, 3));
+				midiSeq.getTracks()[0].add(new MidiEvent(noteOffMessage, 240));
+				MidiSystem.write(midiSeq, 1, byteArrayOutputStream);
+
+			} catch (InvalidMidiDataException | IOException ex) {
+				ex.printStackTrace();
+			}
+
+			MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+			MidiTrack.midi = byteArrayOutputStream.toByteArray();
+			MidiTrack.loadMidiTrackInfo();
+
+			MidiPcmStream midiPcmStream = new MidiPcmStream();
+			midiPcmStream.initDrumKits(9, 128);
+			midiPcmStream.setMusicTrack(midiTrack, false);
+			midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
 
 			MakeSoundFont makeSoundFont = new MakeSoundFont();
-			makeSoundFont.createSoundFont(musicPatch, soundBankCache);
+			try {
+				makeSoundFont.createSoundFont(midiPcmStream);
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
 		}
 	}
 
@@ -3189,10 +3555,11 @@ public class GUI implements ControllerEventListener {
 			MusicPatch.localSoundBankSamples = new File("./Sounds/Sound Bank Samples/");
 			MusicPatch.localSoundBankPatches = new File("./Sounds/Sound Bank Patches/");
 			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
+			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
 			midiPcmStream = new MidiPcmStream();
-			Path path = Paths.get(midiFile.toURI());
+			Path midiPath = Paths.get(midiFile.toURI());
 
 			try {
 
@@ -3201,10 +3568,10 @@ public class GUI implements ControllerEventListener {
 				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
 
 				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-				MidiTrack.midi = Files.readAllBytes(path);
+				MidiTrack.midi = Files.readAllBytes(midiPath);
 				MidiTrack.loadMidiTrackInfo();
 
-				midiPcmStream.method3800(9, 128);
+				midiPcmStream.initDrumKits(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
 				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrackFiles(midiTrack, soundBankCache, MusicPatch.localSoundBankPatches, 0);
@@ -3255,14 +3622,13 @@ public class GUI implements ControllerEventListener {
 
 				PcmPlayer.pcmPlayer_stereo = true;
 
-				Sequence sequence = MidiSystem.getSequence(midiFile);
 				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
 
 				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
 				MidiTrack.midi = Files.readAllBytes(path);
 				MidiTrack.loadMidiTrackInfo();
 
-				midiPcmStream.method3800(9, 128);
+				midiPcmStream.initDrumKits(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
 				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
@@ -3280,20 +3646,28 @@ public class GUI implements ControllerEventListener {
 						soundPlayer.write();
 
 						for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
+
+							//musicPatchNode.field2453 = 220;
+							//musicPatchNode.field2459 = 0;
+							//musicPatchNode.field2458 = 0;
+							//musicPatchNode.field2455 = 4096;
+
 							System.out.println();
+							//System.out.println("Patch #" + musicPatchNode.patch.key);
 							System.out.println("Current Track: " + musicPatchNode.currentTrack);
-							System.out.println("field2459: " + musicPatchNode.field2459);
-							System.out.println("field2451: " + musicPatchNode.field2451);
+							System.out.println("Sustain Pedal: " + musicPatchNode.sustainPedal);
+							System.out.println("Attenuation: " + musicPatchNode.attenuation);
 							System.out.println("field2449 (MIDI Tick Position?): " + musicPatchNode.field2449);
-							System.out.println("field2467 (Loop mode?): " + musicPatchNode.field2467);
+							System.out.println("Fill buffer-related: " + musicPatchNode.loopVariable);
 							System.out.println("Current Note/Key (Ranges 0-127): " + musicPatchNode.currentNotePitch);
 							System.out.println("Pan Value (Ranges 0-127): " + musicPatchNode.currentPanValue);
 							System.out.println("field2453: " + musicPatchNode.field2453);
-							System.out.println("field2445: " + musicPatchNode.field2445);
+							System.out.println("field2454: " + musicPatchNode.field2454);
+							System.out.println("Frequency Correction: " + musicPatchNode.frequencyCorrection);
 							System.out.println("field2455: " + musicPatchNode.field2455);
 							System.out.println("field2448: " + musicPatchNode.field2448);
-							System.out.println("field2449: " + musicPatchNode.field2449);
 							System.out.println("field2462: " + musicPatchNode.field2462);
+							System.out.println("field2458: " + musicPatchNode.field2458);
 							System.out.println();
 						}
 
@@ -3305,7 +3679,7 @@ public class GUI implements ControllerEventListener {
 
 				songThread.start();
 
-			} catch (IOException | InvalidMidiDataException ex) {
+			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
 		}
@@ -3478,14 +3852,13 @@ public class GUI implements ControllerEventListener {
 
 				PcmPlayer.pcmPlayer_stereo = true;
 
-				Sequence sequence = MidiSystem.getSequence(midiFile);
 				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
 
 				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
 				MidiTrack.midi = Files.readAllBytes(path);
 				MidiTrack.loadMidiTrackInfo();
 
-				midiPcmStream.method3800(9, 128);
+				midiPcmStream.initDrumKits(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
 				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
@@ -3500,7 +3873,7 @@ public class GUI implements ControllerEventListener {
 
 				while (midiPcmStream.active) {
 					soundPlayer.fill(soundPlayer.samples, 256);
-					soundPlayer.writeToFile();
+					soundPlayer.writeToBuffer();
 					if (midiPcmStream.midiFile.isDone()) {
 						break;
 					}
@@ -3520,7 +3893,7 @@ public class GUI implements ControllerEventListener {
 				} catch (IOException ex) {
 					ex.printStackTrace();
 				}
-			} catch (IOException | InvalidMidiDataException ex) {
+			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
 		}
@@ -3582,6 +3955,272 @@ public class GUI implements ControllerEventListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
+			Index soundEffectIndex = cacheLibrary.getIndex(4);
+			Index musicIndex = cacheLibrary.getIndex(6);
+			Index soundBankIndex = cacheLibrary.getIndex(14);
+			Index musicPatchIndex = cacheLibrary.getIndex(15);
+
+			MusicPatch.localSoundBankSamples = new File("./Sounds/Sound Bank Samples/");
+			MusicPatch.localSoundBankPatches = new File("./Sounds/Sound Bank Patches/");
+			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
+
+			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
+			midiPcmStream = new MidiPcmStream();
+			Path path = Paths.get(midiFile.toURI());
+
+			try {
+
+				PcmPlayer.pcmPlayer_stereo = true;
+
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				MidiTrack.midi = Files.readAllBytes(path);
+				MidiTrack.loadMidiTrackInfo();
+
+				midiPcmStream.initDrumKits(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
+
+				SoundPlayer soundPlayer = new SoundPlayer();
+				soundPlayer.setStream(midiPcmStream);
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 16384;
+				soundPlayer.init();
+				soundPlayer.open(soundPlayer.capacity);
+
+				while (midiPcmStream.active) {
+					soundPlayer.fill(soundPlayer.samples, 256);
+					soundPlayer.writeToBuffer();
+					if (midiPcmStream.midiFile.isDone()) {
+						break;
+					}
+				}
+
+				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+
+				File outFile = new File("./MIDI Audio/" + midiFile.getName() + ".wav/");
+				FileOutputStream fos;
+
+				try {
+
+					fos = new FileOutputStream(outFile);
+					AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+					AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+					AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+	}
+
+	private class RandomMidiGenerator implements ActionListener {
+
+		private String mood = "Default";
+
+		private int noteC = 0;
+		private int noteCSharp = 1;
+		private int noteD = 2;
+		private int noteDSharp = 3;
+		private int noteE = 4;
+		private int noteF = 5;
+		private int noteFSharp = 6;
+		private int noteG = 7;
+		private int noteGSharp = 8;
+		private int noteA = 9;
+		private int noteASharp = 10;
+		private int noteB = 11;
+
+		private int[] octaves = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+		private int[] baseCNotes = new int[]{0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120};
+
+		private int[] cMajorScale = new int[]{noteC, noteD, noteE, noteF, noteG, noteA, noteB};
+
+		private int[] cMinorScale = new int[]{noteC, noteD, noteDSharp, noteF, noteG, noteGSharp, noteASharp};
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			Index musicIndex = cacheLibrary.getIndex(6);
+			Index patchIndex = cacheLibrary.getIndex(15);
+
+			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+
+			ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+			Sequence midiSeq;
+			try {
+				midiSeq = new Sequence(Sequence.PPQ, 960);
+				MidiSystem.write(generateSong(midiSeq, mood), 1, byteArrayOutputStream);
+
+			} catch (InvalidMidiDataException | IOException ex) {
+				ex.printStackTrace();
+			}
+
+			MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+			MidiTrack.midi = byteArrayOutputStream.toByteArray();
+			MidiTrack.loadMidiTrackInfo();
+
+			MidiPcmStream midiPcmStream = new MidiPcmStream();
+			midiPcmStream.initDrumKits(9, 128);
+			midiPcmStream.setMusicTrack(midiTrack, false);
+			midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
+
+			SoundPlayer soundPlayer = new SoundPlayer();
+			soundPlayer.setStream(midiPcmStream);
+			soundPlayer.samples = new int[512];
+			soundPlayer.capacity = 16384;
+			soundPlayer.init();
+			soundPlayer.open(soundPlayer.capacity);
+
+			while (midiPcmStream.active) {
+				soundPlayer.fill(soundPlayer.samples, 256);
+				soundPlayer.write();
+
+				if (midiPcmStream.midiFile.isDone()) {
+					break;
+				}
+			}
+		}
+
+		private Sequence generateSong(Sequence midiSeq, String mood) {
+			switch (mood) {
+				case "Default":
+					midiSeq = generateDefaultMood(midiSeq);
+			}
+			return midiSeq;
+		}
+
+		private Sequence generateDefaultMood(Sequence midiSeq) {
+			return midiSeq;
+		}
+	}
+
+	private class MidiTransposer implements ActionListener {
+
+		private String desiredMood = "Happy";
+		private String determinedKey = "Cm";
+
+		private int noteC = 0;
+		private int noteCSharp = 1;
+		private int noteD = 2;
+		private int noteDSharp = 3;
+		private int noteE = 4;
+		private int noteF = 5;
+		private int noteFSharp = 6;
+		private int noteG = 7;
+		private int noteGSharp = 8;
+		private int noteA = 9;
+		private int noteASharp = 10;
+		private int noteB = 11;
+
+		private int[] baseCNotes = new int[]{0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120};
+
+		private int[] cMajorScale = new int[]{noteC, noteD, noteE, noteF, noteG, noteA, noteB};
+
+		private int[] cMinorScale = new int[]{noteC, noteD, noteDSharp, noteF, noteG, noteGSharp, noteASharp};
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			Index musicIndex = cacheLibrary.getIndex(6);
+			Index patchIndex = cacheLibrary.getIndex(15);
+
+			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+			midiPcmStream = new MidiPcmStream();
+
+			try {
+
+				PcmPlayer.pcmPlayer_stereo = true;
+
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+
+				Sequence midiSeq = MidiSystem.getSequence(midiFile);
+				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+				MidiSystem.write(transposeSong(midiSeq, desiredMood), 1, byteArrayOutputStream);
+
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				MidiTrack.midi = byteArrayOutputStream.toByteArray();
+				MidiTrack.loadMidiTrackInfo();
+
+				midiPcmStream.initDrumKits(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
+
+				SoundPlayer soundPlayer = new SoundPlayer();
+				soundPlayer.setStream(midiPcmStream);
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 16384;
+				soundPlayer.init();
+				soundPlayer.open(soundPlayer.capacity);
+
+				Thread songThread = new Thread(() -> {
+					while (midiPcmStream.active) {
+						soundPlayer.fill(soundPlayer.samples, 256);
+						soundPlayer.write();
+						if (midiPcmStream.midiFile.isDone()) {
+							break;
+						}
+					}
+				});
+
+				songThread.start();
+			} catch (IOException | InvalidMidiDataException ex) {
+				ex.printStackTrace();
+			}
+		}
+
+		private Sequence transposeSong(Sequence midiSeq, String mood) throws InvalidMidiDataException {
+			switch (mood) {
+				case "Happy":
+					midiSeq = transposeHappyMood(midiSeq);
+			}
+			return midiSeq;
+		}
+
+		private Sequence transposeHappyMood(Sequence midiSeq) throws InvalidMidiDataException {
+			for (Track track : midiSeq.getTracks()) {
+				for (int event = 0; event < track.size(); event++) {
+					MidiEvent midiEvent = track.get(event);
+					MidiMessage midiMessage = midiEvent.getMessage();
+					if (midiMessage instanceof ShortMessage) {
+						ShortMessage shortMessage = (ShortMessage) midiMessage;
+
+						if (shortMessage.getCommand() == ShortMessage.NOTE_ON) {
+							int noteValue = shortMessage.getData1();
+							for (int keys = 0; keys < cMinorScale.length; keys++) {
+								for (int octaves = 0; octaves < baseCNotes.length; octaves++) {
+									if (baseCNotes[octaves] * keys == noteValue) {
+										noteValue++;
+										shortMessage.setMessage(shortMessage.getCommand(), shortMessage.getChannel(), noteValue, shortMessage.getData2());
+									}
+								}
+							}
+						}
+
+						if (shortMessage.getCommand() == ShortMessage.NOTE_OFF) {
+							int noteValue = shortMessage.getData1();
+							for (int keys = 0; keys < cMinorScale.length; keys++) {
+								for (int octaveKeys = 0; octaveKeys < baseCNotes.length; octaveKeys++) {
+									if (keys * octaveKeys == noteValue) {
+										noteValue = baseCNotes[octaveKeys] - keys;
+										System.out.println(noteValue);
+										shortMessage.setMessage(shortMessage.getCommand(), shortMessage.getChannel(), noteValue, shortMessage.getData2());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			return midiSeq;
 		}
 	}
 }

@@ -16,23 +16,23 @@ public class MidiPcmStream extends PcmStream {
     NodeHashTable musicPatches;
     int musicVolume;
     int field2419;
-    int[] field2443;
-    int[] field2416;
-    int[] field2417;
+    int[] volume;
+    int[] pan;
+    int[] expression;
     int[] field2420;
-    int[] field2421;
-    int[] field2422;
+    int[] programChange;
+    int[] bankSelect;
     int[] field2423;
-    int[] field2424;
-    int[] field2437;
-    int[] field2428;
-    int[] field2429;
-    int[] field2430;
-    int[] field2431;
-    int[] field2432;
+    int[] modulation;
+    int[] portamento;
+    int[] sustain;
+    int[] nonRegisteredParameter;
+    int[] dataEntry;
+    int[] generalPurpose1;
+    int[] generalPurpose2;
     int[] field2433;
-    MusicPatchNode[][] field2441;
-    MusicPatchNode[][] field2435;
+    MusicPatchNode[][] musicPatchNode1;
+    MusicPatchNode[][] musicPatchNode2;
     MidiFileReader midiFile;
     boolean field2418;
     int track;
@@ -44,27 +44,27 @@ public class MidiPcmStream extends PcmStream {
     public MidiPcmStream() {
         this.musicVolume = 256;
         this.field2419 = 1000000;
-        this.field2443 = new int[16];
-        this.field2416 = new int[16];
-        this.field2417 = new int[16];
+        this.volume = new int[16];
+        this.pan = new int[16];
+        this.expression = new int[16];
         this.field2420 = new int[16];
-        this.field2421 = new int[16];
-        this.field2422 = new int[16];
+        this.programChange = new int[16];
+        this.bankSelect = new int[16];
         this.field2423 = new int[16];
-        this.field2424 = new int[16];
-        this.field2437 = new int[16];
-        this.field2428 = new int[16];
-        this.field2429 = new int[16];
-        this.field2430 = new int[16];
-        this.field2431 = new int[16];
-        this.field2432 = new int[16];
+        this.modulation = new int[16];
+        this.portamento = new int[16];
+        this.sustain = new int[16];
+        this.nonRegisteredParameter = new int[16];
+        this.dataEntry = new int[16];
+        this.generalPurpose1 = new int[16];
+        this.generalPurpose2 = new int[16];
         this.field2433 = new int[16];
-        this.field2441 = new MusicPatchNode[16][128];
-        this.field2435 = new MusicPatchNode[16][128];
+        this.musicPatchNode1 = new MusicPatchNode[16][128];
+        this.musicPatchNode2 = new MusicPatchNode[16][128];
         this.midiFile = new MidiFileReader();
         this.patchStream = new MusicPatchPcmStream(this);
         this.musicPatches = new NodeHashTable(128);
-        this.method3812();
+        this.sendSystemResetMessage();
     }
 
     public synchronized void setPcmStreamVolume(int volume) {
@@ -199,93 +199,94 @@ public class MidiPcmStream extends PcmStream {
 
     public synchronized void clear() {
         this.midiFile.clear();
-        this.method3812();
+        this.sendSystemResetMessage();
     }
 
     public synchronized boolean isReady() {
         return this.midiFile.isReady();
     }
 
-    public synchronized void method3800(int var1, int var2) {
-        this.method3801(var1, var2);
+    public synchronized void initDrumKits(int channel, int program) {
+        this.setTrackProgramChange(channel, program);
     }
 
-    void method3801(int var1, int var2) {
-        this.field2420[var1] = var2;
-        this.field2422[var1] = var2 & -128;
-        this.method3802(var1, var2);
+    void setTrackProgramChange(int channel, int program) {
+        this.field2420[channel] = program;
+        this.bankSelect[channel] = program & -128;
+        this.setProgramChange(channel, program);
     }
 
-    void method3802(int var1, int var2) {
-        if (var2 != this.field2421[var1]) {
-            this.field2421[var1] = var2;
+    void setProgramChange(int channel, int data1) {
+        if (data1 != this.programChange[channel]) {
+            this.programChange[channel] = data1;
 
-            for (int var3 = 0; var3 < 128; ++var3) {
-                this.field2435[var1][var3] = null;
+            for (int noteIndex = 0; noteIndex < 128; ++noteIndex) {
+                this.musicPatchNode2[channel][noteIndex] = null;
             }
         }
 
     }
 
-    void method3808(int var1, int var2, int var3) {
-        this.method3805(var1, var2, 64);
-        if ((this.field2428[var1] & 2) != 0) {
-            for (MusicPatchNode var4 = (MusicPatchNode)this.patchStream.queue.first(); var4 != null; var4 = (MusicPatchNode)this.patchStream.queue.next()) {
-                if (var4.currentTrack == var1 && var4.field2459 < 0) {
-                    this.field2441[var1][var4.currentNotePitch] = null;
-                    this.field2441[var1][var2] = var4;
-                    int var5 = (var4.field2455 * var4.field2454 >> 12) + var4.field2445;
-                    var4.field2445 += var2 - var4.currentNotePitch << 8;
-                    var4.field2454 = var5 - var4.field2445;
-                    var4.field2455 = 4096;
-                    var4.currentNotePitch = var2;
+    void setNoteOn(int channel, int note, int velocity) {
+        this.setNoteOff(channel, note);
+        if ((this.sustain[channel] & 2) != 0) {
+            for (MusicPatchNode musicPatchNode = (MusicPatchNode)this.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode)this.patchStream.queue.next()) {
+                if (musicPatchNode.currentTrack == channel && musicPatchNode.sustainPedal < 0) {
+                    this.musicPatchNode1[channel][musicPatchNode.currentNotePitch] = null;
+                    this.musicPatchNode1[channel][note] = musicPatchNode;
+                    int var5 = (musicPatchNode.field2455 * musicPatchNode.field2454 >> 12) + musicPatchNode.frequencyCorrection;
+                    musicPatchNode.frequencyCorrection += note - musicPatchNode.currentNotePitch << 8;
+                    musicPatchNode.field2454 = var5 - musicPatchNode.frequencyCorrection;
+                    musicPatchNode.field2455 = 4096;
+                    musicPatchNode.currentNotePitch = note;
                     return;
                 }
             }
         }
 
-        MusicPatch var9 = (MusicPatch)this.musicPatches.get((long)this.field2421[var1]);
-        if (var9 != null) {
-            AudioBuffer var8 = var9.audioBuffers[var2];
-            if (var8 != null) {
-                MusicPatchNode var6 = new MusicPatchNode();
-                var6.currentTrack = var1;
-                var6.patch = var9;
-                var6.audioBuffer = var8;
-                var6.musicPatchInfo = var9.musicPatchNode2[var2];
-                var6.field2467 = var9.loopMode[var2];
-                var6.currentNotePitch = var2;
-                var6.field2451 = var3 * var3 * var9.volume[var2] * var9.panOffset[var2] + 1024 >> 11;
-                var6.currentPanValue = var9.panOffset[var2] & 255;
-                var6.field2445 = (var2 << 8) - (var9.pitchOffset[var2] & 32767);
-                var6.field2456 = 0;
-                var6.field2457 = 0;
-                var6.field2458 = 0;
-                var6.field2459 = -1;
-                var6.field2448 = 0;
-                if (this.field2431[var1] == 0) {
-                    var6.stream = RawPcmStream.method2685(var8, this.method3864(var6), this.method3818(var6), this.method3819(var6));
+        MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(this.programChange[channel]);
+        if (musicPatch != null) {
+            AudioBuffer audioBuffer = musicPatch.audioBuffers[note];
+            if (audioBuffer != null) {
+                MusicPatchNode musicPatchNode = new MusicPatchNode();
+                musicPatchNode.currentTrack = channel;
+                musicPatchNode.patch = musicPatch;
+                musicPatchNode.audioBuffer = audioBuffer;
+                musicPatchNode.musicPatchInfo = musicPatch.musicPatchNode2[note];
+                musicPatchNode.loopVariable = musicPatch.loopMode[note];
+                musicPatchNode.currentNotePitch = note;
+                musicPatchNode.attenuation = velocity * velocity * musicPatch.volume[note] * musicPatch.panOffset[note] + 1024 >> 11;
+                musicPatchNode.currentPanValue = musicPatch.panOffset[note] & 255;
+                musicPatchNode.frequencyCorrection = (note << 8) - (musicPatch.pitchOffset[note] & 32767);
+                musicPatchNode.field2456 = 0;
+                musicPatchNode.field2457 = 0;
+                musicPatchNode.field2458 = 0;
+                musicPatchNode.sustainPedal = -1;
+                musicPatchNode.field2448 = 0;
+                if (this.generalPurpose1[channel] == 0) {
+                    musicPatchNode.stream = RawPcmStream.method2685(audioBuffer, this.method3864(musicPatchNode), this.method3818(musicPatchNode), this.method3819(musicPatchNode));
                 } else {
-                    var6.stream = RawPcmStream.method2685(var8, this.method3864(var6), 0, this.method3819(var6));
-                    this.method3852(var6, var9.pitchOffset[var2] < 0);
+                    musicPatchNode.stream = RawPcmStream.method2685(audioBuffer, this.method3864(musicPatchNode), 0, this.method3819(musicPatchNode));
+                    this.method3852(musicPatchNode, musicPatch.pitchOffset[note] < 0);
                 }
 
-                if (var9.pitchOffset[var2] < 0) {
-                    var6.stream.setNumLoops(-1);
+                if (musicPatch.pitchOffset[note] < 0) {
+                    assert musicPatchNode.stream != null;
+                    musicPatchNode.stream.setNumLoops(-1);
                 }
 
-                if (var6.field2467 >= 0) {
-                    MusicPatchNode var7 = this.field2435[var1][var6.field2467];
-                    if (var7 != null && var7.field2459 < 0) {
-                        this.field2441[var1][var7.currentNotePitch] = null;
-                        var7.field2459 = 0;
+                if (musicPatchNode.loopVariable >= 0) {
+                    MusicPatchNode var7 = this.musicPatchNode2[channel][musicPatchNode.loopVariable];
+                    if (var7 != null && var7.sustainPedal < 0) {
+                        this.musicPatchNode1[channel][var7.currentNotePitch] = null;
+                        var7.sustainPedal = 0;
                     }
 
-                    this.field2435[var1][var6.field2467] = var6;
+                    this.musicPatchNode2[channel][musicPatchNode.loopVariable] = musicPatchNode;
                 }
 
-                this.patchStream.queue.addFirst(var6);
-                this.field2441[var1][var2] = var6;
+                this.patchStream.queue.addFirst(musicPatchNode);
+                this.musicPatchNode1[channel][note] = musicPatchNode;
             }
         }
     }
@@ -295,48 +296,48 @@ public class MidiPcmStream extends PcmStream {
         int var4;
         if (var2 && var1.audioBuffer.enableLoop) {
             int var5 = var3 + var3 - var1.audioBuffer.start;
-            var4 = (int)((long)this.field2431[var1.currentTrack] * (long)var5 >> 6);
+            var4 = (int)((long)this.generalPurpose1[var1.currentTrack] * (long)var5 >> 6);
             var3 <<= 8;
             if (var4 >= var3) {
                 var4 = var3 + var3 - 1 - var4;
                 var1.stream.method2655();
             }
         } else {
-            var4 = (int)((long)var3 * (long)this.field2431[var1.currentTrack] >> 6);
+            var4 = (int)((long)var3 * (long)this.generalPurpose1[var1.currentTrack] >> 6);
         }
 
         var1.stream.method2664(var4);
     }
 
-    void method3805(int var1, int var2, int var3) {
-        MusicPatchNode var4 = this.field2441[var1][var2];
-        if (var4 != null) {
-            this.field2441[var1][var2] = null;
-            if ((this.field2428[var1] & 2) != 0) {
-                for (MusicPatchNode var5 = (MusicPatchNode)this.patchStream.queue.last(); var5 != null; var5 = (MusicPatchNode)this.patchStream.queue.previous()) {
-                    if (var5.currentTrack == var4.currentTrack && var5.field2459 < 0 && var4 != var5) {
-                        var4.field2459 = 0;
+    void setNoteOff(int channel, int note) {
+        MusicPatchNode musicPatchNode = this.musicPatchNode1[channel][note];
+        if (musicPatchNode != null) {
+            this.musicPatchNode1[channel][note] = null;
+            if ((this.sustain[channel] & 2) != 0) {
+                for (MusicPatchNode musicPatchNode3 = (MusicPatchNode)this.patchStream.queue.last(); musicPatchNode3 != null; musicPatchNode3 = (MusicPatchNode)this.patchStream.queue.previous()) {
+                    if (musicPatchNode3.currentTrack == musicPatchNode.currentTrack && musicPatchNode3.sustainPedal < 0 && musicPatchNode != musicPatchNode3) {
+                        musicPatchNode.sustainPedal = 0;
                         break;
                     }
                 }
             } else {
-                var4.field2459 = 0;
+                musicPatchNode.sustainPedal = 0;
             }
 
         }
     }
 
-    void method3900(int var1, int var2, int var3) {
+    void setPolyphonicAftertouch(int var1, int var2, int var3) {
     }
 
-    void method3817(int var1, int var2) {
+    void setAftertouch(int var1, int var2) {
     }
 
-    void method3799(int var1, int var2) {
+    void setPitchBend(int var1, int var2) {
         this.field2423[var1] = var2;
     }
 
-    void method3809(int var1) {
+    void turnAllSoundOff(int var1) {
         for (MusicPatchNode var2 = (MusicPatchNode)this.patchStream.queue.last(); var2 != null; var2 = (MusicPatchNode)this.patchStream.queue.previous()) {
             if (var1 < 0 || var2.currentTrack == var1) {
                 if (var2.stream != null) {
@@ -348,8 +349,8 @@ public class MidiPcmStream extends PcmStream {
                     var2.clearMusicPatchNode();
                 }
 
-                if (var2.field2459 < 0) {
-                    this.field2441[var2.currentTrack][var2.currentNotePitch] = null;
+                if (var2.sustainPedal < 0) {
+                    this.musicPatchNode1[var2.currentTrack][var2.currentNotePitch] = null;
                 }
 
                 var2.remove();
@@ -358,67 +359,67 @@ public class MidiPcmStream extends PcmStream {
 
     }
 
-    void method3810(int var1) {
+    void resetAllControllers(int var1) {
         if (var1 >= 0) {
-            this.field2443[var1] = 12800;
-            this.field2416[var1] = 8192;
-            this.field2417[var1] = 16383;
+            this.volume[var1] = 12800;
+            this.pan[var1] = 8192;
+            this.expression[var1] = 16383;
             this.field2423[var1] = 8192;
-            this.field2424[var1] = 0;
-            this.field2437[var1] = 8192;
-            this.method3813(var1);
-            this.method3916(var1);
-            this.field2428[var1] = 0;
-            this.field2429[var1] = 32767;
-            this.field2430[var1] = 256;
-            this.field2431[var1] = 0;
+            this.modulation[var1] = 0;
+            this.portamento[var1] = 8192;
+            this.resetSustainPedal(var1);
+            this.resetEffectSwitch(var1);
+            this.sustain[var1] = 0;
+            this.nonRegisteredParameter[var1] = 32767;
+            this.dataEntry[var1] = 256;
+            this.generalPurpose1[var1] = 0;
             this.method3899(var1, 8192);
         } else {
             for (var1 = 0; var1 < 16; ++var1) {
-                this.method3810(var1);
+                this.resetAllControllers(var1);
             }
 
         }
     }
 
-    void method3840(int var1) {
+    void turnAllNotesOff(int var1) {
         for (MusicPatchNode var2 = (MusicPatchNode)this.patchStream.queue.last(); var2 != null; var2 = (MusicPatchNode)this.patchStream.queue.previous()) {
-            if ((var1 < 0 || var2.currentTrack == var1) && var2.field2459 < 0) {
-                this.field2441[var2.currentTrack][var2.currentNotePitch] = null;
-                var2.field2459 = 0;
+            if ((var1 < 0 || var2.currentTrack == var1) && var2.sustainPedal < 0) {
+                this.musicPatchNode1[var2.currentTrack][var2.currentNotePitch] = null;
+                var2.sustainPedal = 0;
             }
         }
 
     }
 
-    void method3812() {
-        this.method3809(-1);
-        this.method3810(-1);
+    void sendSystemResetMessage() {
+        this.turnAllSoundOff(-1);
+        this.resetAllControllers(-1);
 
-        int var1;
-        for (var1 = 0; var1 < 16; ++var1) {
-            this.field2421[var1] = this.field2420[var1];
+        int track;
+        for (track = 0; track < 16; ++track) {
+            this.programChange[track] = this.field2420[track];
         }
 
-        for (var1 = 0; var1 < 16; ++var1) {
-            this.field2422[var1] = this.field2420[var1] & -128;
+        for (track = 0; track < 16; ++track) {
+            this.bankSelect[track] = this.field2420[track] & -128;
         }
 
     }
 
-    void method3813(int track) {
-        if ((this.field2428[track] & 2) != 0) {
+    void resetSustainPedal(int track) {
+        if ((this.sustain[track] & 2) != 0) {
             for (MusicPatchNode var2 = (MusicPatchNode) this.patchStream.queue.last(); var2 != null; var2 = (MusicPatchNode)this.patchStream.queue.previous()) {
-                if (var2.currentTrack == track && this.field2441[track][var2.currentNotePitch] == null && var2.field2459 < 0) {
-                    var2.field2459 = 0;
+                if (var2.currentTrack == track && this.musicPatchNode1[track][var2.currentNotePitch] == null && var2.sustainPedal < 0) {
+                    var2.sustainPedal = 0;
                 }
             }
         }
 
     }
 
-    void method3916(int track) {
-        if ((this.field2428[track] & 4) != 0) {
+    void resetEffectSwitch(int track) {
+        if ((this.sustain[track] & 4) != 0) {
             for (MusicPatchNode var2 = (MusicPatchNode)this.patchStream.queue.last(); var2 != null; var2 = (MusicPatchNode)this.patchStream.queue.previous()) {
                 if (var2.currentTrack == track) {
                     var2.field2462 = 0;
@@ -428,213 +429,226 @@ public class MidiPcmStream extends PcmStream {
 
     }
 
-    void method3815(int midiMessage) {
+    void parseMessage(int midiMessage) {
         int message = midiMessage & 240;
-        int var3;
-        int var4;
-        int var5;
+        int channel;
+        int data1;
+        int data2;
+
+        //128 = Note Off
         if (message == 128) {
-            var3 = midiMessage & 15;
-            var4 = midiMessage >> 8 & 127;
-            var5 = midiMessage >> 16 & 127;
-            this.method3805(var3, var4, var5);
+            channel = midiMessage & 15;
+            data1 = midiMessage >> 8 & 127;
+            data2 = midiMessage >> 16 & 127;
+            this.setNoteOff(channel, data1);
+
+            //144 = Note On
         } else if (message == 144) {
-            var3 = midiMessage & 15;
-            var4 = midiMessage >> 8 & 127;
-            var5 = midiMessage >> 16 & 127;
-            if (var5 > 0) {
-                this.method3808(var3, var4, var5);
+            channel = midiMessage & 15;
+            data1 = midiMessage >> 8 & 127;
+            data2 = midiMessage >> 16 & 127;
+            if (data2 > 0) {
+                this.setNoteOn(channel, data1, data2);
             } else {
-                this.method3805(var3, var4, 64);
+                this.setNoteOff(channel, data1);
             }
 
+            //160 = Polyphonic Aftertouch
         } else if (message == 160) {
-            var3 = midiMessage & 15;
-            var4 = midiMessage >> 8 & 127;
-            var5 = midiMessage >> 16 & 127;
-            this.method3900(var3, var4, var5);
+            channel = midiMessage & 15;
+            data1 = midiMessage >> 8 & 127;
+            data2 = midiMessage >> 16 & 127;
+            this.setPolyphonicAftertouch(channel, data1, data2);
+
+            // 176 = Control Change
         } else if (message == 176) {
-            var3 = midiMessage & 15;
-            var4 = midiMessage >> 8 & 127;
-            var5 = midiMessage >> 16 & 127;
-            if (var4 == 0) {
-                this.field2422[var3] = (var5 << 14) + (this.field2422[var3] & -2080769);
+            channel = midiMessage & 15;
+            data1 = midiMessage >> 8 & 127;
+            data2 = midiMessage >> 16 & 127;
+            if (data1 == 0) {
+                this.bankSelect[channel] = (data2 << 14) + (this.bankSelect[channel] & -2080769);
             }
 
-            if (var4 == 32) {
-                this.field2422[var3] = (var5 << 7) + (this.field2422[var3] & -16257);
+            if (data1 == 32) {
+                this.bankSelect[channel] = (data2 << 7) + (this.bankSelect[channel] & -16257);
             }
 
-            if (var4 == 1) {
-                this.field2424[var3] = (var5 << 7) + (this.field2424[var3] & -16257);
+            if (data1 == 1) {
+                this.modulation[channel] = (data2 << 7) + (this.modulation[channel] & -16257);
             }
 
-            if (var4 == 33) {
-                this.field2424[var3] = var5 + (this.field2424[var3] & -128);
+            if (data1 == 33) {
+                this.modulation[channel] = data2 + (this.modulation[channel] & -128);
             }
 
-            if (var4 == 5) {
-                this.field2437[var3] = (var5 << 7) + (this.field2437[var3] & -16257);
+            if (data1 == 5) {
+                this.portamento[channel] = (data2 << 7) + (this.portamento[channel] & -16257);
             }
 
-            if (var4 == 37) {
-                this.field2437[var3] = var5 + (this.field2437[var3] & -128);
+            if (data1 == 37) {
+                this.portamento[channel] = data2 + (this.portamento[channel] & -128);
             }
 
-            if (var4 == 7) {
-                this.field2443[var3] = (var5 << 7) + (this.field2443[var3] & -16257);
+            if (data1 == 7) {
+                this.volume[channel] = (data2 << 7) + (this.volume[channel] & -16257);
             }
 
-            if (var4 == 39) {
-                this.field2443[var3] = var5 + (this.field2443[var3] & -128);
+            if (data1 == 39) {
+                this.volume[channel] = data2 + (this.volume[channel] & -128);
             }
 
-            if (var4 == 10) {
-                this.field2416[var3] = (var5 << 7) + (this.field2416[var3] & -16257);
+            if (data1 == 10) {
+                this.pan[channel] = (data2 << 7) + (this.pan[channel] & -16257);
             }
 
-            if (var4 == 42) {
-                this.field2416[var3] = var5 + (this.field2416[var3] & -128);
+            if (data1 == 42) {
+                this.pan[channel] = data2 + (this.pan[channel] & -128);
             }
 
-            if (var4 == 11) {
-                this.field2417[var3] = (var5 << 7) + (this.field2417[var3] & -16257);
+            if (data1 == 11) {
+                this.expression[channel] = (data2 << 7) + (this.expression[channel] & -16257);
             }
 
-            if (var4 == 43) {
-                this.field2417[var3] = var5 + (this.field2417[var3] & -128);
+            if (data1 == 43) {
+                this.expression[channel] = data2 + (this.expression[channel] & -128);
             }
 
-            int[] var10000;
-            if (var4 == 64) {
-                if (var5 >= 64) {
-                    var10000 = this.field2428;
-                    var10000[var3] |= 1;
+            int[] switches;
+            if (data1 == 64) {
+                if (data2 >= 64) {
+                    switches = this.sustain;
+                    switches[channel] |= 1;
                 } else {
-                    var10000 = this.field2428;
-                    var10000[var3] &= -2;
+                    switches = this.sustain;
+                    switches[channel] &= -2;
                 }
             }
 
-            if (var4 == 65) {
-                if (var5 >= 64) {
-                    var10000 = this.field2428;
-                    var10000[var3] |= 2;
+            if (data1 == 65) {
+                if (data2 >= 64) {
+                    switches = this.sustain;
+                    switches[channel] |= 2;
                 } else {
-                    this.method3813(var3);
-                    var10000 = this.field2428;
-                    var10000[var3] &= -3;
+                    this.resetSustainPedal(channel);
+                    switches = this.sustain;
+                    switches[channel] &= -3;
                 }
             }
 
-            if (var4 == 99) {
-                this.field2429[var3] = (var5 << 7) + (this.field2429[var3] & 127);
+            if (data1 == 99) {
+                this.nonRegisteredParameter[channel] = (data2 << 7) + (this.nonRegisteredParameter[channel] & 127);
             }
 
-            if (var4 == 98) {
-                this.field2429[var3] = (this.field2429[var3] & 16256) + var5;
+            if (data1 == 98) {
+                this.nonRegisteredParameter[channel] = (this.nonRegisteredParameter[channel] & 16256) + data2;
             }
 
-            if (var4 == 101) {
-                this.field2429[var3] = (var5 << 7) + (this.field2429[var3] & 127) + 16384;
+            if (data1 == 101) {
+                this.nonRegisteredParameter[channel] = (data2 << 7) + (this.nonRegisteredParameter[channel] & 127) + 16384;
             }
 
-            if (var4 == 100) {
-                this.field2429[var3] = (this.field2429[var3] & 16256) + var5 + 16384;
+            if (data1 == 100) {
+                this.nonRegisteredParameter[channel] = (this.nonRegisteredParameter[channel] & 16256) + data2 + 16384;
             }
 
-            if (var4 == 120) {
-                this.method3809(var3);
+            if (data1 == 120) {
+                this.turnAllSoundOff(channel);
             }
 
-            if (var4 == 121) {
-                this.method3810(var3);
+            if (data1 == 121) {
+                this.resetAllControllers(channel);
             }
 
-            if (var4 == 123) {
-                this.method3840(var3);
+            if (data1 == 123) {
+                this.turnAllNotesOff(channel);
             }
 
             int var6;
-            if (var4 == 6) {
-                var6 = this.field2429[var3];
+            if (data1 == 6) {
+                var6 = this.nonRegisteredParameter[channel];
                 if (var6 == 16384) {
-                    this.field2430[var3] = (var5 << 7) + (this.field2430[var3] & -16257);
+                    this.dataEntry[channel] = (data2 << 7) + (this.dataEntry[channel] & -16257);
                 }
             }
 
-            if (var4 == 38) {
-                var6 = this.field2429[var3];
+            if (data1 == 38) {
+                var6 = this.nonRegisteredParameter[channel];
                 if (var6 == 16384) {
-                    this.field2430[var3] = var5 + (this.field2430[var3] & -128);
+                    this.dataEntry[channel] = data2 + (this.dataEntry[channel] & -128);
                 }
             }
 
-            if (var4 == 16) {
-                this.field2431[var3] = (var5 << 7) + (this.field2431[var3] & -16257);
+            if (data1 == 16) {
+                this.generalPurpose1[channel] = (data2 << 7) + (this.generalPurpose1[channel] & -16257);
             }
 
-            if (var4 == 48) {
-                this.field2431[var3] = var5 + (this.field2431[var3] & -128);
+            if (data1 == 48) {
+                this.generalPurpose1[channel] = data2 + (this.generalPurpose1[channel] & -128);
             }
 
-            if (var4 == 81) {
-                if (var5 >= 64) {
-                    var10000 = this.field2428;
-                    var10000[var3] |= 4;
+            if (data1 == 81) {
+                if (data2 >= 64) {
+                    switches = this.sustain;
+                    switches[channel] |= 4;
                 } else {
-                    this.method3916(var3);
-                    var10000 = this.field2428;
-                    var10000[var3] &= -5;
+                    this.resetEffectSwitch(channel);
+                    switches = this.sustain;
+                    switches[channel] &= -5;
                 }
             }
 
-            if (var4 == 17) {
-                this.method3899(var3, (var5 << 7) + (this.field2432[var3] & -16257));
+            if (data1 == 17) {
+                this.method3899(channel, (data2 << 7) + (this.generalPurpose2[channel] & -16257));
             }
 
-            if (var4 == 49) {
-                this.method3899(var3, var5 + (this.field2432[var3] & -128));
+            if (data1 == 49) {
+                this.method3899(channel, data2 + (this.generalPurpose2[channel] & -128));
             }
 
+            //192 = Program Change
         } else if (message == 192) {
-            var3 = midiMessage & 15;
-            var4 = midiMessage >> 8 & 127;
-            this.method3802(var3, var4 + this.field2422[var3]);
+            channel = midiMessage & 15;
+            data1 = midiMessage >> 8 & 127;
+            this.setProgramChange(channel, data1 + this.bankSelect[channel]);
+
+            //208 = Aftertouch
         } else if (message == 208) {
-            var3 = midiMessage & 15;
-            var4 = midiMessage >> 8 & 127;
-            this.method3817(var3, var4);
+            channel = midiMessage & 15;
+            data1 = midiMessage >> 8 & 127;
+            this.setAftertouch(channel, data1);
+
+            //224 = Pitch Bend
         } else if (message == 224) {
-            var3 = midiMessage & 15;
-            var4 = (midiMessage >> 8 & 127) + (midiMessage >> 9 & 16256);
-            this.method3799(var3, var4);
+            channel = midiMessage & 15;
+            data1 = (midiMessage >> 8 & 127) + (midiMessage >> 9 & 16256);
+            this.setPitchBend(channel, data1);
+
         } else {
             message = midiMessage & 255;
             if (message == 255) {
-                this.method3812();
+                this.sendSystemResetMessage();
             }
         }
     }
 
     void method3899(int var1, int var2) {
-        this.field2432[var1] = var2;
+        this.generalPurpose2[var1] = var2;
         this.field2433[var1] = (int)(2097152.0D * Math.pow(2.0D, (double)var2 * 5.4931640625E-4D) + 0.5D);
     }
 
     int method3864(MusicPatchNode var1) {
-        int var2 = (var1.field2454 * var1.field2455 >> 12) + var1.field2445;
-        var2 += (this.field2423[var1.currentTrack] - 8192) * this.field2430[var1.currentTrack] >> 12;
+        int var2 = (var1.field2454 * var1.field2455 >> 12) + var1.frequencyCorrection;
+        var2 += (this.field2423[var1.currentTrack] - 8192) * this.dataEntry[var1.currentTrack] >> 12;
         MusicPatchNode2 var3 = var1.musicPatchInfo;
         int var4;
-        if (var3.field2401 > 0 && (var3.vibratoLFOPitch > 0 || this.field2424[var1.currentTrack] > 0)) {
+        if (var3.field2401 > 0 && (var3.vibratoLFOPitch > 0 || this.modulation[var1.currentTrack] > 0)) {
             var4 = var3.vibratoLFOPitch << 2;
             int var5 = var3.field2394 << 1;
             if (var1.field2461 < var5) {
                 var4 = var4 * var1.field2461 / var5;
             }
 
-            var4 += this.field2424[var1.currentTrack] >> 7;
+            var4 += this.modulation[var1.currentTrack] >> 7;
             double var6 = Math.sin(0.01227184630308513D * (double)(var1.field2449 & 511));
             var2 += (int)((double)var4 * var6);
         }
@@ -645,9 +659,9 @@ public class MidiPcmStream extends PcmStream {
 
     int method3818(MusicPatchNode var1) {
         MusicPatchNode2 var2 = var1.musicPatchInfo;
-        int var3 = this.field2443[var1.currentTrack] * this.field2417[var1.currentTrack] + 4096 >> 13;
+        int var3 = this.volume[var1.currentTrack] * this.expression[var1.currentTrack] + 4096 >> 13;
         var3 = var3 * var3 + 16384 >> 15;
-        var3 = var3 * var1.field2451 + 16384 >> 15;
+        var3 = var3 * var1.attenuation + 16384 >> 15;
         var3 = var3 * this.musicVolume + 128 >> 8;
         if (var2.volEnvDecay > 0) {
             var3 = (int)((double)var3 * Math.pow(0.5D, (double)var2.volEnvDecay * (double)var1.field2456 * 1.953125E-5D) + 0.5D);
@@ -669,8 +683,8 @@ public class MidiPcmStream extends PcmStream {
             var3 = var3 * var5 + 32 >> 6;
         }
 
-        if (var1.field2459 > 0 && var2.field2398 != null) {
-            var4 = var1.field2459;
+        if (var1.sustainPedal > 0 && var2.field2398 != null) {
+            var4 = var1.sustainPedal;
             var5 = var2.field2398[var1.field2448 + 1];
             if (var1.field2448 < var2.field2398.length - 2) {
                 var6 = (var2.field2398[var1.field2448] & 255) << 8;
@@ -685,7 +699,7 @@ public class MidiPcmStream extends PcmStream {
     }
 
     int method3819(MusicPatchNode var1) {
-        int var2 = this.field2416[var1.currentTrack];
+        int var2 = this.pan[var1.currentTrack];
         return var2 < 8192 ? var2 * var1.currentPanValue + 32 >> 6 : 16384 - ((128 - var1.currentPanValue) * (16384 - var2) + 32 >> 6);
     }
 
@@ -703,7 +717,7 @@ public class MidiPcmStream extends PcmStream {
                     this.midiFile.markTrackPosition(track);
                     if (this.midiFile.isDone()) {
                         if (!this.field2418 || trackLength == 0) {
-                            this.method3812();
+                            this.sendSystemResetMessage();
                             this.midiFile.clear();
                             return;
                         }
@@ -714,7 +728,7 @@ public class MidiPcmStream extends PcmStream {
                 }
 
                 if ((midiMessage & 128) != 0) {
-                    this.method3815(midiMessage);
+                    this.parseMessage(midiMessage);
                 }
 
                 this.midiFile.readTrackLength(track);
@@ -732,13 +746,12 @@ public class MidiPcmStream extends PcmStream {
 
     boolean method3826(MusicPatchNode var1) {
         if (var1.stream == null) {
-            if (var1.field2459 >= 0) {
+            if (var1.sustainPedal >= 0) {
                 var1.remove();
-                if (var1.field2467 > 0 && var1 == this.field2435[var1.currentTrack][var1.field2467]) {
-                    this.field2435[var1.currentTrack][var1.field2467] = null;
+                if (var1.loopVariable > 0 && var1 == this.musicPatchNode2[var1.currentTrack][var1.loopVariable]) {
+                    this.musicPatchNode2[var1.currentTrack][var1.loopVariable] = null;
                 }
             }
-
             return true;
         } else {
             return false;
@@ -747,10 +760,10 @@ public class MidiPcmStream extends PcmStream {
 
     boolean method3884(MusicPatchNode var1, int[] var2, int var3, int var4) {
         var1.field2453 = PcmPlayer.pcmPlayer_sampleRate / 100;
-        if (var1.field2459 < 0 || var1.stream != null && !var1.stream.method2671()) {
+        if (var1.sustainPedal < 0 || var1.stream != null && !var1.stream.method2671()) {
             int var5 = var1.field2455;
             if (var5 > 0) {
-                var5 -= (int)(16.0D * Math.pow(2.0D, (double)this.field2437[var1.currentTrack] * 4.921259842519685E-4D) + 0.5D);
+                var5 -= (int)(16.0D * Math.pow(2.0D, (double)this.portamento[var1.currentTrack] * 4.921259842519685E-4D) + 0.5D);
                 if (var5 < 0) {
                     var5 = 0;
                 }
@@ -788,14 +801,14 @@ public class MidiPcmStream extends PcmStream {
                 }
             }
 
-            if (var1.field2459 >= 0 && var6.field2398 != null && (this.field2428[var1.currentTrack] & 1) == 0 && (var1.field2467 < 0 || var1 != this.field2435[var1.currentTrack][var1.field2467])) {
+            if (var1.sustainPedal >= 0 && var6.field2398 != null && (this.sustain[var1.currentTrack] & 1) == 0 && (var1.loopVariable < 0 || var1 != this.musicPatchNode2[var1.currentTrack][var1.loopVariable])) {
                 if (var6.vibratoLFODelay > 0) {
-                    var1.field2459 += (int)(128.0D * Math.pow(2.0D, (double)var6.vibratoLFODelay * var8) + 0.5D);
+                    var1.sustainPedal += (int)(128.0D * Math.pow(2.0D, (double)var6.vibratoLFODelay * var8) + 0.5D);
                 } else {
-                    var1.field2459 += 128;
+                    var1.sustainPedal += 128;
                 }
 
-                while (var1.field2448 < var6.field2398.length - 2 && var1.field2459 > (var6.field2398[var1.field2448 + 2] & 255) << 8) {
+                while (var1.field2448 < var6.field2398.length - 2 && var1.sustainPedal > (var6.field2398[var1.field2448 + 2] & 255) << 8) {
                     var1.field2448 += 2;
                 }
 
@@ -817,10 +830,10 @@ public class MidiPcmStream extends PcmStream {
                 }
 
                 var1.clearMusicPatchNode();
-                if (var1.field2459 >= 0) {
+                if (var1.sustainPedal >= 0) {
                     var1.remove();
-                    if (var1.field2467 > 0 && var1 == this.field2435[var1.currentTrack][var1.field2467]) {
-                        this.field2435[var1.currentTrack][var1.field2467] = null;
+                    if (var1.loopVariable > 0 && var1 == this.musicPatchNode2[var1.currentTrack][var1.loopVariable]) {
+                        this.musicPatchNode2[var1.currentTrack][var1.loopVariable] = null;
                     }
                 }
 
@@ -832,8 +845,8 @@ public class MidiPcmStream extends PcmStream {
         } else {
             var1.clearMusicPatchNode();
             var1.remove();
-            if (var1.field2467 > 0 && var1 == this.field2435[var1.currentTrack][var1.field2467]) {
-                this.field2435[var1.currentTrack][var1.field2467] = null;
+            if (var1.loopVariable > 0 && var1 == this.musicPatchNode2[var1.currentTrack][var1.loopVariable]) {
+                this.musicPatchNode2[var1.currentTrack][var1.loopVariable] = null;
             }
 
             return true;
@@ -881,4 +894,5 @@ public class MidiPcmStream extends PcmStream {
         }
 
     }
+
 }
