@@ -82,7 +82,6 @@ public class MusicSample extends Node {
          buffer.get(packetData, 0, size);
          this.packets[packet] = packetData;
       }
-
    }
 
    private void encode(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, int loopStart) {
@@ -99,17 +98,16 @@ public class MusicSample extends Node {
          dataOutputStream.writeInt(start);
          dataOutputStream.writeInt(end);
 
-         int segments = sampleCount / 1000;
-
          ByteBuffer byteBuffer = ByteBuffer.wrap(audioInputStream.readAllBytes());
 
          int position = 0;
-         while (byteBuffer.hasRemaining()) {
-            byte bytes = byteBuffer.get();
-            byteArrayOutputStream.write(bytes & 0xFF);
+         for (int index = 0; index < sampleCount; index += 8) {
+            byte bit = (byte) ((byte) (byteBuffer.getFloat()) >> 8);
+            byteArrayOutputStream.write(bit);
+            position++;
          }
 
-         dataOutputStream.writeInt(segments);
+         dataOutputStream.writeInt(position);
          dataOutputStream.write(byteArrayOutputStream.toByteArray());
 
       } catch (IOException e) {

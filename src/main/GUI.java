@@ -163,6 +163,7 @@ public class GUI {
 			utilityMenu.add("Test MIDI with selected SoundBank").addActionListener(new SoundBankSongTester());
 			utilityMenu.add("Test MIDI with a custom SoundBank").addActionListener(new CustomSoundBankSongTester());
 			utilityMenu.add("Write song to file using SoundBank").addActionListener(new SoundBankSongDumper());
+			utilityMenu.add("Test MIDI Port with selected SoundBank").addActionListener(new MidiPortTester());
 			utilityMenu.add("Batch Convert with SoundBank").addActionListener(new BatchConverter());
 			utilityMenu.add("Encode Data - Soundbank Sample...").addActionListener(new SoundBankEncoder());
 
@@ -2905,59 +2906,49 @@ public class GUI {
 		}
 	}
 
-	private class RandomMidiGenerator implements ActionListener {
+	private class MidiPortTester implements ActionListener {
 
-		private String mood = "Default";
-
-		private int noteC = 0;
-		private int noteCSharp = 1;
-		private int noteD = 2;
-		private int noteDSharp = 3;
-		private int noteE = 4;
-		private int noteF = 5;
-		private int noteFSharp = 6;
-		private int noteG = 7;
-		private int noteGSharp = 8;
-		private int noteA = 9;
-		private int noteASharp = 10;
-		private int noteB = 11;
-
-		private int[] octaves = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-
-		private int[] baseCNotes = new int[]{0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120};
-
-		private int[] cMajorScale = new int[]{noteC, noteD, noteE, noteF, noteG, noteA, noteB};
-
-		private int[] cMinorScale = new int[]{noteC, noteD, noteDSharp, noteF, noteG, noteGSharp, noteASharp};
+		private MidiDevice midiDevice;
+		private byte[] transmittedMidi;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
+			Index soundEffectIndex = cacheLibrary.getIndex(4);
 			Index musicIndex = cacheLibrary.getIndex(6);
-			Index patchIndex = cacheLibrary.getIndex(15);
+			Index soundBankIndex = cacheLibrary.getIndex(14);
+			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
-			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+			MusicPatch.localSoundBankSamples = new File("./Sounds/Sound Bank Samples/");
+			MusicPatch.localSoundBankPatches = new File("./Sounds/Sound Bank Patches/");
+			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
+
+			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
+			midiPcmStream = new MidiPcmStream();
+
+			PcmPlayer.pcmPlayer_stereo = true;
 
 			ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
-			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-			Sequence midiSeq;
-			try {
-				midiSeq = new Sequence(Sequence.PPQ, 960);
-				MidiSystem.write(generateSong(midiSeq, mood), 1, byteArrayOutputStream);
-
-			} catch (InvalidMidiDataException | IOException ex) {
-				ex.printStackTrace();
-			}
 
 			MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-			MidiTrack.midi = byteArrayOutputStream.toByteArray();
-			MidiTrack.loadMidiTrackInfo();
+			midiTrack.midi = null;
 
-			MidiPcmStream midiPcmStream = new MidiPcmStream();
-			midiPcmStream.init(9, 128);
-			midiPcmStream.setMusicTrack(midiTrack, false);
-			midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
+			MidiDevice.Info[] midiDeviceInfos = MidiSystem.getMidiDeviceInfo();
+
+			for (MidiDevice.Info info : midiDeviceInfos) {
+				System.out.println("Available: " + info.getName());
+				if (info.getName().contains("FluidSynth")) {
+					try {
+						if (midiDevice == null) {
+							midiDevice = MidiSystem.getMidiDevice(info);
+							midiDevice.open();
+							System.out.println("FluidSynth Port opened!");
+						}
+					} catch (MidiUnavailableException midiUnavailableException) {
+						midiUnavailableException.printStackTrace();
+					}
+				}
+			}
 
 			SoundPlayer soundPlayer = new SoundPlayer();
 			soundPlayer.setStream(midiPcmStream);
@@ -2966,148 +2957,51 @@ public class GUI {
 			soundPlayer.init();
 			soundPlayer.open(soundPlayer.capacity);
 
-			while (midiPcmStream.active) {
-				soundPlayer.fill(soundPlayer.samples, 256);
-				soundPlayer.write();
-
-				if (midiPcmStream.midiFile.isDone()) {
-					break;
-				}
-			}
-		}
-
-		private Sequence generateSong(Sequence midiSeq, String mood) {
-			switch (mood) {
-				case "Default":
-					midiSeq = generateDefaultMood(midiSeq);
-			}
-			return midiSeq;
-		}
-
-		private Sequence generateDefaultMood(Sequence midiSeq) {
-			return midiSeq;
-		}
-	}
-
-	private class MidiTransposer implements ActionListener {
-
-		private String desiredMood = "Happy";
-		private String determinedKey = "Cm";
-
-		private int noteC = 0;
-		private int noteCSharp = 1;
-		private int noteD = 2;
-		private int noteDSharp = 3;
-		private int noteE = 4;
-		private int noteF = 5;
-		private int noteFSharp = 6;
-		private int noteG = 7;
-		private int noteGSharp = 8;
-		private int noteA = 9;
-		private int noteASharp = 10;
-		private int noteB = 11;
-
-		private int[] baseCNotes = new int[]{0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120};
-
-		private int[] cMajorScale = new int[]{noteC, noteD, noteE, noteF, noteG, noteA, noteB};
-
-		private int[] cMinorScale = new int[]{noteC, noteD, noteDSharp, noteF, noteG, noteGSharp, noteASharp};
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-
-			Index musicIndex = cacheLibrary.getIndex(6);
-			Index patchIndex = cacheLibrary.getIndex(15);
-
-			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
-			midiPcmStream = new MidiPcmStream();
+			MidiFileReceiver midiFileReceiver = new MidiFileReceiver();
 
 			try {
+				sequencer = MidiSystem.getSequencer(false);
+				sequencer.open();
+			} catch (MidiUnavailableException midiUnavailableException) {
+				midiUnavailableException.printStackTrace();
+			}
 
-				PcmPlayer.pcmPlayer_stereo = true;
+			Thread midiThread = new Thread(() -> {
 
-				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+				if (midiDevice != null) {
 
-				Sequence midiSeq = MidiSystem.getSequence(midiFile);
-				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-				MidiSystem.write(transposeSong(midiSeq, desiredMood), 1, byteArrayOutputStream);
+					while (midiDevice != null) {
 
-				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-				MidiTrack.midi = byteArrayOutputStream.toByteArray();
-				MidiTrack.loadMidiTrackInfo();
+						try {
 
-				midiPcmStream.init(9, 128);
-				midiPcmStream.setMusicTrack(midiTrack, loopMode);
-				midiPcmStream.setPcmStreamVolume(volume);
-				midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
+							sequencer.getTransmitter().setReceiver(midiDevice.getReceiver());
 
-				SoundPlayer soundPlayer = new SoundPlayer();
-				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[512];
-				soundPlayer.capacity = 16384;
-				soundPlayer.init();
-				soundPlayer.open(soundPlayer.capacity);
+							ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-				Thread songThread = new Thread(() -> {
-					while (midiPcmStream.active) {
+							if (sequencer.getSequence().getTracks().length > 0) {
+								MidiSystem.write(sequencer.getSequence(), 1, byteArrayOutputStream);
+							}
+
+							midiTrack.midi = byteArrayOutputStream.toByteArray();
+
+							if (midiTrack.midi.length > 0) {
+
+								midiPcmStream.init(9, 128);
+								midiPcmStream.setMusicTrack(midiTrack, false);
+								midiPcmStream.setPcmStreamVolume(volume);
+								midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
+							}
+
+						} catch (IOException | MidiUnavailableException exception) {
+							exception.printStackTrace();
+						}
+
 						soundPlayer.fill(soundPlayer.samples, 256);
 						soundPlayer.write();
-						if (midiPcmStream.midiFile.isDone()) {
-							break;
-						}
-					}
-				});
-
-				songThread.start();
-			} catch (IOException | InvalidMidiDataException ex) {
-				ex.printStackTrace();
-			}
-		}
-
-		private Sequence transposeSong(Sequence midiSeq, String mood) throws InvalidMidiDataException {
-			switch (mood) {
-				case "Happy":
-					midiSeq = transposeHappyMood(midiSeq);
-			}
-			return midiSeq;
-		}
-
-		private Sequence transposeHappyMood(Sequence midiSeq) throws InvalidMidiDataException {
-			for (Track track : midiSeq.getTracks()) {
-				for (int event = 0; event < track.size(); event++) {
-					MidiEvent midiEvent = track.get(event);
-					MidiMessage midiMessage = midiEvent.getMessage();
-					if (midiMessage instanceof ShortMessage) {
-						ShortMessage shortMessage = (ShortMessage) midiMessage;
-
-						if (shortMessage.getCommand() == ShortMessage.NOTE_ON) {
-							int noteValue = shortMessage.getData1();
-							for (int keys = 0; keys < cMinorScale.length; keys++) {
-								for (int octaves = 0; octaves < baseCNotes.length; octaves++) {
-									if (baseCNotes[octaves] * keys == noteValue) {
-										noteValue++;
-										shortMessage.setMessage(shortMessage.getCommand(), shortMessage.getChannel(), noteValue, shortMessage.getData2());
-									}
-								}
-							}
-						}
-
-						if (shortMessage.getCommand() == ShortMessage.NOTE_OFF) {
-							int noteValue = shortMessage.getData1();
-							for (int keys = 0; keys < cMinorScale.length; keys++) {
-								for (int octaveKeys = 0; octaveKeys < baseCNotes.length; octaveKeys++) {
-									if (keys * octaveKeys == noteValue) {
-										noteValue = baseCNotes[octaveKeys] - keys;
-										System.out.println(noteValue);
-										shortMessage.setMessage(shortMessage.getCommand(), shortMessage.getChannel(), noteValue, shortMessage.getData2());
-									}
-								}
-							}
-						}
 					}
 				}
-			}
-			return midiSeq;
+			});
+			midiThread.start();
 		}
 	}
 }
