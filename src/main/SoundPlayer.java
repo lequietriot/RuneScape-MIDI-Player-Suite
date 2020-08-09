@@ -77,6 +77,26 @@ public class SoundPlayer extends PcmPlayer {
          }
     }
 
+    public void writeCustom() {
+        int var1 = 256;
+        if(pcmPlayer_stereo) {
+            var1 <<= 1;
+        }
+
+        for(int var2 = 0; var2 < var1; ++var2) {
+            int var3 = super.samples[var2] ^ Short.MAX_VALUE;
+
+            this.byteSamples[var2 * 2] = (byte) (var3 >> 8);
+            this.byteSamples[var2 * 2 + 1] = (byte) (var3 >> 16);
+        }
+
+        for (int index = 0; index < this.byteSamples.length; index++) {
+            this.byteSamples[index] = (byte) (this.byteSamples[index] >> 1);
+        }
+
+        this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);
+    }
+
     public void close() {
         if(this.sourceDataLine != null) {
             this.sourceDataLine.close();

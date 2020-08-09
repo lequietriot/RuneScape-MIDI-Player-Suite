@@ -37,5 +37,5 @@ Setup instructions (Official SoundBank):
 Yes, go ahead and experiment with the soundbank dumping and packing, you can mix old with new or vice versa!
 
 # To do list (Ideas)
-- Sound tools (Sound Effects, Sound Bank...)
+- Sound Encoding tools (Sound Effects, Sound Bank...)
 - Automatic soundfont creating from cache

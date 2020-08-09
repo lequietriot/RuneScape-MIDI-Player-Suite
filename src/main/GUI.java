@@ -18,9 +18,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class GUI implements ControllerEventListener {
+public class GUI {
 	
 	private File midiFile;
 	private File soundsetFile;
@@ -38,19 +40,9 @@ public class GUI implements ControllerEventListener {
 
 	private Sequence sequence;
 
-	private Sequencer sequencer1;
-	private Sequencer sequencer2;
-	private Sequencer sequencer3;
-	private Sequencer sequencer4;
-	private Sequencer sequencer5;
-	private Sequencer sequencer6;
+	private Sequencer sequencer;
 
-	private Synthesizer synth1;
-	private Synthesizer synth2;
-	private Synthesizer synth3;
-	private Synthesizer synth4;
-	private Synthesizer synth5;
-	private Synthesizer synth6;
+	private Synthesizer synthesizer;
 
 	private Sequence sequenceFixed;
 
@@ -91,10 +83,15 @@ public class GUI implements ControllerEventListener {
 	private int retriggerValue;
 
 	private JTextPane volumeInfo;
+	private JTextPane sampleRateInfo;
 	private int volume = 256;
 
 	private boolean loopMode = false;
 	private MidiPcmStream midiPcmStream;
+
+	private MidiDevice externalDevice;
+	private Transmitter transmitter;
+	private Receiver receiver;
 
 	GUI() throws IOException {
 
@@ -135,8 +132,8 @@ public class GUI implements ControllerEventListener {
 			preferencesMenu.setSize(100, 20);
 			preferencesMenu.setVisible(true);
 
-			preferencesMenu.add("SoundBank - Audio Settings").addActionListener(new SoundBankSettings());
 			preferencesMenu.add("Set Default SoundFont").addActionListener(new DefaultSoundFontSetter());
+			preferencesMenu.add("SoundBank - Audio Settings").addActionListener(new SoundBankSettings());
 
 			utilityMenu = new JMenu();
 			utilityMenu.setText("Tools");
@@ -167,7 +164,7 @@ public class GUI implements ControllerEventListener {
 			utilityMenu.add("Test MIDI with a custom SoundBank").addActionListener(new CustomSoundBankSongTester());
 			utilityMenu.add("Write song to file using SoundBank").addActionListener(new SoundBankSongDumper());
 			utilityMenu.add("Batch Convert with SoundBank").addActionListener(new BatchConverter());
-			//utilityMenu.add("Encode Data - Soundbank Sample...").addActionListener(new SoundBankEncoder());
+			utilityMenu.add("Encode Data - Soundbank Sample...").addActionListener(new SoundBankEncoder());
 
 			playlistMenu = new JMenu();
 			playlistMenu.setText("Playlist");
@@ -274,6 +271,7 @@ public class GUI implements ControllerEventListener {
 		songSlider = new JSlider();
 		songSliderInfo = new JTextPane();
 		volumeInfo = new JTextPane();
+		sampleRateInfo = new JTextPane();
 		
 		if (midiFile == null) {
 			songSlider.setEnabled(false);
@@ -296,12 +294,21 @@ public class GUI implements ControllerEventListener {
 
 		volumeInfo.setBackground(Color.LIGHT_GRAY);
 		volumeInfo.setSelectedTextColor(Color.BLACK);
-		volumeInfo.setText("Sound Bank Volume is: " + volume + " (" + ((volume / 256) * 100) + "%)");
+		volumeInfo.setText("Sound Bank Volume is: " + volume + " (" + ((volume / 256) * 100) + "%) |");
 		volumeInfo.setEnabled(true);
 		volumeInfo.setEditable(false);
 		volumeInfo.setVisible(true);
 		volumeInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
 		volumeInfo.setAlignmentY(Component.BOTTOM_ALIGNMENT);
+
+		sampleRateInfo.setBackground(Color.LIGHT_GRAY);
+		sampleRateInfo.setSelectedTextColor(Color.BLACK);
+		sampleRateInfo.setText("Sample Rate is: " + PcmPlayer.pcmPlayer_sampleRate);
+		sampleRateInfo.setEnabled(true);
+		sampleRateInfo.setEditable(false);
+		sampleRateInfo.setVisible(true);
+		sampleRateInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
+		sampleRateInfo.setAlignmentY(Component.BOTTOM_ALIGNMENT);
 
 		songPanel.add(songSliderInfo);
 		songPanel.setBackground(Color.LIGHT_GRAY);
@@ -328,6 +335,7 @@ public class GUI implements ControllerEventListener {
 		infoPanel.setLocation(0, 120);
 		infoPanel.setBackground(Color.LIGHT_GRAY);
 		infoPanel.add(volumeInfo);
+		infoPanel.add(sampleRateInfo);
 
 		frame.add(infoPanel);
 		frame.add(buttonsPanel);
@@ -344,59 +352,51 @@ public class GUI implements ControllerEventListener {
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
 			soundsetFile = chooseSf2.getSelectedFile();
 			defaultSoundfontPath = chooseSf2.getSelectedFile().getPath();
-			try {
-				initSynthesizers();
-			} catch (MidiUnavailableException | InvalidMidiDataException | IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
 	private void initSynthesizers() throws MidiUnavailableException, InvalidMidiDataException, IOException {
 
-		System.out.println("Initializing Synthesizers, please wait...");
+		/**
+		 System.out.println("Initializing Synthesizers, please wait...");
 
-		synth1 = MidiSystem.getSynthesizer();
-		synth1.open();
-		synth1.unloadAllInstruments(synth1.getDefaultSoundbank());
-		synth1.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		 if (synthesizers == null) {
+		 synthesizers = new Synthesizer[MidiSystem.getSequence(midiFile).getTracks().length];
+		 }
 
-		System.out.println("Loaded Synthesizer 1!");
+		 for (int synth = 0; synth < MidiSystem.getSequence(midiFile).getTracks().length; synth++) {
 
-		synth2 = MidiSystem.getSynthesizer();
-		synth2.open();
-		synth2.unloadAllInstruments(synth2.getDefaultSoundbank());
-		synth2.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		 synthesizers[synth] = MidiSystem.getSynthesizer();
+		 synthesizers[synth].open();
+		 Synthesizers[synth].unloadAllInstruments(synthesizers[synth].getDefaultSoundbank());
+		 synthesizers[synth].loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		 System.out.println("Loaded Synthesizer #" + synth + "!");
+		 }
+		 **/
 
-		System.out.println("Loaded Synthesizer 2!");
+		MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
 
-		synth3 = MidiSystem.getSynthesizer();
-		synth3.open();
-		synth3.unloadAllInstruments(synth3.getDefaultSoundbank());
-		synth3.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+		for (MidiDevice.Info info : infos) {
 
-		System.out.println("Loaded Synthesizer 3!");
+			MidiDevice midiDevice = MidiSystem.getMidiDevice(info);
 
-		synth4 = MidiSystem.getSynthesizer();
-		synth4.open();
-		synth4.unloadAllInstruments(synth4.getDefaultSoundbank());
-		synth4.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+			if (midiDevice.getDeviceInfo().getName().contains("Bus 1")) {
 
-		System.out.println("Loaded Synthesizer 4!");
+				if (transmitter == null) {
+					transmitter = MidiSystem.getTransmitter();
+					externalDevice = midiDevice;
+					externalDevice.open();
+				}
 
-		synth5 = MidiSystem.getSynthesizer();
-		synth5.open();
-		synth5.unloadAllInstruments(synth5.getDefaultSoundbank());
-		synth5.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+				if (receiver == null) {
+					receiver = midiDevice.getReceiver();
+				}
 
-		System.out.println("Loaded Synthesizer 5!");
-
-		synth6 = MidiSystem.getSynthesizer();
-		synth6.open();
-		synth6.unloadAllInstruments(synth6.getDefaultSoundbank());
-		synth6.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
-
-		System.out.println("Loaded Synthesizer 6!");
+				if (transmitter != null && receiver != null) {
+					MidiSystem.getTransmitter().setReceiver(receiver);
+				}
+			}
+		}
 	}
 
 	private void LoadMIDI(JFrame frame) throws MidiUnavailableException, InvalidMidiDataException, IOException {
@@ -408,25 +408,10 @@ public class GUI implements ControllerEventListener {
 		int returnValue = chooseMID.showOpenDialog(null);
 		if (returnValue == JFileChooser.APPROVE_OPTION) {
 			midiFile = chooseMID.getSelectedFile();
-			if (synth1 == null) {
-				initSynthesizers();
-			}
+			initSynthesizers();
 		}
 	}
 
-	@Override
-	public void controlChange(ShortMessage event) {
-		
-		if (!retriggerEffect) {
-
-			retriggerEffect = event.getData1() == 81 & event.getData2() >= 64;
-		}
-		
-		if (event.getData1() == 17 & retriggerEffect) {
-			retriggerValue = (int) (2097152.0D * Math.pow(2.0D, 5.4931640625E-4D * event.getData2()) + 0.5D);
-		}
-	}
-	
 	public class MIDILoader implements ActionListener {
 
 		@Override
@@ -511,807 +496,67 @@ public class GUI implements ControllerEventListener {
 		public void actionPerformed(ActionEvent e) {
 
 			try {
+				MidiLoader midiLoader = new MidiLoader(MidiSystem.getSoundbank(soundsetFile), MidiSystem.getSequence(midiFile).getTracks().length);
+				midiLoader.load(midiFile);
+			} catch (MidiUnavailableException | IOException | InvalidMidiDataException midiUnavailableException) {
+				midiUnavailableException.printStackTrace();
+			}
+			/**
+			try {
 				Thread.sleep(50);
 			} catch (InterruptedException ex) {
 				ex.printStackTrace();
 			}
 
-			if (sequencer1 == null) {
-				startButton.setEnabled(true);
-			}
-			
+			startButton.setEnabled(true);
+
 			try {
 
 				sequence = MidiSystem.getSequence(midiFile);
 
-				setupSequencers(sequence.getTracks().length);
-				setSequencerSolo(sequence.getTracks().length);
+				sequencer = MidiSystem.getSequencer(false);
+				sequencer.open();
+				sequencer.setSequence(sequence);
+				sequencer.getTransmitter().setReceiver(externalDevice.getReceiver());
 
-				if (!fixAttemptingOS) {
-					sequencer1.setSequence(sequence);
-					sequencer2.setSequence(sequence);
-					sequencer3.setSequence(sequence);
-					sequencer4.setSequence(sequence);
-					sequencer5.setSequence(sequence);
-					sequencer6.setSequence(sequence);
-
-					setSequencerSolo(sequence.getTracks().length);
-
-					if (loopMode) {
-						setLoop();
-					}
+				if (loopMode) {
+					setLoop();
 				}
-				
-				else {
-					sequencer1.setSequence(adjustForPlayOS(sequence));
-					sequencer2.setSequence(adjustForPlayOS(sequence));
-					sequencer3.setSequence(adjustForPlayOS(sequence));
-					sequencer4.setSequence(adjustForPlayOS(sequence));
-					sequencer5.setSequence(adjustForPlayOS(sequence));
-					sequencer6.setSequence(adjustForPlayOS(sequence));
 
-					setSequencerSolo(sequence.getTracks().length);
-
-					if (loopMode) {
-						setLoop();
-					}
-				}
-				
-				if (!fixAttemptingHD) {
-					sequencer1.setSequence(sequence);
-					sequencer2.setSequence(sequence);
-					sequencer3.setSequence(sequence);
-					sequencer4.setSequence(sequence);
-					sequencer5.setSequence(sequence);
-					sequencer6.setSequence(sequence);
-
-					setSequencerSolo(sequence.getTracks().length);
-
-					if (loopMode) {
-						setLoop();
-					}
-				}
-				
-				else {
-					sequencer1.setSequence(adjustForPlayHD(sequence));
-					sequencer2.setSequence(adjustForPlayHD(sequence));
-					sequencer3.setSequence(adjustForPlayHD(sequence));
-					sequencer4.setSequence(adjustForPlayHD(sequence));
-					sequencer5.setSequence(adjustForPlayHD(sequence));
-					sequencer6.setSequence(adjustForPlayHD(sequence));
-
-					setSequencerSolo(sequence.getTracks().length);
-
-					if (loopMode) {
-						setLoop();
-					}
-				}
-				
 				if (pausedTime == 0) {
-					sequencer1.start();
-					sequencer2.start();
-					sequencer3.start();
-					sequencer4.start();
-					sequencer5.start();
-					sequencer6.start();
 
-					if (sequencer1.isRunning()) {
+					sequencer.start();
+
+					if (sequencer.isRunning()) {
 						startButton.setEnabled(false);
 						pauseButton.setEnabled(true);
 					}
 				}
-				
+
 				else {
-					sequencer1.setMicrosecondPosition(pausedTime);
-					sequencer2.setMicrosecondPosition(pausedTime);
-					sequencer3.setMicrosecondPosition(pausedTime);
-					sequencer4.setMicrosecondPosition(pausedTime);
-					sequencer5.setMicrosecondPosition(pausedTime);
-					sequencer6.setMicrosecondPosition(pausedTime);
 
-					sequencer1.start();
-					sequencer2.start();
-					sequencer3.start();
-					sequencer4.start();
-					sequencer5.start();
-					sequencer6.start();
+					sequencer.setMicrosecondPosition(pausedTime);
+					sequencer.start();
 
-					if (sequencer1.isRunning()) {
+					if (sequencer.isRunning()) {
 						startButton.setEnabled(false);
 						pauseButton.setEnabled(true);
 					}
 				}
 
-				if (sequencer1.isRunning()) {
+				if (sequencer.isRunning()) {
 					Timer timer = new Timer(0, new TimerListener());
 					timer.start();
 				}
 			} catch (MidiUnavailableException | InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
 			}
-		}
-
-		private void setupSequencers(int length) throws MidiUnavailableException {
-
-			switch (length) {
-				case 0:
-					return;
-				case 1:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-				case 2:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-				case 3:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-				case 4:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-				case 5:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-				case 6:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-				case 7:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-				case 8:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-				case 9:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-				case 10:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-				case 11:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-				case 12:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-				case 13:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-				case 14:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-				case 15:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-				case 16:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-				case 17:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-					sequencer5 = MidiSystem.getSequencer(false);
-					sequencer5.open();
-					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-				case 18:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-					sequencer5 = MidiSystem.getSequencer(false);
-					sequencer5.open();
-					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-				case 19:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-					sequencer5 = MidiSystem.getSequencer(false);
-					sequencer5.open();
-					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-				case 20:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-					sequencer5 = MidiSystem.getSequencer(false);
-					sequencer5.open();
-					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-				case 21:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-					sequencer5 = MidiSystem.getSequencer(false);
-					sequencer5.open();
-					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-
-					sequencer6 = MidiSystem.getSequencer(false);
-					sequencer6.open();
-					sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
-				case 22:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-					sequencer5 = MidiSystem.getSequencer(false);
-					sequencer5.open();
-					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-
-					sequencer6 = MidiSystem.getSequencer(false);
-					sequencer6.open();
-					sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
-				case 23:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-					sequencer5 = MidiSystem.getSequencer(false);
-					sequencer5.open();
-					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-
-					sequencer6 = MidiSystem.getSequencer(false);
-					sequencer6.open();
-					sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
-				case 24:
-					sequencer1 = MidiSystem.getSequencer(false);
-					sequencer1.open();
-					sequencer1.getTransmitter().setReceiver(synth1.getReceiver());
-
-					sequencer2 = MidiSystem.getSequencer(false);
-					sequencer2.open();
-					sequencer2.getTransmitter().setReceiver(synth2.getReceiver());
-
-					sequencer3 = MidiSystem.getSequencer(false);
-					sequencer3.open();
-					sequencer3.getTransmitter().setReceiver(synth3.getReceiver());
-
-					sequencer4 = MidiSystem.getSequencer(false);
-					sequencer4.open();
-					sequencer4.getTransmitter().setReceiver(synth4.getReceiver());
-
-					sequencer5 = MidiSystem.getSequencer(false);
-					sequencer5.open();
-					sequencer5.getTransmitter().setReceiver(synth5.getReceiver());
-
-					sequencer6 = MidiSystem.getSequencer(false);
-					sequencer6.open();
-					sequencer6.getTransmitter().setReceiver(synth6.getReceiver());
-			}
-		}
-
-		private void setSequencerSolo(int trackCount) {
-
-			switch (trackCount) {
-				case 0:
-					System.out.println("Track count is 0 or invalid MIDI file.");
-				case 1:
-					sequencer1.setTrackSolo(0, true);
-				case 2:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-				case 3:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-				case 4:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-				case 5:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-				case 6:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-				case 7:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-				case 8:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-				case 9:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-				case 10:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-				case 11:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-				case 12:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-				case 13:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-				case 14:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-				case 15:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-				case 16:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-				case 17:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-					sequencer5.setTrackSolo(16, true);
-				case 18:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-					sequencer5.setTrackSolo(16, true);
-					sequencer5.setTrackSolo(17, true);
-				case 19:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-					sequencer5.setTrackSolo(16, true);
-					sequencer5.setTrackSolo(17, true);
-					sequencer5.setTrackSolo(18, true);
-				case 20:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-					sequencer5.setTrackSolo(16, true);
-					sequencer5.setTrackSolo(17, true);
-					sequencer5.setTrackSolo(18, true);
-					sequencer5.setTrackSolo(19, true);
-				case 21:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-					sequencer5.setTrackSolo(16, true);
-					sequencer5.setTrackSolo(17, true);
-					sequencer5.setTrackSolo(18, true);
-					sequencer5.setTrackSolo(19, true);
-					sequencer6.setTrackSolo(20, true);
-				case 22:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-					sequencer5.setTrackSolo(16, true);
-					sequencer5.setTrackSolo(17, true);
-					sequencer5.setTrackSolo(18, true);
-					sequencer5.setTrackSolo(19, true);
-					sequencer6.setTrackSolo(20, true);
-					sequencer6.setTrackSolo(21, true);
-				case 23:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-					sequencer5.setTrackSolo(16, true);
-					sequencer5.setTrackSolo(17, true);
-					sequencer5.setTrackSolo(18, true);
-					sequencer5.setTrackSolo(19, true);
-					sequencer6.setTrackSolo(20, true);
-					sequencer6.setTrackSolo(21, true);
-					sequencer6.setTrackSolo(22, true);
-				case 24:
-					sequencer1.setTrackSolo(0, true);
-					sequencer1.setTrackSolo(1, true);
-					sequencer1.setTrackSolo(2, true);
-					sequencer1.setTrackSolo(3, true);
-					sequencer2.setTrackSolo(4, true);
-					sequencer2.setTrackSolo(5, true);
-					sequencer2.setTrackSolo(6, true);
-					sequencer2.setTrackSolo(7, true);
-					sequencer3.setTrackSolo(8, true);
-					sequencer3.setTrackSolo(9, true);
-					sequencer3.setTrackSolo(10, true);
-					sequencer3.setTrackSolo(11, true);
-					sequencer4.setTrackSolo(12, true);
-					sequencer4.setTrackSolo(13, true);
-					sequencer4.setTrackSolo(14, true);
-					sequencer4.setTrackSolo(15, true);
-					sequencer5.setTrackSolo(16, true);
-					sequencer5.setTrackSolo(17, true);
-					sequencer5.setTrackSolo(18, true);
-					sequencer5.setTrackSolo(19, true);
-					sequencer6.setTrackSolo(20, true);
-					sequencer6.setTrackSolo(21, true);
-					sequencer6.setTrackSolo(22, true);
-					sequencer6.setTrackSolo(23, true);
-			}
+			 **/
 		}
 
 		void setLoop() {
 
 			loopMarker = new StringBuilder();
-
-			int trackCount = sequence.getTracks().length;
 
 			for (Track track : sequence.getTracks()) {
 				for (int index = 0; index < track.size(); index++) {
@@ -1355,333 +600,9 @@ public class GUI implements ControllerEventListener {
 					}
 				}
 
-				if (trackCount == 0) {
-					return;
-				}
-
-				if (trackCount == 1) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 2) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 3) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 4) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 5) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 6) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 7) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 8) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 9) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 10) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 11) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 12) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 13) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 14) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 15) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 16) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 17) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer5.setLoopStartPoint(loopStart);
-					sequencer5.setLoopEndPoint(loopEnd);
-					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 18) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer5.setLoopStartPoint(loopStart);
-					sequencer5.setLoopEndPoint(loopEnd);
-					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 19) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer5.setLoopStartPoint(loopStart);
-					sequencer5.setLoopEndPoint(loopEnd);
-					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 20) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer5.setLoopStartPoint(loopStart);
-					sequencer5.setLoopEndPoint(loopEnd);
-					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 21) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer5.setLoopStartPoint(loopStart);
-					sequencer5.setLoopEndPoint(loopEnd);
-					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer6.setLoopStartPoint(loopStart);
-					sequencer6.setLoopEndPoint(loopEnd);
-					sequencer6.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 22) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer5.setLoopStartPoint(loopStart);
-					sequencer5.setLoopEndPoint(loopEnd);
-					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer6.setLoopStartPoint(loopStart);
-					sequencer6.setLoopEndPoint(loopEnd);
-					sequencer6.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 23) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer5.setLoopStartPoint(loopStart);
-					sequencer5.setLoopEndPoint(loopEnd);
-					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer6.setLoopStartPoint(loopStart);
-					sequencer6.setLoopEndPoint(loopEnd);
-					sequencer6.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
-
-				if (trackCount == 24) {
-					sequencer1.setLoopStartPoint(loopStart);
-					sequencer1.setLoopEndPoint(loopEnd);
-					sequencer1.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer2.setLoopStartPoint(loopStart);
-					sequencer2.setLoopEndPoint(loopEnd);
-					sequencer2.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer3.setLoopStartPoint(loopStart);
-					sequencer3.setLoopEndPoint(loopEnd);
-					sequencer3.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer4.setLoopStartPoint(loopStart);
-					sequencer4.setLoopEndPoint(loopEnd);
-					sequencer4.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer5.setLoopStartPoint(loopStart);
-					sequencer5.setLoopEndPoint(loopEnd);
-					sequencer5.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-					sequencer6.setLoopStartPoint(loopStart);
-					sequencer6.setLoopEndPoint(loopEnd);
-					sequencer6.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-				}
+				sequencer.setLoopStartPoint(loopStart);
+				sequencer.setLoopEndPoint(loopEnd);
+				sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
 			}
 		}
 
@@ -1935,23 +856,19 @@ public class GUI implements ControllerEventListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			pausedTime = sequencer1.getMicrosecondPosition();
-			sequencer1.stop();
-			sequencer2.stop();
-			sequencer3.stop();
-			sequencer4.stop();
-			sequencer5.stop();
-			sequencer6.stop();
+			pausedTime = sequencer.getMicrosecondPosition();
+
+			sequencer.stop();
 			
 			if (pausedTime != 0) {
 				pauseButton.setEnabled(false);
 			}
 			
-			if (!sequencer1.isRunning()) {
+			if (!sequencer.isRunning()) {
 				startButton.setEnabled(true);
 			}
 			
-			if (!sequencer1.isRunning()) {
+			if (!sequencer.isRunning()) {
 				Timer timer = new Timer(0, new TimerListener());
 				timer.stop();
 			}
@@ -1963,19 +880,15 @@ public class GUI implements ControllerEventListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			pausedTime = 0;
-			sequencer1.stop();
-			sequencer2.stop();
-			sequencer3.stop();
-			sequencer4.stop();
-			sequencer5.stop();
-			sequencer6.stop();
+
+			sequencer.stop();
 			
-			if (!sequencer1.isRunning()) {
+			if (!sequencer.isRunning()) {
 				pauseButton.setEnabled(true);
 				startButton.setEnabled(true);
 			}
 			
-			if (!sequencer1.isRunning()) {
+			if (!sequencer.isRunning()) {
 				Timer timer = new Timer(100, new TimerListener());
 				timer.stop();
 				songSlider.setValue(0);
@@ -2002,7 +915,7 @@ public class GUI implements ControllerEventListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			int position = (int) (sequencer1.getMicrosecondPosition() / 1000000);
+			int position = (int) (sequencer.getMicrosecondPosition() / 1000000);
 			songSlider.setValue(position);
 		}
 	}
@@ -3330,55 +2243,55 @@ public class GUI implements ControllerEventListener {
 			Index musicIndex = cacheLibrary.getIndex(6);
 			Index patchIndex = cacheLibrary.getIndex(15);
 
-			int program = 0;
 			int bank = 0;
-			int notePitch = 36;
+			int program = 60;
 
-			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+			for (int notePitch = 0; notePitch < 128; notePitch++) {
 
-			ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
-			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+				SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
 
-			Sequence midiSeq;
-			try {
-				midiSeq = new Sequence(Sequence.PPQ, 960);
-				ShortMessage programChangeMsg = new ShortMessage();
-				ShortMessage noteOnMessage = new ShortMessage();
-				ShortMessage noteOffMessage = new ShortMessage();
-				ShortMessage bankMSBMessage = new ShortMessage();
-				ShortMessage bankLSBMessage = new ShortMessage();
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-				programChangeMsg.setMessage(ShortMessage.PROGRAM_CHANGE, 0, program, 0);
-				bankMSBMessage.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 0);
-				bankLSBMessage.setMessage(ShortMessage.CONTROL_CHANGE, 0, 32, bank);
-				noteOnMessage.setMessage(ShortMessage.NOTE_ON, 0, notePitch, 127);
-				noteOffMessage.setMessage(ShortMessage.NOTE_OFF, 0, notePitch, 127);
+				Sequence midiSeq;
+				try {
+					midiSeq = new Sequence(Sequence.PPQ, 960);
+					ShortMessage programChangeMsg = new ShortMessage();
+					ShortMessage noteOnMessage = new ShortMessage();
+					ShortMessage noteOffMessage = new ShortMessage();
+					ShortMessage bankMSBMessage = new ShortMessage();
+					ShortMessage bankLSBMessage = new ShortMessage();
 
-				midiSeq.createTrack().add(new MidiEvent(programChangeMsg, 2));
-				midiSeq.getTracks()[0].add(new MidiEvent(bankLSBMessage, 1));
-				midiSeq.getTracks()[0].add(new MidiEvent(bankMSBMessage, 1));
-				midiSeq.getTracks()[0].add(new MidiEvent(noteOnMessage, 3));
-				midiSeq.getTracks()[0].add(new MidiEvent(noteOffMessage, 240));
-				MidiSystem.write(midiSeq, 1, byteArrayOutputStream);
+					programChangeMsg.setMessage(ShortMessage.PROGRAM_CHANGE, 0, program, 0);
+					bankMSBMessage.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 0);
+					bankLSBMessage.setMessage(ShortMessage.CONTROL_CHANGE, 0, 32, bank);
+					noteOnMessage.setMessage(ShortMessage.NOTE_ON, 0, notePitch, 127);
+					noteOffMessage.setMessage(ShortMessage.NOTE_OFF, 0, notePitch, 127);
 
-			} catch (InvalidMidiDataException | IOException ex) {
-				ex.printStackTrace();
-			}
+					midiSeq.createTrack().add(new MidiEvent(programChangeMsg, 2));
+					midiSeq.getTracks()[0].add(new MidiEvent(bankLSBMessage, 1));
+					midiSeq.getTracks()[0].add(new MidiEvent(bankMSBMessage, 0));
+					midiSeq.getTracks()[0].add(new MidiEvent(noteOnMessage, 3));
+					midiSeq.getTracks()[0].add(new MidiEvent(noteOffMessage, 9003));
+					midiSeq.getTracks()[0].add(new MidiEvent(programChangeMsg, 20000));
+					MidiSystem.write(midiSeq, 1, byteArrayOutputStream);
 
-			MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-			MidiTrack.midi = byteArrayOutputStream.toByteArray();
-			MidiTrack.loadMidiTrackInfo();
+				} catch (InvalidMidiDataException | IOException ex) {
+					ex.printStackTrace();
+				}
 
-			MidiPcmStream midiPcmStream = new MidiPcmStream();
-			midiPcmStream.initDrumKits(9, 128);
-			midiPcmStream.setMusicTrack(midiTrack, false);
-			midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				MidiTrack.midi = byteArrayOutputStream.toByteArray();
+				MidiTrack.loadMidiTrackInfo();
 
-			MakeSoundFont makeSoundFont = new MakeSoundFont();
-			try {
-				makeSoundFont.createSoundFont(midiPcmStream);
-			} catch (IOException ex) {
-				ex.printStackTrace();
+				MidiPcmStream midiPcmStream = new MidiPcmStream();
+				midiPcmStream.init(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, false);
+				midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
+
+				MakeSoundFont makeSoundFont = new MakeSoundFont();
+				makeSoundFont.saveSoundResource(midiPcmStream, bank, program, notePitch);
+				//makeSoundFont.createSoundFont(midiPcmStream, bank, program);
 			}
 		}
 	}
@@ -3405,26 +2318,19 @@ public class GUI implements ControllerEventListener {
 	private class TestButtonListener implements ActionListener {
 
 		AudioFormat audioFormat;
-		SourceDataLine sourceDataLine;
 		int trackCount;
-		byte[] bytes;
-		byte[] combinedBytes;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			audioFormat = new AudioFormat(48000, 16, 2, true, false);
+			audioFormat = new AudioFormat(44100, 16, 2, true, false);
 
 			try {
-				DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
-				sourceDataLine = (SourceDataLine) AudioSystem.getLine(info);
-				sourceDataLine.open();
-				sourceDataLine.start();
-
 				Sequencer sequencer = MidiSystem.getSequencer(false);
 				Sequence sequence = MidiSystem.getSequence(midiFile);
 				Soundbank soundbank = MidiSystem.getSoundbank(soundsetFile);
 
+				sequencer.open();
 				sequencer.setSequence(sequence);
 				trackCount = sequence.getTracks().length;
 
@@ -3432,43 +2338,41 @@ public class GUI implements ControllerEventListener {
 
 				for (int track = 0; track < trackCount; track++) {
 
+					File file = new File("./Tracks/" + track + ".wav/");
+					FileOutputStream fileOutputStream = new FileOutputStream(file);
+
 					System.out.println("Rendering... Track " + track);
 
 					AudioSynthesizer audioSynthesizer = findAudioSynthesizer();
 
-					AudioInputStream audioInputStream = audioSynthesizer.openStream(audioFormat, null);
-
-					sequencer.getTransmitter().setReceiver(audioSynthesizer.getReceiver());
+					Map<String,Object> infoMap = new HashMap<>();
+					infoMap.put("resamplerType", "sinc");
+					infoMap.put("maxPolyphony", "1024");
+					AudioInputStream audioInputStream = audioSynthesizer.openStream(audioFormat, infoMap);
 
 					audioSynthesizer.unloadAllInstruments(audioSynthesizer.getDefaultSoundbank());
 					audioSynthesizer.loadAllInstruments(soundbank);
 
 					sequencer.setTrackSolo(track, true);
+					sequencer.getTransmitter().setReceiver(audioSynthesizer.getReceiver());
 
-					double total = send(sequence, audioSynthesizer.getReceiver());
+					Sequence soloTrack = new Sequence(sequence.getDivisionType(), sequence.getResolution());
+					Track soloedTrack = soloTrack.createTrack();
+
+					for (int index = 0; index < sequence.getTracks()[track].size(); index++) {
+						MidiEvent midiEvent = sequence.getTracks()[track].get(index);
+						soloedTrack.add(midiEvent);
+					}
+
+					double total = send(soloTrack, audioSynthesizer.getReceiver());
 
 					long length = (long) (audioInputStream.getFormat().getFrameRate() * (total + 4));
 					audioInputStream = new AudioInputStream(audioInputStream, audioInputStream.getFormat(), length);
-					bytes = audioInputStream.readAllBytes();
 
-					if (combinedBytes == null) {
-						combinedBytes = bytes;
-
-					} else {
-
-						for (int index = 0; index < bytes.length; index++) {
-							combinedBytes[index] = (byte) (combinedBytes[index] + bytes[index] >> 1);
-						}
-					}
+					AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, fileOutputStream);
 				}
 
-				File file = new File("./output.dat/");
-				FileOutputStream fileOutputStream = new FileOutputStream(file);
-				fileOutputStream.write(combinedBytes);
-
-				sourceDataLine.write(combinedBytes, 0, combinedBytes.length);
-
-			} catch (MidiUnavailableException | IOException | InvalidMidiDataException | LineUnavailableException exception) {
+			} catch (MidiUnavailableException | IOException | InvalidMidiDataException exception) {
 				exception.printStackTrace();
 			}
 		}
@@ -3555,6 +2459,7 @@ public class GUI implements ControllerEventListener {
 			MusicPatch.localSoundBankSamples = new File("./Sounds/Sound Bank Samples/");
 			MusicPatch.localSoundBankPatches = new File("./Sounds/Sound Bank Patches/");
 			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
+
 			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
@@ -3571,14 +2476,14 @@ public class GUI implements ControllerEventListener {
 				MidiTrack.midi = Files.readAllBytes(midiPath);
 				MidiTrack.loadMidiTrackInfo();
 
-				midiPcmStream.initDrumKits(9, 128);
+				midiPcmStream.init(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
 				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrackFiles(midiTrack, soundBankCache, MusicPatch.localSoundBankPatches, 0);
 
 				SoundPlayer soundPlayer = new SoundPlayer();
 				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[512];
+				soundPlayer.samples = new int[2048];
 				soundPlayer.capacity = 16384;
 				soundPlayer.init();
 				soundPlayer.open(soundPlayer.capacity);
@@ -3586,7 +2491,7 @@ public class GUI implements ControllerEventListener {
 				Thread songThread = new Thread(() -> {
 					while (midiPcmStream.active) {
 						soundPlayer.fill(soundPlayer.samples, 256);
-						soundPlayer.write();
+						soundPlayer.writeCustom();
 						if (midiPcmStream.midiFile.isDone()) {
 							break;
 						}
@@ -3628,7 +2533,7 @@ public class GUI implements ControllerEventListener {
 				MidiTrack.midi = Files.readAllBytes(path);
 				MidiTrack.loadMidiTrackInfo();
 
-				midiPcmStream.initDrumKits(9, 128);
+				midiPcmStream.init(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
 				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
@@ -3644,32 +2549,6 @@ public class GUI implements ControllerEventListener {
 					while (midiPcmStream.active) {
 						soundPlayer.fill(soundPlayer.samples, 256);
 						soundPlayer.write();
-
-						for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
-
-							//musicPatchNode.field2453 = 220;
-							//musicPatchNode.field2459 = 0;
-							//musicPatchNode.field2458 = 0;
-							//musicPatchNode.field2455 = 4096;
-
-							System.out.println();
-							//System.out.println("Patch #" + musicPatchNode.patch.key);
-							System.out.println("Current Track: " + musicPatchNode.currentTrack);
-							System.out.println("Sustain Pedal: " + musicPatchNode.sustainPedal);
-							System.out.println("Attenuation: " + musicPatchNode.attenuation);
-							System.out.println("field2449 (MIDI Tick Position?): " + musicPatchNode.field2449);
-							System.out.println("Fill buffer-related: " + musicPatchNode.loopVariable);
-							System.out.println("Current Note/Key (Ranges 0-127): " + musicPatchNode.currentNotePitch);
-							System.out.println("Pan Value (Ranges 0-127): " + musicPatchNode.currentPanValue);
-							System.out.println("field2453: " + musicPatchNode.field2453);
-							System.out.println("field2454: " + musicPatchNode.field2454);
-							System.out.println("Frequency Correction: " + musicPatchNode.frequencyCorrection);
-							System.out.println("field2455: " + musicPatchNode.field2455);
-							System.out.println("field2448: " + musicPatchNode.field2448);
-							System.out.println("field2462: " + musicPatchNode.field2462);
-							System.out.println("field2458: " + musicPatchNode.field2458);
-							System.out.println();
-						}
 
 						if (midiPcmStream.midiFile.isDone()) {
 							break;
@@ -3815,16 +2694,23 @@ public class GUI implements ControllerEventListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			File file = new File("./samples/1.wav/");
-
 			try {
-				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(file);
-				FileOutputStream fileOutputStream = new FileOutputStream(new File("./samples/1e.dat/"));
+
+				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./Test.wav/"));
+
+				FileOutputStream fileOutputStream = new FileOutputStream(new File("./Test.dat/"));
 				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
 
 				MusicSample musicSample = new MusicSample(audioInputStream, dataOutputStream, 0);
 
-			} catch (UnsupportedAudioFileException | IOException ex) {
+				Path path = Paths.get("./Test.dat/");
+
+				cacheLibrary.getIndex(14).getArchive(1).removeFile(0);
+				cacheLibrary.getIndex(14).addArchive(1).addFile(Files.readAllBytes(path));
+				cacheLibrary.getIndex(14).getArchive(1).getFile(0).setName(0);
+				cacheLibrary.getIndex(14).update();
+
+			} catch (IOException | UnsupportedAudioFileException ex) {
 				ex.printStackTrace();
 			}
 		}
@@ -3858,7 +2744,7 @@ public class GUI implements ControllerEventListener {
 				MidiTrack.midi = Files.readAllBytes(path);
 				MidiTrack.loadMidiTrackInfo();
 
-				midiPcmStream.initDrumKits(9, 128);
+				midiPcmStream.init(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
 				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
@@ -3936,6 +2822,7 @@ public class GUI implements ControllerEventListener {
 		private void checkForRateInput(JTextField sampleRateTextField) {
 			String sampleRateInput = sampleRateTextField.getText();
 			PcmPlayer.pcmPlayer_sampleRate = Integer.parseInt(sampleRateInput);
+			sampleRateInfo.setText("Sample Rate is: " + PcmPlayer.pcmPlayer_sampleRate);
 		}
 
 		private void checkForVolumeInput(JTextField volumeTextField) {
@@ -3968,50 +2855,50 @@ public class GUI implements ControllerEventListener {
 			midiPcmStream = new MidiPcmStream();
 			Path path = Paths.get(midiFile.toURI());
 
+			PcmPlayer.pcmPlayer_stereo = true;
+
+			ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+
+			MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+			try {
+				MidiTrack.midi = Files.readAllBytes(path);
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+			MidiTrack.loadMidiTrackInfo();
+
+			midiPcmStream.init(9, 128);
+			midiPcmStream.setMusicTrack(midiTrack, loopMode);
+			midiPcmStream.setPcmStreamVolume(volume);
+			midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
+
+			SoundPlayer soundPlayer = new SoundPlayer();
+			soundPlayer.setStream(midiPcmStream);
+			soundPlayer.samples = new int[512];
+			soundPlayer.capacity = 16384;
+			soundPlayer.init();
+			soundPlayer.open(soundPlayer.capacity);
+
+			while (midiPcmStream.active) {
+				soundPlayer.fill(soundPlayer.samples, 256);
+				soundPlayer.writeToBuffer();
+				if (midiPcmStream.midiFile.isDone()) {
+					break;
+				}
+			}
+
+			byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+
+			File outFile = new File("./MIDI Audio/" + midiFile.getName() + ".wav/");
+			File mp3File = new File("./MIDI Audio/" + midiFile.getName() + ".mp3/");
+			FileOutputStream fos;
+
 			try {
 
-				PcmPlayer.pcmPlayer_stereo = true;
-
-				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
-
-				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-				MidiTrack.midi = Files.readAllBytes(path);
-				MidiTrack.loadMidiTrackInfo();
-
-				midiPcmStream.initDrumKits(9, 128);
-				midiPcmStream.setMusicTrack(midiTrack, loopMode);
-				midiPcmStream.setPcmStreamVolume(volume);
-				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-
-				SoundPlayer soundPlayer = new SoundPlayer();
-				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[512];
-				soundPlayer.capacity = 16384;
-				soundPlayer.init();
-				soundPlayer.open(soundPlayer.capacity);
-
-				while (midiPcmStream.active) {
-					soundPlayer.fill(soundPlayer.samples, 256);
-					soundPlayer.writeToBuffer();
-					if (midiPcmStream.midiFile.isDone()) {
-						break;
-					}
-				}
-
-				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
-
-				File outFile = new File("./MIDI Audio/" + midiFile.getName() + ".wav/");
-				FileOutputStream fos;
-
-				try {
-
-					fos = new FileOutputStream(outFile);
-					AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
-					AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
-					AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
+				fos = new FileOutputStream(outFile);
+				AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+				AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+				AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
 			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
@@ -4068,7 +2955,7 @@ public class GUI implements ControllerEventListener {
 			MidiTrack.loadMidiTrackInfo();
 
 			MidiPcmStream midiPcmStream = new MidiPcmStream();
-			midiPcmStream.initDrumKits(9, 128);
+			midiPcmStream.init(9, 128);
 			midiPcmStream.setMusicTrack(midiTrack, false);
 			midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
 
@@ -4149,7 +3036,7 @@ public class GUI implements ControllerEventListener {
 				MidiTrack.midi = byteArrayOutputStream.toByteArray();
 				MidiTrack.loadMidiTrackInfo();
 
-				midiPcmStream.initDrumKits(9, 128);
+				midiPcmStream.init(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, loopMode);
 				midiPcmStream.setPcmStreamVolume(volume);
 				midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);

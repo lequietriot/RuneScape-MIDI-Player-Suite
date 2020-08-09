@@ -15,6 +15,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * MIDI File class from Jagex's custom MIDI Player Engine, refactored.
+ * @author Rodolfo Ruiz-Velasco (https://github.com/lequietriot)
+ * @author Vincent (MIDI Encoder, from Rune-Server)
+ */
 public class MidiTrack extends Node {
 
     private static final int NOTE_OFF = 0x80;
@@ -755,7 +760,6 @@ public class MidiTrack extends Node {
      *
      * @author Vincent
      */
-
     static void encode(File midiFile) throws InvalidMidiDataException, IOException {
 
         Sequence sequence = MidiSystem.getSequence(midiFile);
@@ -1663,7 +1667,7 @@ public class MidiTrack extends Node {
 
                     while (var7 == var4.trackLengths[var6]) {
                         var4.gotoTrack(var6);
-                        int var8 = var4.readMessage(var6);
+                        int var8 = var4.getMessage(var6);
                         if (var8 == 1) {
                             var4.setTrackDone();
                             var4.markTrackPosition(var6);

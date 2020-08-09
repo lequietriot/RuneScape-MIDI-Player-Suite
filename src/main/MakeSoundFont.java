@@ -2,21 +2,26 @@ package main;
 
 import com.sun.media.sound.*;
 
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
 public class MakeSoundFont {
 
-    void createSoundFont(MidiPcmStream midiPcmStream) throws IOException {
+    MusicPatchNode musicPatchNode;
+
+    void createSoundFont(MidiPcmStream midiPcmStream, int bank, int program) throws IOException {
+
+        int patchNumber;
+
+        if (bank > 0) {
+            program += (bank * 128);
+        }
+
+        patchNumber = program;
 
         PcmPlayer.pcmPlayer_stereo = false;
-        PcmPlayer.pcmPlayer_sampleRate = 22050;
+        PcmPlayer.pcmPlayer_sampleRate = 44100;
 
         SF2Soundbank sf2Soundbank = new SF2Soundbank();
         sf2Soundbank.setName("Patch");
@@ -29,6 +34,7 @@ public class MakeSoundFont {
         SF2Layer sf2Layer = new SF2Layer();
 
         SoundPlayer soundPlayer = new SoundPlayer();
+        soundPlayer.byteArrayOutputStream = new ByteArrayOutputStream();
         soundPlayer.setStream(midiPcmStream);
         soundPlayer.samples = new int[512];
         soundPlayer.capacity = 16384;
@@ -36,28 +42,22 @@ public class MakeSoundFont {
         soundPlayer.open(soundPlayer.capacity);
 
         while (midiPcmStream.active) {
+
             soundPlayer.fill(soundPlayer.samples, 256);
             soundPlayer.writeToBuffer();
 
-            for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
+            for (MusicPatchNode musicPatchNode1 = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode1 != null; musicPatchNode1 = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
+                musicPatchNode = musicPatchNode1;
+            }
 
-                AudioFormat audioFormat = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 1, true, false);
+            if (midiPcmStream.midiFile.isDone()) {
 
-                AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(soundPlayer.byteArrayOutputStream.toByteArray()), audioFormat, soundPlayer.byteArrayOutputStream.toByteArray().length);
-                ByteArrayOutputStream audioStream = new ByteArrayOutputStream();
-
-                try {
-                    AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, audioStream);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                sf2Sample.setName(musicPatchNode.patch.key + "_" + musicPatchNode.currentNotePitch);
-                sf2Sample.setData(audioStream.toByteArray());
-                sf2Sample.setSampleRate(musicPatchNode.audioBuffer.sampleRate);
+                sf2Sample.setName(patchNumber + "_" + musicPatchNode.currentNotePitch);
+                sf2Sample.setData(soundPlayer.byteArrayOutputStream.toByteArray());
+                sf2Sample.setSampleRate(PcmPlayer.pcmPlayer_sampleRate);
                 sf2Sample.setOriginalPitch(musicPatchNode.currentNotePitch);
-                sf2Sample.setStartLoop(musicPatchNode.audioBuffer.start);
-                sf2Sample.setEndLoop(musicPatchNode.audioBuffer.end);
+                //sf2Sample.setStartLoop(musicPatchNode.audioBuffer.start);
+                //sf2Sample.setEndLoop(musicPatchNode.audioBuffer.end);
                 sf2Sample.setSampleType(1); //Mono
                 sf2Sample.setSampleLink(-1); //No Link
                 sf2Soundbank.addResource(sf2Sample);
@@ -71,10 +71,7 @@ public class MakeSoundFont {
                 sf2Layer.getRegions().add(sf2LayerRegion);
 
                 sf2Soundbank.addResource(sf2Layer);
-            }
-
-            if (midiPcmStream.midiFile.isDone()) {
-                break;
+                midiPcmStream.active = false;
             }
         }
 
@@ -139,6 +136,66 @@ public class MakeSoundFont {
 
          **/
 
-        sf2Soundbank.save(new File("./0.sf2/"));
+        sf2Soundbank.save(new File("./SoundFonts/" + patchNumber + "/" + musicPatchNode.currentNotePitch + ".sf2/"));
+    }
+
+    void saveSoundResource(MidiPcmStream midiPcmStream, int bank, int program, int notePitch) {
+
+        int patchNumber;
+
+        if (bank > 0) {
+            program += (bank * 128);
+        }
+
+        patchNumber = program;
+
+        PcmPlayer.pcmPlayer_stereo = true;
+        PcmPlayer.pcmPlayer_sampleRate = 22050;
+
+        SoundPlayer soundPlayer = new SoundPlayer();
+        soundPlayer.byteArrayOutputStream = new ByteArrayOutputStream();
+        soundPlayer.setStream(midiPcmStream);
+        soundPlayer.samples = new int[512];
+        soundPlayer.capacity = 16384;
+        soundPlayer.init();
+        soundPlayer.open(soundPlayer.capacity);
+
+        while (midiPcmStream.active) {
+
+            for (MusicPatchNode musicPatchNode1 = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode1 != null; musicPatchNode1 = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
+                musicPatchNode = musicPatchNode1;
+
+                System.out.println();
+                System.out.println("Patch #" + musicPatchNode.patch.key);
+                System.out.println("Note/Key = " + musicPatchNode.currentNotePitch);
+                System.out.println("Fixed Velocity = " + (musicPatchNode.patch.velocity + musicPatchNode.patch.volume[musicPatchNode.currentNotePitch]));
+                System.out.println();
+
+            }
+
+            soundPlayer.fill(soundPlayer.samples, 256);
+            soundPlayer.writeToBuffer();
+
+            if (midiPcmStream.midiFile.isDone()) {
+                break;
+            }
+        }
+
+        /**
+        byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+
+        File outFile = new File("./Sounds/Sound Renders/" + patchNumber + "_" + notePitch + ".wav/");
+        FileOutputStream fos;
+
+        try {
+
+            fos = new FileOutputStream(outFile);
+            AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+            AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+         **/
     }
 }

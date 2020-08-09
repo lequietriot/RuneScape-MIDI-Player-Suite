@@ -10,10 +10,10 @@ import java.io.IOException;
 
 public class SoundBankCache {
 
-    private Index soundEffectIndex;
-    private Index musicSampleIndex;
-    private NodeHashTable musicSamples;
-    private NodeHashTable AudioBuffers;
+    private final Index soundEffectIndex;
+    private final Index musicSampleIndex;
+    private final NodeHashTable musicSamples;
+    private final NodeHashTable AudioBuffers;
 
     SoundBankCache(Index var1, Index var2) {
         this.musicSamples = new NodeHashTable(256);
@@ -109,27 +109,36 @@ public class SoundBankCache {
 
     public static AudioBuffer getCustomMusicSample(File idx14, int id) throws IOException {
 
-        byte[] data;
         int sampleRate;
         AudioBuffer raw;
 
         try {
             File sampleFile = new File(idx14.toString() + "/" + id + ".wav/");
-            data = AudioSystem.getAudioInputStream(sampleFile).readAllBytes();
+
+            byte[] data = AudioSystem.getAudioInputStream(sampleFile).readAllBytes();
             sampleRate = (int) AudioSystem.getAudioInputStream(sampleFile).getFormat().getSampleRate();
 
             for (int l = 0; l < data.length; l++) {
-                data[l] = (byte) (data[l] ^ 127 & 0xFF);
+                data[l] = (byte) (data[l] & 0xFF ^ 128);
+            }
+
+            raw = new AudioBuffer(sampleRate, data, 0, 0);
+            return raw;
+
+            /**
+            for (int l = 0; l < data.length; l++) {
+                data[l] = (byte) (data[l] & 0xFF);
             }
 
             if (LoopConstants.getHDStart(id) != 0) {
-                raw = new AudioBuffer(sampleRate, data, LoopConstants.getHDStart(id), data.length);
+                raw = new AudioBuffer(sampleRate * 4, data, LoopConstants.getHDStart(id), data.length);
                 return raw;
             }
             else {
-                raw = new AudioBuffer(sampleRate, data, LoopConstants.getHDStart(id), data.length);
+                raw = new AudioBuffer(sampleRate * 4, data, LoopConstants.getHDStart(id), data.length);
                 return raw;
             }
+             **/
         } catch (UnsupportedAudioFileException e) {
             e.printStackTrace();
         }

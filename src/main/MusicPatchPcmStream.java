@@ -6,14 +6,14 @@ public class MusicPatchPcmStream extends PcmStream {
    NodeDeque queue;
    PcmStreamMixer mixer;
 
-   MusicPatchPcmStream(MidiPcmStream var1) {
+   MusicPatchPcmStream(MidiPcmStream midiPcmStream) {
       this.queue = new NodeDeque();
       this.mixer = new PcmStreamMixer();
-      this.superStream = var1;
+      this.superStream = midiPcmStream;
    }
 
    void method3992(MusicPatchNode var1, int[] var2, int var3, int var4, int var5) {
-      if ((this.superStream.sustain[var1.currentTrack] & 4) != 0 && var1.sustainPedal < 0) {
+      if ((this.superStream.sustain[var1.currentTrack] & 4) != 0 && var1.field2450 < 0) {
          int var6 = this.superStream.field2433[var1.currentTrack] / PcmPlayer.pcmPlayer_sampleRate;
 
          while (true) {
@@ -43,6 +43,7 @@ public class MusicPatchPcmStream extends PcmStream {
             }
 
             if (var1.patch.pitchOffset[var1.currentNotePitch] < 0) {
+               assert var1.stream != null;
                var1.stream.setNumLoops(-1);
             }
 
@@ -58,7 +59,7 @@ public class MusicPatchPcmStream extends PcmStream {
    }
 
    void method3989(MusicPatchNode musicPatchNode, int var2) {
-      if ((this.superStream.sustain[musicPatchNode.currentTrack] & 4) != 0 && musicPatchNode.sustainPedal < 0) {
+      if ((this.superStream.sustain[musicPatchNode.currentTrack] & 4) != 0 && musicPatchNode.field2450 < 0) {
          int var3 = this.superStream.field2433[musicPatchNode.currentTrack] / PcmPlayer.pcmPlayer_sampleRate;
          int var4 = (var3 + 1048575 - musicPatchNode.field2462) / var3;
          musicPatchNode.field2462 = var3 * var2 + musicPatchNode.field2462 & 1048575;
@@ -71,6 +72,7 @@ public class MusicPatchPcmStream extends PcmStream {
             }
 
             if (musicPatchNode.patch.pitchOffset[musicPatchNode.currentNotePitch] < 0) {
+               assert musicPatchNode.stream != null;
                musicPatchNode.stream.setNumLoops(-1);
             }
 
@@ -78,6 +80,7 @@ public class MusicPatchPcmStream extends PcmStream {
          }
       }
 
+      assert musicPatchNode.stream != null;
       musicPatchNode.stream.skip(var2);
    }
 
@@ -86,7 +89,7 @@ public class MusicPatchPcmStream extends PcmStream {
       if (var1 == null) {
          return null;
       } else {
-         return (PcmStream)(var1.stream != null ? var1.stream : this.nextSubStream());
+         return var1.stream != null ? var1.stream : this.nextSubStream();
       }
    }
 
@@ -147,7 +150,7 @@ public class MusicPatchPcmStream extends PcmStream {
 
                this.method3989(var3, var3.field2453);
                var2 -= var3.field2453;
-            } while(!this.superStream.method3884(var3, (int[])null, 0, var2));
+            } while(!this.superStream.method3884(var3, null, 0, var2));
          }
       }
 

@@ -31,7 +31,7 @@ public class MusicPatch extends Node {
         return new MusicPatch(data);
     }
 
-    MusicPatch(byte[] var1) {
+    MusicPatch(byte[] patchData) {
         this.audioBuffers = new AudioBuffer[128];
         this.pitchOffset = new short[128];
         this.volume = new byte[128];
@@ -39,51 +39,51 @@ public class MusicPatch extends Node {
         this.musicPatchNode2 = new MusicPatchNode2[128];
         this.loopMode = new byte[128];
         this.sampleOffset = new int[128];
-        Buffer var2 = new Buffer(var1);
+        Buffer patchBuffer = new Buffer(patchData);
 
         int var3;
-        for (var3 = 0; var2.array[var3 + var2.index] != 0; ++var3) {
+        for (var3 = 0; patchBuffer.array[var3 + patchBuffer.index] != 0; ++var3) {
         }
 
         byte[] var4 = new byte[var3];
 
         int var5;
         for (var5 = 0; var5 < var3; ++var5) {
-            var4[var5] = var2.readByte();
+            var4[var5] = patchBuffer.readByte();
         }
 
-        ++var2.index;
+        ++patchBuffer.index;
         ++var3;
-        var5 = var2.index;
-        var2.index += var3;
+        var5 = patchBuffer.index;
+        patchBuffer.index += var3;
 
         int var6;
-        for (var6 = 0; var2.array[var6 + var2.index] != 0; ++var6) {
+        for (var6 = 0; patchBuffer.array[var6 + patchBuffer.index] != 0; ++var6) {
         }
 
         byte[] var7 = new byte[var6];
 
         int var8;
         for (var8 = 0; var8 < var6; ++var8) {
-            var7[var8] = var2.readByte();
+            var7[var8] = patchBuffer.readByte();
         }
 
-        ++var2.index;
+        ++patchBuffer.index;
         ++var6;
-        var8 = var2.index;
-        var2.index += var6;
+        var8 = patchBuffer.index;
+        patchBuffer.index += var6;
 
         int var9;
-        for (var9 = 0; var2.array[var9 + var2.index] != 0; ++var9) {
+        for (var9 = 0; patchBuffer.array[var9 + patchBuffer.index] != 0; ++var9) {
         }
 
         byte[] var10 = new byte[var9];
 
         for (int var11 = 0; var11 < var9; ++var11) {
-            var10[var11] = var2.readByte();
+            var10[var11] = patchBuffer.readByte();
         }
 
-        ++var2.index;
+        ++patchBuffer.index;
         ++var9;
         byte[] var38 = new byte[var9];
         int var12;
@@ -94,7 +94,7 @@ public class MusicPatch extends Node {
             var12 = 2;
 
             for (var14 = 2; var14 < var9; ++var14) {
-                int var15 = var2.readUnsignedByte();
+                int var15 = patchBuffer.readUnsignedByte();
                 if (var15 == 0) {
                     var13 = var12++;
                 } else {
@@ -116,41 +116,41 @@ public class MusicPatch extends Node {
         MusicPatchNode2 var40;
         for (var14 = 0; var14 < var39.length; ++var14) {
             var40 = var39[var14] = new MusicPatchNode2();
-            int var16 = var2.readUnsignedByte();
+            int var16 = patchBuffer.readUnsignedByte();
             if (var16 > 0) {
                 var40.field2402 = new byte[var16 * 2];
             }
 
-            var16 = var2.readUnsignedByte();
+            var16 = patchBuffer.readUnsignedByte();
             if (var16 > 0) {
                 var40.field2398 = new byte[var16 * 2 + 2];
                 var40.field2398[1] = 64;
             }
         }
 
-        var14 = var2.readUnsignedByte();
+        var14 = patchBuffer.readUnsignedByte();
         byte[] var47 = var14 > 0 ? new byte[var14 * 2] : null;
-        var14 = var2.readUnsignedByte();
+        var14 = patchBuffer.readUnsignedByte();
         byte[] var41 = var14 > 0 ? new byte[var14 * 2] : null;
 
         int var17;
-        for (var17 = 0; var2.array[var17 + var2.index] != 0; ++var17) {
+        for (var17 = 0; patchBuffer.array[var17 + patchBuffer.index] != 0; ++var17) {
         }
 
         byte[] var18 = new byte[var17];
 
         int var19;
         for (var19 = 0; var19 < var17; ++var19) {
-            var18[var19] = var2.readByte();
+            var18[var19] = patchBuffer.readByte();
         }
 
-        ++var2.index;
+        ++patchBuffer.index;
         ++var17;
         var19 = 0;
 
         int var20;
         for (var20 = 0; var20 < 128; ++var20) {
-            var19 += var2.readUnsignedByte();
+            var19 += patchBuffer.readUnsignedByte();
             this.pitchOffset[var20] = (short)var19;
         }
 
@@ -158,7 +158,7 @@ public class MusicPatch extends Node {
 
         short[] var50;
         for (var20 = 0; var20 < 128; ++var20) {
-            var19 += var2.readUnsignedByte();
+            var19 += patchBuffer.readUnsignedByte();
             var50 = this.pitchOffset;
             var50[var20] = (short)(var50[var20] + (var19 << 8));
         }
@@ -176,7 +176,7 @@ public class MusicPatch extends Node {
                     var20 = -1;
                 }
 
-                var22 = var2.readVarInt();
+                var22 = patchBuffer.readVarInt();
             }
 
             var50 = this.pitchOffset;
@@ -199,7 +199,7 @@ public class MusicPatch extends Node {
                         var20 = -1;
                     }
 
-                    var23 = var2.array[var5++] - 1;
+                    var23 = patchBuffer.array[var5++] - 1;
                 }
 
                 this.loopMode[var24] = (byte)var23;
@@ -220,7 +220,7 @@ public class MusicPatch extends Node {
                         var20 = -1;
                     }
 
-                    var24 = var2.array[var8++] + 16 << 2;
+                    var24 = patchBuffer.array[var8++] + 16 << 2;
                 }
 
                 this.panOffset[var25] = (byte)var24;
@@ -263,7 +263,7 @@ public class MusicPatch extends Node {
                 }
 
                 if (this.sampleOffset[var27] > 0) {
-                    var26 = var2.readUnsignedByte() + 1;
+                    var26 = patchBuffer.readUnsignedByte() + 1;
                 }
             }
 
@@ -271,7 +271,7 @@ public class MusicPatch extends Node {
             --var20;
         }
 
-        this.velocity = var2.readUnsignedByte() + 1;
+        this.velocity = patchBuffer.readUnsignedByte() + 1;
 
         MusicPatchNode2 var28;
         int var29;
@@ -279,26 +279,26 @@ public class MusicPatch extends Node {
             var28 = var39[var27];
             if (var28.field2402 != null) {
                 for (var29 = 1; var29 < var28.field2402.length; var29 += 2) {
-                    var28.field2402[var29] = var2.readByte();
+                    var28.field2402[var29] = patchBuffer.readByte();
                 }
             }
 
             if (var28.field2398 != null) {
                 for (var29 = 3; var29 < var28.field2398.length - 2; var29 += 2) {
-                    var28.field2398[var29] = var2.readByte();
+                    var28.field2398[var29] = patchBuffer.readByte();
                 }
             }
         }
 
         if (var47 != null) {
             for (var27 = 1; var27 < var47.length; var27 += 2) {
-                var47[var27] = var2.readByte();
+                var47[var27] = patchBuffer.readByte();
             }
         }
 
         if (var41 != null) {
             for (var27 = 1; var27 < var41.length; var27 += 2) {
-                var41[var27] = var2.readByte();
+                var41[var27] = patchBuffer.readByte();
             }
         }
 
@@ -308,7 +308,7 @@ public class MusicPatch extends Node {
                 var19 = 0;
 
                 for (var29 = 2; var29 < var28.field2398.length; var29 += 2) {
-                    var19 = var19 + 1 + var2.readUnsignedByte();
+                    var19 = var19 + 1 + patchBuffer.readUnsignedByte();
                     var28.field2398[var29] = (byte)var19;
                 }
             }
@@ -320,7 +320,7 @@ public class MusicPatch extends Node {
                 var19 = 0;
 
                 for (var29 = 2; var29 < var28.field2402.length; var29 += 2) {
-                    var19 = 1 + var19 + var2.readUnsignedByte();
+                    var19 = 1 + var19 + patchBuffer.readUnsignedByte();
                     var28.field2402[var29] = (byte)var19;
                 }
             }
@@ -335,11 +335,11 @@ public class MusicPatch extends Node {
         int var44;
         byte var46;
         if (var47 != null) {
-            var19 = var2.readUnsignedByte();
+            var19 = patchBuffer.readUnsignedByte();
             var47[0] = (byte)var19;
 
             for (var27 = 2; var27 < var47.length; var27 += 2) {
-                var19 = 1 + var19 + var2.readUnsignedByte();
+                var19 = 1 + var19 + patchBuffer.readUnsignedByte();
                 var47[var27] = (byte)var19;
             }
 
@@ -370,16 +370,14 @@ public class MusicPatch extends Node {
             for (var44 = var46; var44 < 128; ++var44) {
                 this.volume[var44] = (byte)(var43 * this.volume[var44] + 32 >> 6);
             }
-
-            var40 = null;
         }
 
         if (var41 != null) {
-            var19 = var2.readUnsignedByte();
+            var19 = patchBuffer.readUnsignedByte();
             var41[0] = (byte)var19;
 
             for (var27 = 2; var27 < var41.length; var27 += 2) {
-                var19 = 1 + var19 + var2.readUnsignedByte();
+                var19 = 1 + var19 + patchBuffer.readUnsignedByte();
                 var41[var27] = (byte)var19;
             }
 
@@ -438,44 +436,42 @@ public class MusicPatch extends Node {
 
                 this.panOffset[var44] = (byte)var45;
             }
-
-            Object var48 = null;
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
-            var39[var27].volEnvDecay = var2.readUnsignedByte();
+            var39[var27].volEnvDecay = patchBuffer.readUnsignedByte();
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
             var28 = var39[var27];
             if (var28.field2402 != null) {
-                var28.volEnvAttack = var2.readUnsignedByte();
+                var28.volEnvAttack = patchBuffer.readUnsignedByte();
             }
 
             if (var28.field2398 != null) {
-                var28.vibratoLFODelay = var2.readUnsignedByte();
+                var28.vibratoLFODelay = patchBuffer.readUnsignedByte();
             }
 
             if (var28.volEnvDecay > 0) {
-                var28.vibratoLFOFrequency = var2.readUnsignedByte();
+                var28.vibratoLFOFrequency = patchBuffer.readUnsignedByte();
             }
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
-            var39[var27].field2401 = var2.readUnsignedByte();
+            var39[var27].field2401 = patchBuffer.readUnsignedByte();
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
             var28 = var39[var27];
             if (var28.field2401 > 0) {
-                var28.vibratoLFOPitch = var2.readUnsignedByte();
+                var28.vibratoLFOPitch = patchBuffer.readUnsignedByte();
             }
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
             var28 = var39[var27];
             if (var28.vibratoLFOPitch > 0) {
-                var28.field2394 = var2.readUnsignedByte();
+                var28.field2394 = patchBuffer.readUnsignedByte();
             }
         }
     }

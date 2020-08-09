@@ -99,17 +99,17 @@ public class MusicSample extends Node {
          dataOutputStream.writeInt(start);
          dataOutputStream.writeInt(end);
 
-         int count = 0;
-         while (audioInputStream.available() > 0) {
-            byte[] samples = new byte[510];
-            for (int index = 0; index < samples.length; index++) {
+         int segments = sampleCount / 1000;
 
-            }
-            count++;
-            byteArrayOutputStream.write(samples);
+         ByteBuffer byteBuffer = ByteBuffer.wrap(audioInputStream.readAllBytes());
+
+         int position = 0;
+         while (byteBuffer.hasRemaining()) {
+            byte bytes = byteBuffer.get();
+            byteArrayOutputStream.write(bytes & 0xFF);
          }
 
-         dataOutputStream.writeInt(count);
+         dataOutputStream.writeInt(segments);
          dataOutputStream.write(byteArrayOutputStream.toByteArray());
 
       } catch (IOException e) {

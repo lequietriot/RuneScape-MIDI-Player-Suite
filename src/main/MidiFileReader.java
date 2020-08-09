@@ -2,217 +2,292 @@ package main;
 
 import main.utils.Buffer;
 
+/**
+ * MIDI File Reader class from Jagex's custom MIDI Player Engine, refactored.
+ * @author Rodolfo Ruiz-Velasco (https://github.com/lequietriot)
+ */
 public class MidiFileReader {
 
-    static final byte[] field2478;
+    static final byte[] sequenceArray;
 
     Buffer buffer;
     int division;
     int[] trackStarts;
     int[] trackPositions;
     int[] trackLengths;
-    int[] field2474;
-    int field2471;
-    long field2477;
+    int[] midiMessages;
+    int tempoMPQ;
+    long sequencePosition;
 
     static {
-        field2478 = new byte[]{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        sequenceArray = new byte[]{2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     }
 
-    MidiFileReader(byte[] var1) {
+    /**
+     * Initializes the MIDI File Reader and immediately parses it.
+     * @param midiData A standard MIDI file (in a byte array) to be read.
+     */
+    MidiFileReader(byte[] midiData) {
         this.buffer = new Buffer(null);
-        this.parse(var1);
+        this.parse(midiData);
     }
 
+    /**
+     * Initializes the MIDI File Reader without parsing anything.
+     */
     MidiFileReader() {
         this.buffer = new Buffer(null);
     }
 
-    void parse(byte[] var1) {
-        this.buffer.array = var1;
+    /**
+     * Parses the received MIDI file byte array, loading relevant data into int arrays.
+     */
+    void parse(byte[] midiData) {
+        this.buffer.array = midiData;
         this.buffer.index = 10;
-        int var2 = this.buffer.readUnsignedShort();
+        int eventCount = this.buffer.readUnsignedShort();
         this.division = this.buffer.readUnsignedShort();
-        this.field2471 = 500000;
-        this.trackStarts = new int[var2];
+        this.tempoMPQ = 500000;
+        this.trackStarts = new int[eventCount];
 
-        Buffer var10000;
-        int var3;
-        int var5;
-        for (var3 = 0; var3 < var2; var10000.index += var5) {
-            int var4 = this.buffer.readInt();
-            var5 = this.buffer.readInt();
-            if (var4 == 1297379947) {
-                this.trackStarts[var3] = this.buffer.index;
-                ++var3;
+        Buffer midiReadBuffer;
+        int trackIndex;
+        int bytesToRead;
+        for (trackIndex = 0; trackIndex < eventCount; midiReadBuffer.index += bytesToRead) {
+            int MTrk_Header = this.buffer.readInt();
+            bytesToRead = this.buffer.readInt();
+            if (MTrk_Header == 1297379947) {
+                this.trackStarts[trackIndex] = this.buffer.index;
+                ++trackIndex;
             }
 
-            var10000 = this.buffer;
+            midiReadBuffer = this.buffer;
         }
 
-        this.field2477 = 0L;
-        this.trackPositions = new int[var2];
+        this.sequencePosition = 0L;
+        this.trackPositions = new int[eventCount];
 
-        for (var3 = 0; var3 < var2; ++var3) {
-            this.trackPositions[var3] = this.trackStarts[var3];
+        for (trackIndex = 0; trackIndex < eventCount; ++trackIndex) {
+            this.trackPositions[trackIndex] = this.trackStarts[trackIndex];
         }
 
-        this.trackLengths = new int[var2];
-        this.field2474 = new int[var2];
+        this.trackLengths = new int[eventCount];
+        this.midiMessages = new int[eventCount];
     }
 
+    /**
+     * Completely clears everything that has been loaded.
+     */
     void clear() {
         this.buffer.array = null;
         this.trackStarts = null;
         this.trackPositions = null;
         this.trackLengths = null;
-        this.field2474 = null;
+        this.midiMessages = null;
     }
 
+    /**
+     * Is the MIDI sequence ready for playback?
+     * @return returns true or false if data is present in the buffer.
+     */
     boolean isReady() {
         return this.buffer.array != null;
     }
 
+    /**
+     * Obtain the total count of tracks present in the MIDI sequence.
+     * @return returns the number of tracks in the sequence.
+     */
     int trackCount() {
         return this.trackPositions.length;
     }
 
-    void gotoTrack(int var1) {
-        this.buffer.index = this.trackPositions[var1];
+    /**
+     * Prioritize the selected track.
+     * @param track The selected track in the sequence.
+     */
+    void gotoTrack(int track) {
+        this.buffer.index = this.trackPositions[track];
     }
 
-    void markTrackPosition(int var1) {
-        this.trackPositions[var1] = this.buffer.index;
+    /**
+     * Mark the current position in the selected track.
+     * @param track The selected track in the sequence.
+     */
+    void markTrackPosition(int track) {
+        this.trackPositions[track] = this.buffer.index;
     }
 
+    /**
+     * Stop reading the sequence, the track is done playing.
+     */
     void setTrackDone() {
         this.buffer.index = -1;
     }
 
-    void readTrackLength(int var1) {
-        int var2 = this.buffer.readVarInt();
-        int[] var10000 = this.trackLengths;
-        var10000[var1] += var2;
+    /**
+     * Read the length of the specified track.
+     * @param track The selected track in the sequence.
+     */
+    void readTrackLength(int track) {
+        int trackEvent = this.buffer.readVarInt();
+        int[] trackSize = this.trackLengths;
+        trackSize[track] += trackEvent;
     }
 
-    int readMessage(int var1) {
-        int var2 = this.readMessage0(var1);
-        return var2;
+    /**
+     * Obtain a specific message from a point in the sequence.
+     * @param midiMessage The raw MIDI message.
+     * @return The read message in the sequence.
+     */
+    int getMessage(int midiMessage) {
+        return this.readMessage(midiMessage);
     }
 
-    int readMessage0(int var1) {
-        byte var2 = this.buffer.array[this.buffer.index];
-        int var5;
-        if (var2 < 0) {
-            var5 = var2 & 255;
-            this.field2474[var1] = var5;
+    /**
+     * Decodes the obtained message from a point in the sequence.
+     * @param midiMessage The raw MIDI message.
+     * @return The value of the read message in the sequence.
+     */
+    int readMessage(int midiMessage) {
+        byte messageBytes = this.buffer.array[this.buffer.index];
+        int message;
+        if (messageBytes < 0) {
+            message = messageBytes & 255;
+            this.midiMessages[midiMessage] = message;
             ++this.buffer.index;
         } else {
-            var5 = this.field2474[var1];
+            message = this.midiMessages[midiMessage];
         }
 
-        if (var5 != 240 && var5 != 247) {
-            return this.method3934(var1, var5);
+        if (message != 240 && message != 247) {
+            return this.getMessageLength(midiMessage, message);
         } else {
-            int var3 = this.buffer.readVarInt();
-            if (var5 == 247 && var3 > 0) {
-                int var4 = this.buffer.array[this.buffer.index] & 255;
-                if (var4 >= 241 && var4 <= 243 || var4 == 246 || var4 == 248 || var4 >= 250 && var4 <= 252 || var4 == 254) {
+            int value = this.buffer.readVarInt();
+            if (message == 247 && value > 0) {
+                int shortMessage = this.buffer.array[this.buffer.index] & 255;
+                if (shortMessage >= 241 && shortMessage <= 243 || shortMessage == 246 || shortMessage == 248 || shortMessage >= 250 && shortMessage <= 252 || shortMessage == 254) {
                     ++this.buffer.index;
-                    this.field2474[var1] = var4;
-                    return this.method3934(var1, var4);
+                    this.midiMessages[midiMessage] = shortMessage;
+                    return this.getMessageLength(midiMessage, shortMessage);
                 }
             }
 
-            Buffer var10000 = this.buffer;
-            var10000.index += var3;
+            Buffer midiBuffer = this.buffer;
+            midiBuffer.index += value;
             return 0;
         }
     }
 
-    int method3934(int var1, int var2) {
-        int var4;
-        if (var2 == 255) {
-            int var7 = this.buffer.readUnsignedByte();
-            var4 = this.buffer.readVarInt();
-            Buffer var10000;
-            if (var7 == 47) {
-                var10000 = this.buffer;
-                var10000.index += var4;
+    /**
+     * Obtain the specified message's length.
+     * @param index The specified index of a track that contains the message.
+     * @param midiMessage The message from the sequence.
+     * @return The message's length in bytes length.
+     */
+    int getMessageLength(int index, int midiMessage) {
+
+        int messageValue;
+
+        //Meta Message
+        if (midiMessage == 255) {
+            int status = this.buffer.readUnsignedByte();
+            messageValue = this.buffer.readVarInt();
+            Buffer midiBuffer;
+
+            //End of Track
+            if (status == 47) {
+                midiBuffer = this.buffer;
+                midiBuffer.index += messageValue;
                 return 1;
-            } else if (var7 == 81) {
-                int var5 = this.buffer.readMedium();
-                var4 -= 3;
-                int var6 = this.trackLengths[var1];
-                this.field2477 += (long)var6 * (long)(this.field2471 - var5);
-                this.field2471 = var5;
-                var10000 = this.buffer;
-                var10000.index += var4;
+
+            //Set Tempo
+            } else if (status == 81) {
+                int mpqValue = this.buffer.readMedium();
+                messageValue -= 3;
+                int trackLength = this.trackLengths[index];
+                this.sequencePosition += (long) trackLength * (long) (this.tempoMPQ - mpqValue);
+                this.tempoMPQ = mpqValue;
+                midiBuffer = this.buffer;
+                midiBuffer.index += messageValue;
                 return 2;
             } else {
-                var10000 = this.buffer;
-                var10000.index += var4;
+                midiBuffer = this.buffer;
+                midiBuffer.index += messageValue;
                 return 3;
             }
         } else {
-            byte var3 = field2478[var2 - 128];
-            var4 = var2;
-            if (var3 >= 1) {
-                var4 = var2 | this.buffer.readUnsignedByte() << 8;
+            byte messageBytes = sequenceArray[midiMessage - 128];
+            messageValue = midiMessage;
+            if (messageBytes >= 1) {
+                messageValue = midiMessage | this.buffer.readUnsignedByte() << 8;
             }
 
-            if (var3 >= 2) {
-                var4 |= this.buffer.readUnsignedByte() << 16;
+            if (messageBytes >= 2) {
+                messageValue |= this.buffer.readUnsignedByte() << 16;
             }
 
-            return var4;
+            return messageValue;
         }
     }
 
-    long method3935(int var1) {
-        return this.field2477 + (long)var1 * (long)this.field2471;
+    /**
+     * Obtain the current position in the sequence.
+     * @param tick The specified point in the sequence.
+     * @return The current position in the sequence.
+     */
+    long getTrackPosition(int tick) {
+        return this.sequencePosition + (long) tick * (long) this.tempoMPQ;
     }
 
+    /**
+     * Obtain the current prioritized track in the sequence.
+     * @return The current track.
+     */
     int getPrioritizedTrack() {
-        int var1 = this.trackPositions.length;
-        int var2 = -1;
-        int var3 = Integer.MAX_VALUE;
+        int trackPositionSize = this.trackPositions.length;
+        int currentTrack = -1;
+        int maxSize = Integer.MAX_VALUE;
 
-        for (int var4 = 0; var4 < var1; ++var4) {
-            if (this.trackPositions[var4] >= 0 && this.trackLengths[var4] < var3) {
-                var2 = var4;
-                var3 = this.trackLengths[var4];
+        for (int trackIndex = 0; trackIndex < trackPositionSize; ++trackIndex) {
+            if (this.trackPositions[trackIndex] >= 0 && this.trackLengths[trackIndex] < maxSize) {
+                currentTrack = trackIndex;
+                maxSize = this.trackLengths[trackIndex];
             }
         }
 
-        return var2;
+        return currentTrack;
     }
 
+    /**
+     * Is the MIDI sequence done playing?
+     * @return returns true or false if the sequence is done playing.
+     */
     boolean isDone() {
         if (trackPositions != null) {
-            int var1 = this.trackPositions.length;
-
-            for (int var2 = 0; var2 < var1; ++var2) {
-                if (this.trackPositions[var2] >= 0) {
+            for (int trackPosition : this.trackPositions) {
+                if (trackPosition >= 0) {
                     return false;
                 }
             }
         }
-
         return true;
     }
 
-    void reset(long var1) {
-        this.field2477 = var1;
-        int var3 = this.trackPositions.length;
+    /**
+     * Reset the current sequence to a certain position.
+     * @param tick The position to reset the sequence to.
+     */
+    void reset(long tick) {
+        this.sequencePosition = tick;
+        int trackPosition = this.trackPositions.length;
 
-        for (int var4 = 0; var4 < var3; ++var4) {
-            this.trackLengths[var4] = 0;
-            this.field2474[var4] = 0;
-            this.buffer.index = this.trackStarts[var4];
-            this.readTrackLength(var4);
-            this.trackPositions[var4] = this.buffer.index;
+        for (int trackIndex = 0; trackIndex < trackPosition; ++trackIndex) {
+            this.trackLengths[trackIndex] = 0;
+            this.midiMessages[trackIndex] = 0;
+            this.buffer.index = this.trackStarts[trackIndex];
+            this.readTrackLength(trackIndex);
+            this.trackPositions[trackIndex] = this.buffer.index;
         }
-
     }
 }

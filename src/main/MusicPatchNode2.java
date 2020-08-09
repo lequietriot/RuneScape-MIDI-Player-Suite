@@ -9,7 +9,7 @@ public class MusicPatchNode2 {
     int vibratoLFODelay;
     int vibratoLFOFrequency;
     int vibratoLFOPitch;
-    int field2401; //Length in MIDI Ticks
+    int field2401;
     int field2394;
 
     MusicPatchNode2() {
