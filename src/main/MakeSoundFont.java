@@ -2,9 +2,11 @@ package main;
 
 import com.sun.media.sound.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import java.io.*;
 
 public class MakeSoundFont {
 
@@ -181,7 +183,6 @@ public class MakeSoundFont {
             }
         }
 
-        /**
         byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
 
         File outFile = new File("./Sounds/Sound Renders/" + patchNumber + "_" + notePitch + ".wav/");
@@ -196,6 +197,5 @@ public class MakeSoundFont {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-         **/
     }
 }

@@ -2840,8 +2840,23 @@ public class GUI {
 
 	private class BatchConverter implements ActionListener {
 
+		File[] midiFiles;
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			try {
+
+				selectMidiFolder(frame);
+
+				if (midiFiles != null) {
+					writeMidiAudio();
+				}
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+		}
+
+		private void writeMidiAudio() throws IOException {
 
 			Index soundEffectIndex = cacheLibrary.getIndex(4);
 			Index musicIndex = cacheLibrary.getIndex(6);
@@ -2854,54 +2869,93 @@ public class GUI {
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
 			midiPcmStream = new MidiPcmStream();
-			Path path = Paths.get(midiFile.toURI());
 
-			PcmPlayer.pcmPlayer_stereo = true;
+			for (File midiSeqFile : midiFiles) {
 
-			ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+				Path path = Paths.get(midiSeqFile.toURI());
 
-			MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-			try {
-				MidiTrack.midi = Files.readAllBytes(path);
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
-			}
-			MidiTrack.loadMidiTrackInfo();
+				PcmPlayer.pcmPlayer_stereo = true;
 
-			midiPcmStream.init(9, 128);
-			midiPcmStream.setMusicTrack(midiTrack, loopMode);
-			midiPcmStream.setPcmStreamVolume(volume);
-			midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
 
-			SoundPlayer soundPlayer = new SoundPlayer();
-			soundPlayer.setStream(midiPcmStream);
-			soundPlayer.samples = new int[512];
-			soundPlayer.capacity = 16384;
-			soundPlayer.init();
-			soundPlayer.open(soundPlayer.capacity);
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				try {
+					MidiTrack.midi = Files.readAllBytes(path);
+				} catch (IOException ioException) {
+					ioException.printStackTrace();
+				}
+				MidiTrack.loadMidiTrackInfo();
 
-			while (midiPcmStream.active) {
-				soundPlayer.fill(soundPlayer.samples, 256);
-				soundPlayer.writeToBuffer();
-				if (midiPcmStream.midiFile.isDone()) {
-					break;
+				midiPcmStream.init(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
+
+				SoundPlayer soundPlayer = new SoundPlayer();
+				soundPlayer.setStream(midiPcmStream);
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 16384;
+				soundPlayer.init();
+				soundPlayer.open(soundPlayer.capacity);
+
+				while (midiPcmStream.active) {
+					soundPlayer.fill(soundPlayer.samples, 256);
+					soundPlayer.writeToBuffer();
+					if (midiPcmStream.midiFile.isDone()) {
+						break;
+					}
+				}
+
+				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+
+				File midiAudioDirectory = new File("./MIDI Audio/");
+
+				if (midiAudioDirectory.mkdirs()) {
+
+					File outFile = new File(midiAudioDirectory + "/" + midiSeqFile.getName().replace(".mid", "") + ".wav/");
+					FileOutputStream fos;
+
+					try {
+
+						fos = new FileOutputStream(outFile);
+						AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+						AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+						AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+
+				else {
+
+					File outFile = new File(midiAudioDirectory + "/" + midiSeqFile.getName().replace(".mid", "") + ".wav/");
+					FileOutputStream fos;
+
+					try {
+
+						fos = new FileOutputStream(outFile);
+						AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+						AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+						AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
 				}
 			}
+		}
 
-			byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+		private void selectMidiFolder(JFrame frame) throws IOException {
+			JFileChooser chooseMidiFolder = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
+			chooseMidiFolder.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooseMidiFolder.setSize(400, 200);
+			chooseMidiFolder.setDialogTitle("Please choose a folder containing MIDI files.");
+			chooseMidiFolder.setVisible(true);
+			frame.add(chooseMidiFolder);
+			int returnValue = chooseMidiFolder.showOpenDialog(null);
 
-			File outFile = new File("./MIDI Audio/" + midiFile.getName() + ".wav/");
-			File mp3File = new File("./MIDI Audio/" + midiFile.getName() + ".mp3/");
-			FileOutputStream fos;
-
-			try {
-
-				fos = new FileOutputStream(outFile);
-				AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
-				AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
-				AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
-			} catch (IOException ex) {
-				ex.printStackTrace();
+			if (returnValue == JFileChooser.APPROVE_OPTION) {
+				File path = new File(chooseMidiFolder.getSelectedFile().getPath());
+				midiFiles = path.listFiles();
 			}
 		}
 	}

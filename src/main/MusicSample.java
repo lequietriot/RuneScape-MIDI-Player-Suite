@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class MusicSample extends Node {
 
@@ -81,6 +82,8 @@ public class MusicSample extends Node {
          byte[] packetData = new byte[size];
          buffer.get(packetData, 0, size);
          this.packets[packet] = packetData;
+
+         System.out.println("Packet " + packet + " (Length: " +  packetData.length + ")" + " - " + Arrays.toString(packetData));
       }
    }
 
@@ -98,16 +101,28 @@ public class MusicSample extends Node {
          dataOutputStream.writeInt(start);
          dataOutputStream.writeInt(end);
 
-         ByteBuffer byteBuffer = ByteBuffer.wrap(audioInputStream.readAllBytes());
+         byte[] audio = audioInputStream.readAllBytes();
+         ByteBuffer byteBuffer = ByteBuffer.wrap(audio);
 
-         int position = 0;
-         for (int index = 0; index < sampleCount; index += 8) {
-            byte bit = (byte) ((byte) (byteBuffer.getFloat()) >> 8);
-            byteArrayOutputStream.write(bit);
-            position++;
+         int channels = 1;
+         int blockCount = audio.length / 8;
+         float[][] float2DArray = new float[channels][blockCount];
+
+         for (int index = 0; index < blockCount; index++) {
+            for (int channel = 0; channel < channels; channel++) {
+               short sample = byteBuffer.getShort();
+               float2DArray[channel][index] = sample;
+            }
          }
 
-         dataOutputStream.writeInt(position);
+         for (int channel = 0; channel < float2DArray.length; channel++) {
+            for (int index = 0; index < float2DArray[index].length; index++) {
+               byteArrayOutputStream.write(float2DArray[channel].length);
+               byteArrayOutputStream.write(Integer.parseInt(String.valueOf((byte) float2DArray[channel][index])));
+            }
+         }
+
+         dataOutputStream.writeInt(channels);
          dataOutputStream.write(byteArrayOutputStream.toByteArray());
 
       } catch (IOException e) {
