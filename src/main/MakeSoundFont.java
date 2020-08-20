@@ -7,26 +7,18 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import java.io.*;
+import java.util.Arrays;
 
 public class MakeSoundFont {
 
     MusicPatchNode musicPatchNode;
 
-    void createSoundFont(MidiPcmStream midiPcmStream, int bank, int program) throws IOException {
+    void createSoundFont(MusicPatch musicPatch, SoundBankCache soundBankCache) throws IOException {
 
-        int patchNumber;
-
-        if (bank > 0) {
-            program += (bank * 128);
-        }
-
-        patchNumber = program;
-
-        PcmPlayer.pcmPlayer_stereo = false;
-        PcmPlayer.pcmPlayer_sampleRate = 44100;
+        int patchNumber = (int) musicPatch.key;
 
         SF2Soundbank sf2Soundbank = new SF2Soundbank();
-        sf2Soundbank.setName("Patch");
+        sf2Soundbank.setName("Patch " + patchNumber);
         sf2Soundbank.setRomName("RuneScape MIDI Suite");
         sf2Soundbank.setRomVersionMajor(1);
         sf2Soundbank.setRomVersionMinor(0);
@@ -35,110 +27,62 @@ public class MakeSoundFont {
         SF2LayerRegion sf2LayerRegion = new SF2LayerRegion();
         SF2Layer sf2Layer = new SF2Layer();
 
-        SoundPlayer soundPlayer = new SoundPlayer();
-        soundPlayer.byteArrayOutputStream = new ByteArrayOutputStream();
-        soundPlayer.setStream(midiPcmStream);
-        soundPlayer.samples = new int[512];
-        soundPlayer.capacity = 16384;
-        soundPlayer.init();
-        soundPlayer.open(soundPlayer.capacity);
+        FileOutputStream fileOutputStream = new FileOutputStream(new File("./SoundFonts/Patch.txt/"));
+        DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
 
-        while (midiPcmStream.active) {
+        for (int index = 0; index < 128; index++) {
 
-            soundPlayer.fill(soundPlayer.samples, 256);
-            soundPlayer.writeToBuffer();
+            int sampleID = musicPatch.sampleOffset[index];
+            AudioBuffer audioBuffer = null;
 
-            for (MusicPatchNode musicPatchNode1 = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode1 != null; musicPatchNode1 = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
-                musicPatchNode = musicPatchNode1;
+            if (sampleID != 0) {
+                if ((sampleID & 1) == 0) {
+                    audioBuffer = soundBankCache.getSoundEffect(musicPatch.sampleOffset[index] >> 2, null);
+                } else {
+                    audioBuffer = soundBankCache.getMusicSample(musicPatch.sampleOffset[index] >> 2, null);
+                }
             }
 
-            if (midiPcmStream.midiFile.isDone()) {
+            byte[] rawData = audioBuffer.samples;
+            byte[] audioData = new byte[rawData.length * 2];
 
-                sf2Sample.setName(patchNumber + "_" + musicPatchNode.currentNotePitch);
-                sf2Sample.setData(soundPlayer.byteArrayOutputStream.toByteArray());
-                sf2Sample.setSampleRate(PcmPlayer.pcmPlayer_sampleRate);
-                sf2Sample.setOriginalPitch(musicPatchNode.currentNotePitch);
-                //sf2Sample.setStartLoop(musicPatchNode.audioBuffer.start);
-                //sf2Sample.setEndLoop(musicPatchNode.audioBuffer.end);
-                sf2Sample.setSampleType(1); //Mono
-                sf2Sample.setSampleLink(-1); //No Link
-                sf2Soundbank.addResource(sf2Sample);
-
-                sf2Layer.setName("Layer");
-
-                sf2LayerRegion.putInteger(SF2Region.GENERATOR_INITIALATTENUATION, musicPatchNode.attenuation / 4);
-                sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, musicPatchNode.loopVariable * -1);
-                sf2LayerRegion.putInteger(SF2Region.GENERATOR_RELEASEVOLENV, musicPatchNode.field2453);
-                sf2LayerRegion.setSample(sf2Sample);
-                sf2Layer.getRegions().add(sf2LayerRegion);
-
-                sf2Soundbank.addResource(sf2Layer);
-                midiPcmStream.active = false;
+            for (int frame = 0; frame < rawData.length; frame++) {
+                audioData[frame * 2] = rawData[frame];
+                audioData[frame * 2 + 1] = (rawData[frame]);
             }
+
+            sf2Sample.setName(String.valueOf(((musicPatch.sampleOffset[index] >> 2))));
+            sf2Sample.setData(audioData);
+            sf2Sample.setSampleRate(audioBuffer.sampleRate);
+            sf2Sample.setStartLoop(audioBuffer.start);
+            sf2Sample.setEndLoop(audioBuffer.end);
+            sf2Sample.setOriginalPitch(128 - (musicPatch.pitchOffset[index] / -256));
+            sf2Sample.setSampleType(1);
+            sf2Sample.setSampleLink(0);
+
+            System.out.println();
+            System.out.println("Note " + index);
+            System.out.println("Fixed Velocity = " + (musicPatch.velocity + musicPatch.volume[index]));
+            System.out.println("Pan Value = " + (musicPatch.panOffset[index] - 64) * 1.28);
+            System.out.println("Sample ID = " + ((musicPatch.sampleOffset[index] >> 2) - 1));
+            System.out.println("Sample Rate = " + soundBankCache.getMusicSample((musicPatch.sampleOffset[index] >> 2) - 1, null).sampleRate);
+            System.out.println("Sample Loop Start = " + soundBankCache.getMusicSample((musicPatch.sampleOffset[index] >> 2) - 1, null).start);
+            System.out.println("Sample Loop End = " + soundBankCache.getMusicSample((musicPatch.sampleOffset[index] >> 2) - 1, null).end);
+            System.out.println("Sample Pitch = " + (128 - (musicPatch.pitchOffset[index] / -256)));
+            System.out.println();
+            System.out.println("??? = " + Arrays.toString(musicPatch.musicPatchNode2[index].field2402));
+            System.out.println("??? = " + Arrays.toString(musicPatch.musicPatchNode2[index].field2398));
+            System.out.println("??? = " + musicPatch.musicPatchNode2[index].volEnvAttack);
+            System.out.println("Decay = " + (musicPatch.musicPatchNode2[index].volumeEnvelopeDecay));
+            System.out.println("??? = " + musicPatch.musicPatchNode2[index].vibratoLFODelay);
+            System.out.println("??? = " + musicPatch.musicPatchNode2[index].vibratoLFOFrequency);
+            System.out.println("??? = " + musicPatch.musicPatchNode2[index].vibratoLFOPitch);
+            System.out.println("??? = " + musicPatch.musicPatchNode2[index].field2401);
+            System.out.println("??? = " + musicPatch.musicPatchNode2[index].field2394);
         }
 
-        /**
-        for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
-
-            System.out.println();
-            System.out.println("Patch #" + musicPatchNode.patch.key);
-            System.out.println("Patch Volume 1: " + musicPatchNode.patch.velocity);
-            System.out.println("Patch Volume 2: " + musicPatchNode.patch.volume[musicPatchNode.currentNotePitch]);
-            System.out.println("offset: " + musicPatchNode.patch.pitchOffset[musicPatchNode.currentNotePitch]);
-            System.out.println();
-            System.out.println("Attack?: " + musicPatchNode.musicPatchInfo.volEnvAttack);
-            System.out.println("Decay?: " + musicPatchNode.musicPatchInfo.volEnvDecay);
-            System.out.println("2394: " + musicPatchNode.musicPatchInfo.field2394);
-            System.out.println("2401: " + musicPatchNode.musicPatchInfo.field2401);
-            System.out.println();
-            System.out.println("Active Track: " + musicPatchNode.currentTrack);
-            System.out.println("Attenuation: " + musicPatchNode.attenuation);
-            System.out.println("Loop Mode: " + musicPatchNode.loopVariable);
-            System.out.println("Note Pitch (0-127): " + musicPatchNode.currentNotePitch);
-            System.out.println("Pan (0-127): " + musicPatchNode.currentPanValue);
-            System.out.println("Frequency Correction: " + musicPatchNode.frequencyCorrection);
-            System.out.println("2454: " + musicPatchNode.field2454);
-            System.out.println("Sustain Pedal: " + musicPatchNode.sustainPedal);
-            System.out.println("2458: " + musicPatchNode.field2458);
-            System.out.println("2455: " + musicPatchNode.field2455);
-            System.out.println("Portamento: " + musicPatchNode.field2453);
-            System.out.println("2462: " + musicPatchNode.field2462);
-            System.out.println("2449: " + musicPatchNode.field2449);
-            System.out.println();
-
-            AudioFormat audioFormat = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 1, true, false);
-
-            AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(soundPlayer.byteArrayOutputStream.toByteArray()), audioFormat, soundPlayer.byteArrayOutputStream.toByteArray().length);
-            try {
-                AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, soundPlayer.byteArrayOutputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            sf2Sample.setName(musicPatchNode.patch.key + "_" + musicPatchNode.currentNotePitch);
-            sf2Sample.setData(soundPlayer.byteArrayOutputStream.toByteArray());
-            sf2Sample.setSampleRate(musicPatchNode.audioBuffer.sampleRate);
-            sf2Sample.setOriginalPitch(musicPatchNode.currentNotePitch);
-            sf2Sample.setStartLoop(musicPatchNode.audioBuffer.start);
-            sf2Sample.setEndLoop(musicPatchNode.audioBuffer.end);
-            sf2Sample.setSampleType(1); //Mono
-            sf2Sample.setSampleLink(-1); //No Link
-            sf2Soundbank.addResource(sf2Sample);
-
-            sf2Layer.setName("Layer");
-
-            sf2LayerRegion.putInteger(SF2Region.GENERATOR_INITIALATTENUATION, musicPatchNode.attenuation / 4);
-            sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, musicPatchNode.loopVariable * -1);
-            sf2LayerRegion.putInteger(SF2Region.GENERATOR_RELEASEVOLENV, musicPatchNode.field2453);
-            sf2LayerRegion.setSample(sf2Sample);
-            sf2Layer.getRegions().add(sf2LayerRegion);
-
-            sf2Soundbank.addResource(sf2Layer);
-        }
-
-         **/
-
-        sf2Soundbank.save(new File("./SoundFonts/" + patchNumber + "/" + musicPatchNode.currentNotePitch + ".sf2/"));
+        sf2Soundbank.addResource(sf2Sample);
+        sf2Soundbank.save(new File("./SoundFonts/" + patchNumber + ".sf2/"));
     }
 
     void saveSoundResource(MidiPcmStream midiPcmStream, int bank, int program, int notePitch) {

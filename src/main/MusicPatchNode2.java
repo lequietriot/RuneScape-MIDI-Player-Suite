@@ -4,7 +4,7 @@ public class MusicPatchNode2 {
 
     byte[] field2402;
     byte[] field2398;
-    int volEnvDecay;
+    int volumeEnvelopeDecay;
     int volEnvAttack;
     int vibratoLFODelay;
     int vibratoLFOFrequency;

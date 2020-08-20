@@ -75,6 +75,37 @@ public class MidiPcmStream extends PcmStream {
         return this.musicVolume;
     }
 
+    public synchronized void loadCustomSoundBank(MidiTrack midiTrack) {
+
+        midiTrack.loadMidiTrackInfo();
+
+        for (ByteArrayNode tableIndex = (ByteArrayNode) midiTrack.table.first(); tableIndex != null; tableIndex = (ByteArrayNode) midiTrack.table.next()) {
+            int patchID = (int) tableIndex.key;
+            MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+            if (musicPatch == null) {
+
+                try {
+                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + LoopTable.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
+                    musicPatch = new MusicPatch(Files.readAllBytes(path));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (musicPatch != null) {
+                    this.musicPatches.put(musicPatch, patchID);
+                }
+            }
+
+            try {
+                if (musicPatch != null) {
+                    musicPatch.loadCustomPatch();
+                }
+            } catch (IOException | UnsupportedAudioFileException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public synchronized boolean loadMusicTrack(MidiTrack midiTrack, Index idx15, SoundBankCache soundBank, int sampleRate) {
         midiTrack.loadMidiTrackInfo();
         boolean patchLoading = true;
@@ -658,8 +689,8 @@ public class MidiPcmStream extends PcmStream {
         var3 = var3 * var3 + 16384 >> 15;
         var3 = var3 * var1.attenuation + 16384 >> 15;
         var3 = var3 * this.musicVolume + 128 >> 8;
-        if (var2.volEnvDecay > 0) {
-            var3 = (int)((double)var3 * Math.pow(0.5D, (double)var2.volEnvDecay * (double)var1.field2456 * 1.953125E-5D) + 0.5D);
+        if (var2.volumeEnvelopeDecay > 0) {
+            var3 = (int)((double) var3 * Math.pow(0.5D, (double) var2.volumeEnvelopeDecay * (double) var1.field2456 * 1.953125E-5D) + 0.5D);
         }
 
         int var4;
@@ -772,7 +803,7 @@ public class MidiPcmStream extends PcmStream {
             ++var1.field2461;
             var1.field2449 += var6.field2401;
             double var8 = (double)((var1.currentNotePitch - 60 << 8) + (var1.field2455 * var1.field2454 >> 12)) * 5.086263020833333E-6D;
-            if (var6.volEnvDecay > 0) {
+            if (var6.volumeEnvelopeDecay > 0) {
                 if (var6.vibratoLFOFrequency > 0) {
                     var1.field2456 += (int)(128.0D * Math.pow(2.0D, (double)var6.vibratoLFOFrequency * var8) + 0.5D);
                 } else {
@@ -889,5 +920,4 @@ public class MidiPcmStream extends PcmStream {
         }
 
     }
-
 }

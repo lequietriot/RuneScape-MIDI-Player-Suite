@@ -1,10 +1,295 @@
 package main;
 
-public class LoopConstants {
+public class LoopTable {
 
-    public static int getHDStart(int id) {
+    public static String RUNESCAPE_VERSION = "RSHD";
 
-        switch (id) {
+    public static int getLoopStart(int sampleID) {
+
+        switch (RUNESCAPE_VERSION) {
+            case "RS2":
+                return getRS2LoopStart(sampleID);
+            case "OSRS":
+                return getOSLoopStart(sampleID);
+            case "RSHD":
+                return getHDLoopStart(sampleID);
+            case "RS3":
+                return getRS3LoopStart(sampleID);
+        }
+
+        return 0;
+    }
+
+    private static int getRS2LoopStart(int sampleID) {
+        //Unfinished
+        switch (sampleID) {
+
+            //Patch 60
+            case 157:
+                return 24281;
+            case 158:
+                return 43418;
+            case 159:
+                return 60642;
+        }
+
+        return 0;
+    }
+
+    private static int getOSLoopStart(int sampleID) {
+
+        //Unfinished
+        switch (sampleID) {
+
+            //Patch 0
+            case 2:
+                return 32861;
+            case 3:
+                return 15224;
+            case 4:
+                return 6092;
+            case 5:
+                return 12091;
+            case 6:
+                return 10570;
+
+            //Patch 1
+            case 7:
+                return 40741;
+            case 8:
+                return 30374;
+            case 9:
+                return 19799;
+
+            //Patch 2
+            case 1:
+                return 23323;
+            case 11:
+                return 17116;
+
+            //Patch 3
+            case 12:
+                return 36605;
+            case 13:
+                return 12415;
+
+            //Patch 4
+            case 14:
+                return 22255;
+            case 15:
+                return 6438;
+            case 16:
+                return 5421;
+
+            //Patch 5
+            case 17:
+                return 14206;
+            case 18:
+                return 7885;
+            case 19:
+                return 19901;
+            case 20:
+                return 16933;
+
+            //Patch 6
+            case 21:
+                return 66357;
+            case 22:
+                return 25691;
+            case 23:
+                return 18049;
+
+            //Patch 7
+            case 24:
+                return 14083;
+            case 25:
+                return 9463;
+
+            //Patch 8
+            case 26:
+                return 9361;
+
+            //Patch 9
+            case 27:
+                return 10977;
+
+            //Patch 10
+            case 28:
+                return 10084;
+
+            //Patch 11
+            case 29:
+                return 15635;
+            case 30:
+                return 9306;
+
+            //Patch 12 - No loop
+
+            //Patch 13 - No loop
+
+            //Patch 14
+            case 33:
+                return 106094;
+            case 34:
+                return 52674;
+            case 35:
+                return 36568;
+
+            //Patch 15 - No loop
+
+            //Patch 16
+            case 39:
+                return 21467;
+            case 40:
+                return 8992;
+
+            //Patch 17
+            case 41:
+                return 18469;
+            case 42:
+                return 12796;
+            case 43:
+                return 5719;
+
+            //Patch 18
+            case 10:
+                return 9875;
+            case 44:
+                return 9510;
+            case 45:
+                return 11875;
+            case 46:
+                return 10744;
+            case 47:
+                return 3668;
+
+            //Patch 19
+            case 48:
+                return 25414;
+            case 49:
+                return 21827;
+            case 50:
+                return 20456;
+            case 51:
+                return 18469;
+            case 52:
+                return 13790;
+
+            //Patch 20
+            case 53:
+                return 17358;
+            case 54:
+                return 9285;
+            case 55:
+                return 7082;
+
+            //Patch 21
+            case 56:
+                return 22432;
+            case 57:
+                return 10654;
+            case 58:
+                return 12915;
+            case 59:
+                return 6051;
+
+            //Patch 22
+            case 60:
+                return 8085;
+            case 61:
+                return 7680;
+            case 62:
+                return 4725;
+
+            //Patch 23
+            case 63:
+                return 12317;
+            case 64:
+                return 6592;
+            case 65:
+                return 15437;
+
+            //Patch 24
+            case 66:
+                return 18151;
+            case 67:
+                return 17916;
+            case 68:
+                return 12967;
+            case 69:
+                return 5371;
+
+            //Patch 25
+            case 70:
+                return 36903;
+            case 71:
+                return 23413;
+            case 72:
+                return 21720;
+
+            //Patch 26
+            case 73:
+                return 25234;
+
+            //Patch 27
+            case 74:
+                return 55422;
+            case 75:
+                return 54632;
+            case 76:
+                return 41894;
+            case 77:
+                return 20334;
+
+            //Patch 28
+            case 78:
+                return 3289;
+
+            //Patch 29
+            case 79:
+                return 31769;
+            case 80:
+                return 26242;
+            case 81:
+                return 24442;
+            case 82:
+                return 21972;
+
+            //Patch 30
+            case 83:
+                return 46029;
+            case 84:
+                return 41492;
+            case 85:
+                return 16168;
+            case 86:
+                return 12039;
+
+            //Patch 31
+            case 87:
+                return 2483;
+
+            //Patch 32
+            case 88:
+                return 14771;
+            case 89:
+                return 19087;
+
+            //Patch 33
+            case 90:
+                return 19559;
+
+            //Patch 34
+            case 91:
+                return 12190;
+        }
+
+        return 0;
+    }
+
+    public static int getHDLoopStart(int sampleID) {
+
+        switch (sampleID) {
 
             //Patch 0
             case 133:
@@ -1320,6 +1605,14 @@ public class LoopConstants {
             case 9725:
                 return 56614;
 
+
+        }
+
+        return 0;
+    }
+
+    private static int getRS3LoopStart(int sampleID) {
+        switch (sampleID) {
 
         }
 

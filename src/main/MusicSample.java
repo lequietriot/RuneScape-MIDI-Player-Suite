@@ -9,7 +9,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 public class MusicSample extends Node {
 
@@ -83,7 +82,7 @@ public class MusicSample extends Node {
          buffer.get(packetData, 0, size);
          this.packets[packet] = packetData;
 
-         System.out.println("Packet " + packet + " (Length: " +  packetData.length + ")" + " - " + Arrays.toString(packetData));
+         //System.out.println("Packet " + packet + " (Length: " +  packetData.length + ")" + " - " + Arrays.toString(packetData));
       }
    }
 

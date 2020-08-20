@@ -4,7 +4,6 @@ import main.utils.Buffer;
 import main.utils.Node;
 import org.displee.cache.index.Index;
 
-import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
@@ -439,7 +438,7 @@ public class MusicPatch extends Node {
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
-            var39[var27].volEnvDecay = patchBuffer.readUnsignedByte();
+            var39[var27].volumeEnvelopeDecay = patchBuffer.readUnsignedByte();
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
@@ -452,7 +451,7 @@ public class MusicPatch extends Node {
                 var28.vibratoLFODelay = patchBuffer.readUnsignedByte();
             }
 
-            if (var28.volEnvDecay > 0) {
+            if (var28.volumeEnvelopeDecay > 0) {
                 var28.vibratoLFOFrequency = patchBuffer.readUnsignedByte();
             }
         }
@@ -508,6 +507,168 @@ public class MusicPatch extends Node {
         return var4;
     }
 
+    /**
+     * Constructs a blank new custom Music Patch, using basic default values.
+     * @param customID a custom patch ID to create the patch in.
+     */
+    public MusicPatch(int customID) {
+        try {
+            createBlankPatch(customID);
+            loadCustomPatch();
+        } catch (IOException | UnsupportedAudioFileException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void modifyExistingPatch(int customID) {
+
+        //short lowestNote = -32768;
+        for (int index = 0; index < 128; index++) {
+            //pitchOffset[index] = lowestNote;
+            //lowestNote += 256;
+        }
+
+        //byte volumeValue = 32;
+        for (int index = 0; index < 128; index++) {
+            //volume[index] = volumeValue;
+        }
+
+        //byte panning = 64;
+        for (int index = 0; index < 128; index++) {
+            //panOffset[index] = panning;
+        }
+
+        //byte loop = -1;
+        for (int index = 0; index < 128; index++) {
+            //loopMode[index] = loop;
+        }
+
+        //int sampleID = customID * 128;
+        for (int index = 0; index < 128; index++) {
+            //sampleOffset[index] = sampleID;
+            //sampleID++;
+        }
+    }
+
+    public void createBlankPatch(int customID) {
+
+        this.audioBuffers = new AudioBuffer[128];
+        this.pitchOffset = new short[128];
+        this.volume = new byte[128];
+        this.panOffset = new byte[128];
+        this.musicPatchNode2 = new MusicPatchNode2[128];
+        this.loopMode = new byte[128];
+        this.sampleOffset = new int[128];
+
+        this.velocity = 32;
+
+        short lowestNote = -32768;
+        for (int index = 0; index < 128; index++) {
+            pitchOffset[index] = lowestNote;
+            lowestNote += 256;
+        }
+
+        byte volumeValue = 32;
+        for (int index = 0; index < 128; index++) {
+            volume[index] = volumeValue;
+        }
+
+        byte panning = 64;
+        for (int index = 0; index < 128; index++) {
+            panOffset[index] = panning;
+        }
+
+        byte loop = -1;
+        for (int index = 0; index < 128; index++) {
+            loopMode[index] = loop;
+        }
+
+        int sampleID = customID * 128;
+        for (int index = 0; index < 128; index++) {
+            sampleOffset[index] = sampleID;
+            sampleID++;
+        }
+
+        for (int index = 0; index < 128; index++) {
+            musicPatchNode2[index] = new MusicPatchNode2();
+            musicPatchNode2[index].field2398 = null;
+            musicPatchNode2[index].field2402 = null;
+            musicPatchNode2[index].volEnvAttack = 0;
+            musicPatchNode2[index].volumeEnvelopeDecay = 0;
+            musicPatchNode2[index].vibratoLFOFrequency = 0;
+            musicPatchNode2[index].vibratoLFOPitch = 0;
+            musicPatchNode2[index].vibratoLFODelay = 0;
+            musicPatchNode2[index].field2401 = 24;
+            musicPatchNode2[index].field2394 = 0;
+        }
+    }
+
+    /**
+     * Loads the initialized custom Music Patch.
+     */
+    public void loadCustomPatch() throws IOException, UnsupportedAudioFileException {
+
+        int position = 0;
+        AudioBuffer audioBuffer = null;
+
+        for (int note = 0; note < 128; ++note) {
+            int sampleID = this.sampleOffset[note];
+            if (sampleID != 0) {
+                if(sampleID != position) {
+                    position = sampleID--;
+                    if((sampleID & 1) == 0) {
+                        audioBuffer = getCustomAudioSampleSFX(sampleID >> 2);
+                    } else {
+                        audioBuffer = getCustomAudioSample(sampleID >> 2);
+                    }
+                }
+
+                if (audioBuffer != null) {
+                    this.audioBuffers[note] = audioBuffer;
+                    this.sampleOffset[note] = 0;
+                }
+            }
+        }
+    }
+
+    public AudioBuffer getCustomAudioSampleSFX(int sampleID) throws IOException, UnsupportedAudioFileException {
+
+        AudioBuffer audioBuffer = null;
+
+        if (localCustomSoundBank != null) {
+            File sampleFile = new File(localCustomSoundBank + "/" + LoopTable.RUNESCAPE_VERSION + "/SFX/" + sampleID + ".wav/");
+            byte[] data = AudioSystem.getAudioInputStream(sampleFile).readAllBytes();
+            int sampleRate = (int) AudioSystem.getAudioInputStream(sampleFile).getFormat().getSampleRate();
+
+            for (int position = 0; position < data.length; position++) {
+                data[position] = (byte) ((data[position] ^ 127) & 0xFF);
+            }
+
+            audioBuffer = new AudioBuffer(sampleRate, data, LoopTable.getLoopStart(sampleID), data.length);
+        }
+
+        return audioBuffer;
+    }
+
+    public AudioBuffer getCustomAudioSample(int sampleID) throws IOException, UnsupportedAudioFileException {
+
+        AudioBuffer audioBuffer = null;
+
+        if (localCustomSoundBank != null) {
+            File sampleFile = new File(localCustomSoundBank + "/" + LoopTable.RUNESCAPE_VERSION + "/Samples/" + sampleID + ".wav/");
+            byte[] data = AudioSystem.getAudioInputStream(sampleFile).readAllBytes();
+            int sampleRate = (int) AudioSystem.getAudioInputStream(sampleFile).getFormat().getSampleRate();
+
+            for (int position = 0; position < data.length; position++) {
+                data[position] = (byte) ((data[position] ^ 127) & 0xFF);
+            }
+
+            audioBuffer = new AudioBuffer(sampleRate, data, LoopTable.getLoopStart(sampleID), data.length);
+        }
+
+        return audioBuffer;
+    }
+
     public boolean localPatchLoader(SoundBankCache soundBankCache, byte[] byteArray, int[] var3) throws IOException, UnsupportedAudioFileException {
         boolean var4 = true;
         int var5 = 0;
@@ -547,35 +708,6 @@ public class MusicPatch extends Node {
         }
 
         return var4;
-    }
-
-    public boolean customPatchLoad(int patchID) throws IOException, UnsupportedAudioFileException {
-
-        boolean var4 = true;
-        AudioBuffer audioBuffer;
-        int notePosition = 0;
-
-        for (int note = 0; note < 128; note++) {
-
-            if (new File("./Sounds/Custom Sound Bank/" + patchID + "/" + note + ".wav/").exists()) {
-
-                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./Sounds/Custom Sound Bank/" + patchID + "/" + note + ".wav/"));
-                byte[] audioData = audioInputStream.readAllBytes();
-
-                for (int l = 0; l < audioData.length; l++) {
-                    audioData[l] = (byte) (audioData[l] ^ 127 & 0xFF);
-                }
-
-                audioBuffer = new AudioBuffer((int) audioInputStream.getFormat().getSampleRate(), audioData, 0, 0);
-                audioBuffers[note] = audioBuffer;
-                pitchOffset[note] = (short) (note * 256);
-
-            }
-
-        }
-
-        return var4;
-
     }
 
     void clear() {

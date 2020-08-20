@@ -148,6 +148,7 @@ public class GUI {
 			utilityMenu.add("Dump Data - MIDI Music...").addActionListener(new MidiDumper());
 			utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
             utilityMenu.add("Dump Data - Sound Bank Samples...").addActionListener(new MusicSampleDumper());
+			utilityMenu.add("Dump Data - Sound Bank Patch...").addActionListener(new SoundBankPatchDumper());
 
 			utilityMenu.add("Dump Data - RS3 Sound Effects...").addActionListener(new StreamSoundEffectDumper());
 
@@ -161,9 +162,9 @@ public class GUI {
 
 			utilityMenu.add("---");
 			utilityMenu.add("Test MIDI with selected SoundBank").addActionListener(new SoundBankSongTester());
-			utilityMenu.add("Test MIDI with a custom SoundBank").addActionListener(new CustomSoundBankSongTester());
+			utilityMenu.add("Test MIDI with a custom SoundBank").addActionListener(new SoundBankPatchTest());
 			utilityMenu.add("Write song to file using SoundBank").addActionListener(new SoundBankSongDumper());
-			utilityMenu.add("Test MIDI Port with selected SoundBank").addActionListener(new MidiPortTester());
+			utilityMenu.add("Write song to file using custom SoundBank").addActionListener(new CustomSoundBankDumper());
 			utilityMenu.add("Batch Convert with SoundBank").addActionListener(new BatchConverter());
 			utilityMenu.add("Encode Data - Soundbank Sample...").addActionListener(new SoundBankEncoder());
 
@@ -1998,6 +1999,9 @@ public class GUI {
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
+
+						System.out.println("Loop Start: " + audioBuffer.start);
+						System.out.println("Loop End: " + audioBuffer.end);
 					} else {
 						System.out.println("Couldn't create new directory (It might already exist).");
 						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
@@ -2008,6 +2012,9 @@ public class GUI {
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
+
+						System.out.println("Loop Start: " + audioBuffer.start);
+						System.out.println("Loop End: " + audioBuffer.end);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -2551,6 +2558,14 @@ public class GUI {
 						soundPlayer.fill(soundPlayer.samples, 256);
 						soundPlayer.write();
 
+						for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
+							for (int index = 0; index < 128; index++) {
+								//musicPatchNode.patch.musicPatchNode2[index].volEnvAttack = 100;
+								//musicPatchNode.patch.musicPatchNode2[index].field2394 = 0;
+								//musicPatchNode.patch.musicPatchNode2[index].field2401 = 128;
+							}
+						}
+
 						if (midiPcmStream.midiFile.isDone()) {
 							break;
 						}
@@ -2844,6 +2859,7 @@ public class GUI {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
+
 			try {
 
 				selectMidiFolder(frame);
@@ -2872,6 +2888,8 @@ public class GUI {
 			for (File midiSeqFile : midiFiles) {
 
 				if (midiSeqFile.getName().contains(".mid")) {
+
+					System.out.println(midiSeqFile.getName());
 
 					midiPcmStream = new MidiPcmStream();
 					Path path = Paths.get(midiSeqFile.toURI());
@@ -2965,16 +2983,64 @@ public class GUI {
 		}
 	}
 
-	private class MidiPortTester implements ActionListener {
+	private class SoundBankPatchTest implements ActionListener {
 
-		private MidiDevice midiDevice;
-		private byte[] transmittedMidi;
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			Index musicIndex = cacheLibrary.getIndex(6);
+
+			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
+
+			try {
+
+				midiPcmStream = new MidiPcmStream();
+				Path path = Paths.get(midiFile.toURI());
+				PcmPlayer.pcmPlayer_stereo = true;
+
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				MidiTrack.midi = Files.readAllBytes(path);
+				MidiTrack.loadMidiTrackInfo();
+
+				midiPcmStream.init(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				midiPcmStream.loadCustomSoundBank(midiTrack);
+
+				SoundPlayer soundPlayer = new SoundPlayer();
+				soundPlayer.setStream(midiPcmStream);
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 16384;
+				soundPlayer.init();
+				soundPlayer.open(soundPlayer.capacity);
+
+				Thread songThread = new Thread(() -> {
+					while (midiPcmStream.active) {
+						soundPlayer.fill(soundPlayer.samples, 256);
+						soundPlayer.write();
+
+						if (midiPcmStream.midiFile.isDone()) {
+							break;
+						}
+					}
+				});
+
+				songThread.start();
+
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+		}
+	}
+
+	private class SoundBankPatchDumper implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
 			Index soundEffectIndex = cacheLibrary.getIndex(4);
-			Index musicIndex = cacheLibrary.getIndex(6);
 			Index soundBankIndex = cacheLibrary.getIndex(14);
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
@@ -2983,84 +3049,74 @@ public class GUI {
 			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
-			midiPcmStream = new MidiPcmStream();
+			MusicPatch musicPatch = new MusicPatch(musicPatchIndex.getArchive(60).getFile(0).getData());
 
-			PcmPlayer.pcmPlayer_stereo = true;
-
-			ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
-
-			MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-			midiTrack.midi = null;
-
-			MidiDevice.Info[] midiDeviceInfos = MidiSystem.getMidiDeviceInfo();
-
-			for (MidiDevice.Info info : midiDeviceInfos) {
-				System.out.println("Available: " + info.getName());
-				if (info.getName().contains("FluidSynth")) {
-					try {
-						if (midiDevice == null) {
-							midiDevice = MidiSystem.getMidiDevice(info);
-							midiDevice.open();
-							System.out.println("FluidSynth Port opened!");
-						}
-					} catch (MidiUnavailableException midiUnavailableException) {
-						midiUnavailableException.printStackTrace();
-					}
-				}
-			}
-
-			SoundPlayer soundPlayer = new SoundPlayer();
-			soundPlayer.setStream(midiPcmStream);
-			soundPlayer.samples = new int[512];
-			soundPlayer.capacity = 16384;
-			soundPlayer.init();
-			soundPlayer.open(soundPlayer.capacity);
-
-			MidiFileReceiver midiFileReceiver = new MidiFileReceiver();
+			MakeSoundFont makeSoundFont = new MakeSoundFont();
 
 			try {
-				sequencer = MidiSystem.getSequencer(false);
-				sequencer.open();
-			} catch (MidiUnavailableException midiUnavailableException) {
-				midiUnavailableException.printStackTrace();
+				makeSoundFont.createSoundFont(musicPatch, soundBankCache);
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
 			}
+		}
+	}
+	private class CustomSoundBankDumper implements ActionListener {
 
-			Thread midiThread = new Thread(() -> {
+		@Override
+		public void actionPerformed(ActionEvent e) {
 
-				if (midiDevice != null) {
+			Index musicIndex = cacheLibrary.getIndex(6);
 
-					while (midiDevice != null) {
+			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
 
-						try {
+			try {
 
-							sequencer.getTransmitter().setReceiver(midiDevice.getReceiver());
+				midiPcmStream = new MidiPcmStream();
+				Path path = Paths.get(midiFile.toURI());
+				PcmPlayer.pcmPlayer_stereo = true;
 
-							ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
 
-							if (sequencer.getSequence().getTracks().length > 0) {
-								MidiSystem.write(sequencer.getSequence(), 1, byteArrayOutputStream);
-							}
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				MidiTrack.midi = Files.readAllBytes(path);
+				MidiTrack.loadMidiTrackInfo();
 
-							midiTrack.midi = byteArrayOutputStream.toByteArray();
+				midiPcmStream.init(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				midiPcmStream.loadCustomSoundBank(midiTrack);
 
-							if (midiTrack.midi.length > 0) {
-
-								midiPcmStream.init(9, 128);
-								midiPcmStream.setMusicTrack(midiTrack, false);
-								midiPcmStream.setPcmStreamVolume(volume);
-								midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-							}
-
-						} catch (IOException | MidiUnavailableException exception) {
-							exception.printStackTrace();
-						}
-
-						soundPlayer.fill(soundPlayer.samples, 256);
-						soundPlayer.write();
+				SoundPlayer soundPlayer = new SoundPlayer();
+				soundPlayer.setStream(midiPcmStream);
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 16384;
+				soundPlayer.init();
+				soundPlayer.open(soundPlayer.capacity);
+				while (midiPcmStream.active) {
+					soundPlayer.fill(soundPlayer.samples, 256);
+					soundPlayer.writeToBuffer();
+					if (midiPcmStream.midiFile.isDone()) {
+						break;
 					}
 				}
-			});
-			midiThread.start();
+
+				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+
+				File outFile = new File("./MIDI Audio/" + midiFile.getName() + ".wav/");
+				FileOutputStream fos;
+
+				try {
+
+					fos = new FileOutputStream(outFile);
+					AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+					AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+					AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
 		}
 	}
 }
