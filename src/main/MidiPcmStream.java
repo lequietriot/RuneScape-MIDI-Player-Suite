@@ -1,9 +1,11 @@
 package main;
 
+import com.sun.media.sound.SF2Soundbank;
 import main.utils.ByteArrayNode;
 import main.utils.NodeHashTable;
 import org.displee.cache.index.Index;
 
+import javax.sound.midi.Soundbank;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
@@ -281,7 +283,7 @@ public class MidiPcmStream extends PcmStream {
                 musicPatchNode.musicPatchInfo = musicPatch.musicPatchNode2[note];
                 musicPatchNode.loopVariable = musicPatch.loopMode[note];
                 musicPatchNode.currentNotePitch = note;
-                musicPatchNode.attenuation = velocity * velocity * musicPatch.volume[note] * musicPatch.panOffset[note] + 1024 >> 11;
+                musicPatchNode.aField2000 = velocity * velocity * musicPatch.volume[note] * musicPatch.panOffset[note] + 1024 >> 11;
                 musicPatchNode.currentPanValue = musicPatch.panOffset[note] & 255;
                 musicPatchNode.frequencyCorrection = (note << 8) - (musicPatch.pitchOffset[note] & 32767);
                 musicPatchNode.field2456 = 0;
@@ -667,7 +669,7 @@ public class MidiPcmStream extends PcmStream {
         var2 += (this.field2423[var1.currentTrack] - 8192) * this.dataEntry[var1.currentTrack] >> 12;
         MusicPatchNode2 var3 = var1.musicPatchInfo;
         int var4;
-        if (var3.field2401 > 0 && (var3.vibratoLFOPitch > 0 || this.modulation[var1.currentTrack] > 0)) {
+        if (var3.voiceCount > 0 && (var3.vibratoLFOPitch > 0 || this.modulation[var1.currentTrack] > 0)) {
             var4 = var3.vibratoLFOPitch << 2;
             int var5 = var3.field2394 << 1;
             if (var1.field2461 < var5) {
@@ -687,7 +689,7 @@ public class MidiPcmStream extends PcmStream {
         MusicPatchNode2 var2 = var1.musicPatchInfo;
         int var3 = this.volume[var1.currentTrack] * this.expression[var1.currentTrack] + 4096 >> 13;
         var3 = var3 * var3 + 16384 >> 15;
-        var3 = var3 * var1.attenuation + 16384 >> 15;
+        var3 = var3 * var1.aField2000 + 16384 >> 15;
         var3 = var3 * this.musicVolume + 128 >> 8;
         if (var2.volumeEnvelopeDecay > 0) {
             var3 = (int)((double) var3 * Math.pow(0.5D, (double) var2.volumeEnvelopeDecay * (double) var1.field2456 * 1.953125E-5D) + 0.5D);
@@ -801,7 +803,7 @@ public class MidiPcmStream extends PcmStream {
             MusicPatchNode2 var6 = var1.musicPatchInfo;
             boolean var7 = false;
             ++var1.field2461;
-            var1.field2449 += var6.field2401;
+            var1.field2449 += var6.voiceCount;
             double var8 = (double)((var1.currentNotePitch - 60 << 8) + (var1.field2455 * var1.field2454 >> 12)) * 5.086263020833333E-6D;
             if (var6.volumeEnvelopeDecay > 0) {
                 if (var6.vibratoLFOFrequency > 0) {
@@ -812,8 +814,8 @@ public class MidiPcmStream extends PcmStream {
             }
 
             if (var6.field2402 != null) {
-                if (var6.volEnvAttack > 0) {
-                    var1.field2457 += (int)(128.0D * Math.pow(2.0D, (double)var6.volEnvAttack * var8) + 0.5D);
+                if (var6.volumeEnvelopeRelease > 0) {
+                    var1.field2457 += (int)(128.0D * Math.pow(2.0D, (double)var6.volumeEnvelopeRelease * var8) + 0.5D);
                 } else {
                     var1.field2457 += 128;
                 }
@@ -879,7 +881,6 @@ public class MidiPcmStream extends PcmStream {
         }
     }
 
-
     public synchronized boolean loadMusicTrackFiles(MidiTrack var1, SoundBankCache soundCache, File idx15, int var4) throws IOException, UnsupportedAudioFileException {
         var1.loadMidiTrackInfo();
         boolean var5 = true;
@@ -919,5 +920,72 @@ public class MidiPcmStream extends PcmStream {
             PcmStream_disable(var1);
         }
 
+    }
+
+    public void loadSoundFontBank(MidiTrack midiTrack, Soundbank soundbank) {
+
+        SF2Soundbank sf2Soundbank = (SF2Soundbank) soundbank;
+
+        midiTrack.loadMidiTrackInfo();
+
+        for (ByteArrayNode tableIndex = (ByteArrayNode) midiTrack.table.first(); tableIndex != null; tableIndex = (ByteArrayNode) midiTrack.table.next()) {
+            int patchID = (int) tableIndex.key;
+            MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+            if (musicPatch == null) {
+
+                try {
+                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + LoopTable.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
+                    musicPatch = new MusicPatch(Files.readAllBytes(path));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (musicPatch != null) {
+                    this.musicPatches.put(musicPatch, patchID);
+                }
+            }
+
+            if (musicPatch != null) {
+                try {
+                    musicPatch.loadCustomBankPatch(sf2Soundbank);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void loadAllSoundFontBankPatches(Soundbank soundbank) {
+
+        SF2Soundbank sf2Soundbank = (SF2Soundbank) soundbank;
+
+        for (int patchID = 0; patchID < 4000; patchID++) {
+
+            MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+
+            if (musicPatch == null) {
+                try {
+                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + LoopTable.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
+
+                    if (new File(String.valueOf(path.toFile())).exists()) {
+                        musicPatch = new MusicPatch(Files.readAllBytes(path));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (musicPatch != null) {
+                    this.musicPatches.put(musicPatch, patchID);
+                }
+            }
+
+            if (musicPatch != null) {
+                try {
+                    musicPatch.loadCustomBankPatch(sf2Soundbank);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

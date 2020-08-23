@@ -2,7 +2,7 @@ package main;
 
 public class LoopTable {
 
-    public static String RUNESCAPE_VERSION = "RSHD";
+    public static String RUNESCAPE_VERSION = "OSRS";
 
     public static int getLoopStart(int sampleID) {
 
@@ -1612,6 +1612,8 @@ public class LoopTable {
     }
 
     private static int getRS3LoopStart(int sampleID) {
+
+        //Unfinished
         switch (sampleID) {
 
         }
