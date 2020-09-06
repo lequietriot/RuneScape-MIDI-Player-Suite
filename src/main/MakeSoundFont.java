@@ -24,66 +24,6 @@ public class MakeSoundFont {
         sf2Soundbank.addResource(sf2Sample);
     }
 
-    public void addSamplesCustom(MusicPatch musicPatch) throws IOException, UnsupportedAudioFileException {
-
-        int var5 = 0;
-        AudioBuffer audioBuffer;
-
-        for(int var7 = 0; var7 < 128; ++var7) {
-
-            int var8 = musicPatch.sampleOffset[var7];
-            if(var8 != 0) {
-                if(var8 != var5) {
-                    var5 = var8--;
-                    if((var8 & 1) == 0) {
-                        audioBuffer = musicPatch.getCustomAudioSampleSFX(var8 >> 2);
-
-                        byte[] rawData = audioBuffer.samples;
-                        byte[] audioData = new byte[rawData.length * 2];
-
-                        for (int frame = 0; frame < rawData.length; frame++) {
-                            audioData[frame * 2] = rawData[frame];
-                            audioData[frame * 2 + 1] = (rawData[frame]);
-                        }
-
-                        sf2Sample = new SF2Sample();
-                        sf2Sample.setName(String.valueOf(((var8 >> 2))));
-                        sf2Sample.setData(audioData);
-                        sf2Sample.setSampleRate(audioBuffer.sampleRate);
-                        sf2Sample.setStartLoop(audioBuffer.start);
-                        sf2Sample.setEndLoop(audioBuffer.end);
-                        sf2Sample.setSampleType(1);
-                        sf2Sample.setSampleLink(0);
-
-                        addSamplesToBank(sf2Sample);
-
-                    } else {
-                        audioBuffer = musicPatch.getCustomAudioSample(var8 >> 2);
-
-                        byte[] rawData = audioBuffer.samples;
-                        byte[] audioData = new byte[rawData.length * 2];
-
-                        for (int frame = 0; frame < rawData.length; frame++) {
-                            audioData[frame * 2] = rawData[frame];
-                            audioData[frame * 2 + 1] = (rawData[frame]);
-                        }
-
-                        sf2Sample = new SF2Sample();
-                        sf2Sample.setName(String.valueOf(((var8 >> 2))));
-                        sf2Sample.setData(audioData);
-                        sf2Sample.setSampleRate(audioBuffer.sampleRate);
-                        sf2Sample.setStartLoop(audioBuffer.start);
-                        sf2Sample.setEndLoop(audioBuffer.end);
-                        sf2Sample.setSampleType(1);
-                        sf2Sample.setSampleLink(0);
-
-                        addSamplesToBank(sf2Sample);
-                    }
-                }
-            }
-        }
-    }
-
     public void addSamples(MusicPatch musicPatch, SoundBankCache soundBankCache) {
 
         int var5 = 0;

@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,7 +135,7 @@ public class GUI {
 
 			preferencesMenu.add("Set Default SoundFont").addActionListener(new DefaultSoundFontSetter());
 			preferencesMenu.add("SoundBank - Audio Settings").addActionListener(new SoundBankSettings());
-			preferencesMenu.add("SoundBank - Audio Controllers").addActionListener(new SoundBankControls());
+			//preferencesMenu.add("SoundBank - Audio Controllers").addActionListener(new SoundBankControls());
 
 			utilityMenu = new JMenu();
 			utilityMenu.setText("Tools");
@@ -3012,6 +3013,7 @@ public class GUI {
 				//midiPcmStream.loadCustomSoundBank(midiTrack);
 
 				try {
+					//midiPcmStream.loadCreateSoundFontBanks(MidiSystem.getSoundbank(soundsetFile));
 					midiPcmStream.loadSoundFontBank(midiTrack, MidiSystem.getSoundbank(soundsetFile));
 				} catch (InvalidMidiDataException invalidMidiDataException) {
 					invalidMidiDataException.printStackTrace();
@@ -3059,11 +3061,30 @@ public class GUI {
 			MusicPatch.localSoundEffects = new File("./Sounds/Sound Effects/");
 
 			SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
-			MakeSoundFont makeSoundFont = new MakeSoundFont();
-			makeSoundFont.initSoundFont();
+			//MakeSoundFont makeSoundFont = new MakeSoundFont();
+			//makeSoundFont.initSoundFont();
 
+			int index = 116;
+			File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + index + ".dat/");
+
+			try {
+				MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
+				System.out.println(Arrays.toString(musicPatch.musicPatchNode2[0].field2398));
+				System.out.println(Arrays.toString(musicPatch.musicPatchNode2[0].field2402));
+				System.out.println(musicPatch.musicPatchNode2[0].volumeEnvelopeDecay);
+				System.out.println(musicPatch.musicPatchNode2[0].volumeEnvelopeRelease);
+				System.out.println(musicPatch.musicPatchNode2[0].vibratoLFODelay);
+				System.out.println(musicPatch.musicPatchNode2[0].vibratoLFOFrequency);
+				System.out.println(musicPatch.musicPatchNode2[0].vibratoLFOPitch);
+				System.out.println(musicPatch.musicPatchNode2[0].voiceCount);
+				System.out.println(musicPatch.musicPatchNode2[0].field2394);
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+
+			/**
 			for (int index = 0; index < 4000; index++) {
-				File patch = new File(MusicPatch.localCustomSoundBank + "/" + LoopTable.RUNESCAPE_VERSION + "/Patches/" + index + ".dat/");
+				File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + index + ".dat/");
 				if (patch.exists()) {
 					try {
 						MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
@@ -3074,7 +3095,6 @@ public class GUI {
 				}
 			}
 
-			/**
 			for (int index = 0; index < 4000; index++) {
 				if (musicPatchIndex.getArchive(index) != null) {
 					MusicPatch musicPatch = new MusicPatch(musicPatchIndex.getArchive(index).getFile(0).getData());
@@ -3083,7 +3103,7 @@ public class GUI {
 			}
 			 **/
 
-			makeSoundFont.saveSoundBank();
+			//makeSoundFont.saveSoundBank();
 		}
 	}
 	private class CustomSoundBankDumper implements ActionListener {

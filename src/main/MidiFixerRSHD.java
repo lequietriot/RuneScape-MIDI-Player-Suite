@@ -1,16 +1,8 @@
 package main;
 
+import javax.sound.midi.*;
 import java.io.File;
 import java.io.IOException;
-
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
-import javax.sound.midi.MidiEvent;
-import javax.sound.midi.MidiMessage;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Sequence;
-import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Track;
 
 public class MidiFixerRSHD {
 	
@@ -167,9 +159,9 @@ public class MidiFixerRSHD {
 	final static String patch264 = "New Age Pad (2)";
 	final static String patch265 = "Synth Flute";
 	final static String patch266 = "Choir Aahs (3)";
-	final static String patch267 = "Spring SFX 1";
-	final static String patch268 = "Spring SFX 2";
-	final static String patch269 = "Spring SFX 3";
+	final static String patch267 = "Spring SFX (1)";
+	final static String patch268 = "Spring SFX (2)";
+	final static String patch269 = "Spring SFX (3)";
 	final static String patch270 = "Spring SFX 4";
 	final static String patch271 = "Spring SFX 5";
 	final static String patch272 = "Spring SFX 6";
@@ -200,7 +192,7 @@ public class MidiFixerRSHD {
 	final static String patch297 = "One Piercing Note, Part 1";
 	final static String patch298 = "Valerio's Song";
 	final static String patch299 = "Citharede Requiem Vocals";
-	final static String patch300 = "Tremolo Strings (2)"; // This patch is transposed down 48 notes. (?)
+	final static String patch300 = "Tremolo Strings (2)"; // This patch is transposed down 24 notes.
 	final static String patch301 = "Diamond Jubilee";
 	final static String patch302 = "Percussion Loops";
 	final static String patch303 = "Varrock Saradominist Church";

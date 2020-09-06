@@ -1,16 +1,8 @@
 package main;
 
+import javax.sound.midi.*;
 import java.io.File;
 import java.io.IOException;
-
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
-import javax.sound.midi.MidiEvent;
-import javax.sound.midi.MidiMessage;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Sequence;
-import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Track;
 
 public class MidiFixerOSRS {
 	
@@ -153,9 +145,9 @@ public class MidiFixerOSRS {
 	final static String patch184 = "Special Effects Drum Kit";
 	final static String patch255 = "Standard Drum Kit";
 	
-	final static String patch256 = "Slow Choir Oh"; //This patch is transposed down 12 notes.
-	final static String patch257 = "Voice (Staccato)"; //This patch is transposed down 24 notes.
-	final static String patch258 = "Voice (Sustained)"; //This patch is transposed down 36 notes.
+	final static String patch256 = "Slow Choir Ohh"; //This patch is transposed down 12 notes.
+	final static String patch257 = "Opera Voice (Staccato)"; //This patch is transposed down 24 notes.
+	final static String patch258 = "Opera Voice (Sustain)"; //This patch is transposed down 36 notes.
 
 	static int bankLSB = 0;
 	

@@ -11,7 +11,7 @@ public class MusicPatchNode extends Node {
     int currentTrack; //The current track that is being played.
     int loopVariable; //Typically -1, indicating a sample loop until note off.
     int currentNotePitch; //The note pitch, valued 0 through 127, to cover all 128 keys.
-    int aField2000;
+    int maxVolumeLevel; //The maximum volume level.
     int currentPanValue; //Panning value, 0 (Left) through 127 (Right): value of 64 means audio is centered.
     int frequencyCorrection; //Can be negative or positive, Each note is either -256 or +256 (octaves are -/+3072).
     int field2454;
@@ -27,6 +27,7 @@ public class MusicPatchNode extends Node {
     int field2462;
 
     MusicPatchNode() {
+
     }
 
     void clearMusicPatchNode() {
