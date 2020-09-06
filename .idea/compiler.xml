@@ -2,7 +2,7 @@
 <project version="4">
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="OSRS-MIDI-Player" options="--add-exports=java.desktop/com.sun.media.sound=ALL-UNNAMED" />
+      <module name="RuneScape-MIDI-Player-Suite" options="--add-exports=java.desktop/com.sun.media.sound=ALL-UNNAMED" />
     </option>
   </component>
 </project>

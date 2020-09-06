@@ -2,7 +2,7 @@
   <artifact type="jar" name="OSRS-MIDI-Player:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/OSRS_MIDI_Player_jar</output-path>
     <root id="archive" name="OSRS-MIDI-Player.jar">
-      <element id="module-output" name="OSRS-MIDI-Player" />
+      <element id="module-output" name="RuneScape-MIDI-Player-Suite" />
       <element id="extracted-dir" path="$PROJECT_DIR$/libs/jffmpeg-1.1.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/libs/Displee-RS-Cache-Library.jar" path-in-jar="/" />
     </root>
