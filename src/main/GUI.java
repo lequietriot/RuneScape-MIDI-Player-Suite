@@ -1,6 +1,7 @@
 package main;
 
 import com.sun.media.sound.AudioSynthesizer;
+import main.utils.Buffer;
 import org.displee.CacheLibrary;
 import org.displee.cache.index.Index;
 
@@ -143,6 +144,7 @@ public class GUI {
 			utilityMenu.setVisible(true);
 
 			utilityMenu.add("Encode Data - MIDI Music...").addActionListener(new MidiEncoder());
+			utilityMenu.add("Create Sound Bank Patch").addActionListener(new PatchCreator());
 			//utilityMenu.add("Generate Sound - MIDI Note...").addActionListener(new MidiNoteGenerator());
 			//utilityMenu.add("Generate Random Music").addActionListener(new RandomMidiGenerator());
 			//utilityMenu.add("Modify Existing Music").addActionListener(new MidiTransposer());
@@ -3064,20 +3066,16 @@ public class GUI {
 			//MakeSoundFont makeSoundFont = new MakeSoundFont();
 			//makeSoundFont.initSoundFont();
 
-			int index = 116;
-			File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + index + ".dat/");
+			//int index = 116;
+			//File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + index + ".dat/");
+			File patch = new File("./Patch.dat/");
 
 			try {
 				MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
-				System.out.println(Arrays.toString(musicPatch.musicPatchNode2[0].field2398));
-				System.out.println(Arrays.toString(musicPatch.musicPatchNode2[0].field2402));
-				System.out.println(musicPatch.musicPatchNode2[0].volumeEnvelopeDecay);
-				System.out.println(musicPatch.musicPatchNode2[0].volumeEnvelopeRelease);
-				System.out.println(musicPatch.musicPatchNode2[0].vibratoLFODelay);
-				System.out.println(musicPatch.musicPatchNode2[0].vibratoLFOFrequency);
-				System.out.println(musicPatch.musicPatchNode2[0].vibratoLFOPitch);
-				System.out.println(musicPatch.musicPatchNode2[0].voiceCount);
-				System.out.println(musicPatch.musicPatchNode2[0].field2394);
+				System.out.println(Arrays.toString(Buffer.writeSignedVarInt(25674)));
+				for (int index = 0; index < 128; index++) {
+					System.out.println(index + " - " + (musicPatch.sampleOffset[index] >> 2));
+				}
 			} catch (IOException ioException) {
 				ioException.printStackTrace();
 			}
@@ -3333,6 +3331,22 @@ public class GUI {
 			if (returnValue == JFileChooser.APPROVE_OPTION) {
 				File path = new File(chooseMidiFolder.getSelectedFile().getPath());
 				midiFiles = path.listFiles();
+			}
+		}
+	}
+
+	private class PatchCreator implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				File patchFile = new File("./Patch.dat/");
+				FileOutputStream fileOutputStream = new FileOutputStream(patchFile);
+				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+				dataOutputStream.write(0);
+
+			} catch (IOException error) {
+				error.printStackTrace();
 			}
 		}
 	}

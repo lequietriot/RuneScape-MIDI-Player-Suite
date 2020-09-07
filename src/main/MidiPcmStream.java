@@ -901,10 +901,14 @@ public class MidiPcmStream extends PcmStream {
             int patchID = (int) tableIndex.key;
             MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
             if (musicPatch == null) {
-
                 try {
                     Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
-                    musicPatch = new MusicPatch(Files.readAllBytes(path));
+                    if (path.toFile().exists()) {
+                        musicPatch = new MusicPatch(Files.readAllBytes(path));
+                    }
+                    else {
+                        musicPatch = PatchBanks.getMusicPatch(patchID, sf2Soundbank);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

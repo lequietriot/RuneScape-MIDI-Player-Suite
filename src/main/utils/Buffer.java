@@ -613,4 +613,23 @@ public class Buffer extends Node {
       this.index += 2;
       return (this.array[this.index - 1] & 255) + ((this.array[this.index - 2] & 255) << 8);
    }
+
+   public static byte[] writeSignedVarInt(int value) {
+      return writeUnsignedVarInt((value << 1) ^ (value >> 31));
+   }
+
+   public static byte[] writeUnsignedVarInt(int value) {
+      byte[] byteArrayList = new byte[10];
+      int i = 0;
+      while ((value & 0xFFFFFF80) != 0L) {
+         byteArrayList[i++] = ((byte) ((value & 0x7F) | 0x80));
+         value >>>= 7;
+      }
+      byteArrayList[i] = ((byte) (value & 0x7F));
+      byte[] out = new byte[i + 1];
+      for (; i >= 0; i--) {
+         out[i] = byteArrayList[i];
+      }
+      return out;
+   }
 }
