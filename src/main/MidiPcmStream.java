@@ -269,8 +269,9 @@ public class MidiPcmStream extends PcmStream {
                 }
 
                 if (musicPatch.pitchOffset[note] < 0) {
-                    assert musicPatchNode.stream != null;
-                    musicPatchNode.stream.setNumLoops(-1);
+                    if (musicPatchNode.stream != null) {
+                        musicPatchNode.stream.setNumLoops(-1);
+                    }
                 }
 
                 if (musicPatchNode.loopVariable >= 0) {
@@ -905,9 +906,13 @@ public class MidiPcmStream extends PcmStream {
                     Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
                     if (path.toFile().exists()) {
                         musicPatch = new MusicPatch(Files.readAllBytes(path));
+                        musicPatch.loadSf2ID(sf2Soundbank, patchID);
+                        //musicPatch.loadCustomBankPatch(sf2Soundbank);
                     }
                     else {
-                        musicPatch = PatchBanks.getMusicPatch(patchID, sf2Soundbank);
+                        musicPatch = PatchBanks.getCustomMusicPatch(patchID, sf2Soundbank);
+                        musicPatch.loadSf2ID(sf2Soundbank, patchID);
+                        //musicPatch.loadCustomBankPatchID(sf2Soundbank);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -919,11 +924,7 @@ public class MidiPcmStream extends PcmStream {
             }
 
             if (musicPatch != null) {
-                try {
-                    musicPatch.loadCustomBankPatch(sf2Soundbank);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                //musicPatch.loadCustomBankPatch(sf2Soundbank);
             }
         }
     }

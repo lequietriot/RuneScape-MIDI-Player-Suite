@@ -1,7 +1,6 @@
 package main;
 
 import com.sun.media.sound.AudioSynthesizer;
-import main.utils.Buffer;
 import org.displee.CacheLibrary;
 import org.displee.cache.index.Index;
 
@@ -3066,16 +3065,20 @@ public class GUI {
 			//MakeSoundFont makeSoundFont = new MakeSoundFont();
 			//makeSoundFont.initSoundFont();
 
-			//int index = 116;
-			//File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + index + ".dat/");
-			File patch = new File("./Patch.dat/");
+			int id = 0;
+			File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
+			//File patch = new File("./Patch.dat/");
 
 			try {
 				MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
-				System.out.println(Arrays.toString(Buffer.writeSignedVarInt(25674)));
-				for (int index = 0; index < 128; index++) {
-					System.out.println(index + " - " + (musicPatch.sampleOffset[index] >> 2));
-				}
+				System.out.println("2402? - " + (Arrays.toString(musicPatch.musicPatchNode2[36].field2402)));
+				System.out.println("2398? - " + (Arrays.toString(musicPatch.musicPatchNode2[36].field2398)));
+				System.out.println("Decay? - " + (musicPatch.musicPatchNode2[36].volumeEnvelopeDecay));
+				System.out.println("Release? - " + (musicPatch.musicPatchNode2[36].volumeEnvelopeRelease));
+				System.out.println("Field2394 - " + (musicPatch.musicPatchNode2[36].field2394));
+				System.out.println("LFODelay - " + (musicPatch.musicPatchNode2[36].vibratoLFODelay));
+				System.out.println("LFOFreq - " + (musicPatch.musicPatchNode2[36].vibratoLFOFrequency));
+				System.out.println("LFOPitch - " + (musicPatch.musicPatchNode2[36].vibratoLFOPitch));
 			} catch (IOException ioException) {
 				ioException.printStackTrace();
 			}

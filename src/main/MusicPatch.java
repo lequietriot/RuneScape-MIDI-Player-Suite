@@ -1,11 +1,14 @@
 package main;
 
+import com.sun.media.sound.SF2Instrument;
+import com.sun.media.sound.SF2Region;
 import com.sun.media.sound.SF2Sample;
 import com.sun.media.sound.SF2Soundbank;
 import main.utils.Buffer;
 import main.utils.Node;
 import org.displee.cache.index.Index;
 
+import javax.sound.midi.Patch;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
@@ -604,17 +607,18 @@ public class MusicPatch extends Node {
 
         for (int index = 0; index < 128; index++) {
             musicPatchNode2[index] = new MusicPatchNode2();
-            musicPatchNode2[index].field2398 = new byte[]{0, 64};
-            musicPatchNode2[index].field2402 = new byte[]{0, 64};
+            musicPatchNode2[index].field2398 = null;
+            musicPatchNode2[index].field2402 = null;
             musicPatchNode2[index].volumeEnvelopeRelease = 0;
             musicPatchNode2[index].volumeEnvelopeDecay = 0;
             musicPatchNode2[index].vibratoLFOFrequency = 0;
             musicPatchNode2[index].vibratoLFOPitch = 0;
             musicPatchNode2[index].vibratoLFODelay = 0;
-            musicPatchNode2[index].voiceCount = 0;
+            musicPatchNode2[index].voiceCount = 24;
             musicPatchNode2[index].field2394 = 0;
         }
     }
+
     /**
      * Loads the initialized custom Music Patch.
      */
@@ -649,18 +653,18 @@ public class MusicPatch extends Node {
         for (int note = 0; note < 128; ++note) {
             int sampleID = this.sampleOffset[note];
             if (sampleID != 0) {
-                //if(sampleID != position) {
-                    //position = sampleID--;
+                if(sampleID != position) {
+                    position = sampleID--;
                     if((sampleID & 1) == 0) {
                         for (SF2Sample sf2Sample : sf2Soundbank.getSamples()) {
-                            if ((sampleID) == Integer.parseInt(sf2Sample.getName())) {
+                            if ((sampleID >> 2) == Integer.parseInt(sf2Sample.getName())) {
                                 audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), (int) sf2Sample.getStartLoop(), (int) sf2Sample.getEndLoop());
                                 System.out.println("Loaded Sample ID " + (sampleID));
                             }
                         }
                     } else {
                         for (SF2Sample sf2Sample : sf2Soundbank.getSamples()) {
-                            if ((sampleID) == Integer.parseInt(sf2Sample.getName())) {
+                            if ((sampleID >> 2) == Integer.parseInt(sf2Sample.getName())) {
                                 audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), (int) sf2Sample.getStartLoop(), (int) sf2Sample.getEndLoop());
                                 System.out.println("Loaded Sample ID " + (sampleID));
                             }
@@ -673,7 +677,7 @@ public class MusicPatch extends Node {
                     this.sampleOffset[note] = 0;
                 }
             }
-        //}
+        }
     }
 
     public byte[] getEightBitData(SF2Sample sf2Sample) throws IOException {
@@ -731,5 +735,107 @@ public class MusicPatch extends Node {
 
     void clear() {
         this.sampleOffset = null;
+    }
+
+    /**
+     * Loads the initialized custom Music Patch.
+     */
+    public void loadCustomBankPatchID(SF2Soundbank sf2Soundbank) throws IOException {
+
+        int position = 0;
+        AudioBuffer audioBuffer = null;
+
+        for (int note = 0; note < 128; ++note) {
+            int sampleID = this.sampleOffset[note];
+            if (sampleID != 0) {
+                //if(sampleID != position) {
+                    //position = sampleID--;
+                    if((sampleID & 1) == 0) {
+                        for (SF2Sample sf2Sample : sf2Soundbank.getSamples()) {
+                            if ((sampleID) == Integer.parseInt(sf2Sample.getName())) {
+                                audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), (int) sf2Sample.getStartLoop(), (int) sf2Sample.getEndLoop());
+                                System.out.println("Loaded Sample ID " + (sampleID));
+                            }
+                        }
+                    } else {
+                        for (SF2Sample sf2Sample : sf2Soundbank.getSamples()) {
+                            if ((sampleID) == Integer.parseInt(sf2Sample.getName())) {
+                                audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), (int) sf2Sample.getStartLoop(), (int) sf2Sample.getEndLoop());
+                                System.out.println("Loaded Sample ID " + (sampleID));
+                            }
+                        }
+                    }
+                }
+
+                if (audioBuffer != null) {
+                    this.audioBuffers[note] = audioBuffer;
+                    this.sampleOffset[note] = 0;
+                }
+            //}
+        }
+    }
+
+    /**
+     * Loads the initialized custom Music Patch.
+     */
+    public void loadSf2ID(SF2Soundbank sf2Soundbank, int patchID) throws IOException {
+
+        AudioBuffer audioBuffer;
+        Patch patch;
+
+        int bank = 0;
+        int patchNumber = patchID;
+
+        while (patchNumber > 127) {
+            patchNumber = patchNumber - 128;
+            bank++;
+        }
+
+        bank = bank * 128;
+
+        patch = new Patch(bank, patchNumber);
+
+        System.out.println(bank);
+        System.out.println(patchNumber);
+        System.out.println(sf2Soundbank.getInstrument(patch));
+
+        if (sf2Soundbank.getInstrument(patch) != null) {
+
+            for (int region = 0; region < ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().toArray().length; region++) {
+
+                for (int layer = 0; layer < ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().toArray().length; layer++) {
+
+                    SF2Sample sf2Sample = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getSample();
+                    byte[] noteRange = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_KEYRANGE);
+                    int loopMode = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_SAMPLEMODES);
+
+                    byte[] overridingNote = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_OVERRIDINGROOTKEY);
+
+                    if (noteRange[1] >= noteRange[0]) {
+                        noteRange[1]++;
+                    }
+
+                    for (int note = noteRange[0]; note < noteRange[1]; note++) {
+
+                        if (loopMode >= 1) {
+                            audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), (int) sf2Sample.getStartLoop(), (int) sf2Sample.getEndLoop());
+                        } else {
+                            audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), -1, -1, false);
+                        }
+
+                        this.audioBuffers[note] = audioBuffer;
+                        this.sampleOffset[note] = 0;
+
+                        if (overridingNote != null && overridingNote[0] != -1) {
+                            this.pitchOffset[note] = (short) ((overridingNote[0] * 256) - 32768);
+                        }
+
+                        else {
+                            this.pitchOffset[note] = (short) ((sf2Sample.getOriginalPitch() * 256) - 32768);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
