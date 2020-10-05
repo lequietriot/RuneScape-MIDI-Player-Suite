@@ -121,7 +121,7 @@ public class MakeSoundFont {
                 System.out.println();
                 System.out.println("Patch #" + musicPatchNode.patch.key);
                 System.out.println("Note/Key = " + musicPatchNode.currentNotePitch);
-                System.out.println("Fixed Velocity = " + (musicPatchNode.patch.velocity + musicPatchNode.patch.volume[musicPatchNode.currentNotePitch]));
+                System.out.println("Fixed Velocity = " + (musicPatchNode.patch.baseVelocity + musicPatchNode.patch.volume[musicPatchNode.currentNotePitch]));
                 System.out.println();
 
             }

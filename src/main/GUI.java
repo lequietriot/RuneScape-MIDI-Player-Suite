@@ -18,7 +18,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -502,8 +501,8 @@ public class GUI {
 		public void actionPerformed(ActionEvent e) {
 
 			try {
-				MidiLoader midiLoader = new MidiLoader(MidiSystem.getSoundbank(soundsetFile), MidiSystem.getSequence(midiFile).getTracks().length);
-				midiLoader.load(midiFile);
+				MidiLoader midiLoader = new MidiLoader();
+				midiLoader.load(MidiSystem.getSoundbank(soundsetFile), midiFile);
 			} catch (MidiUnavailableException | IOException | InvalidMidiDataException midiUnavailableException) {
 				midiUnavailableException.printStackTrace();
 			}
@@ -3065,20 +3064,18 @@ public class GUI {
 			//MakeSoundFont makeSoundFont = new MakeSoundFont();
 			//makeSoundFont.initSoundFont();
 
-			int id = 0;
+			int id = 116;
 			File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
 			//File patch = new File("./Patch.dat/");
 
 			try {
 				MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
-				System.out.println("2402? - " + (Arrays.toString(musicPatch.musicPatchNode2[36].field2402)));
-				System.out.println("2398? - " + (Arrays.toString(musicPatch.musicPatchNode2[36].field2398)));
-				System.out.println("Decay? - " + (musicPatch.musicPatchNode2[36].volumeEnvelopeDecay));
-				System.out.println("Release? - " + (musicPatch.musicPatchNode2[36].volumeEnvelopeRelease));
-				System.out.println("Field2394 - " + (musicPatch.musicPatchNode2[36].field2394));
-				System.out.println("LFODelay - " + (musicPatch.musicPatchNode2[36].vibratoLFODelay));
-				System.out.println("LFOFreq - " + (musicPatch.musicPatchNode2[36].vibratoLFOFrequency));
-				System.out.println("LFOPitch - " + (musicPatch.musicPatchNode2[36].vibratoLFOPitch));
+				for (int index = 0; index < 128; index++) {
+					System.out.println();
+					System.out.println("Sample: " + index + " - " + (musicPatch.sampleOffset[index] >> 2));
+					System.out.println("Note Velocity: " + index + " - " + (musicPatch.baseVelocity + musicPatch.volume[index]));
+					System.out.println("Note Pan: " + index + " : " + ((musicPatch.panOffset[index] - 64) * 1.28));
+				}
 			} catch (IOException ioException) {
 				ioException.printStackTrace();
 			}

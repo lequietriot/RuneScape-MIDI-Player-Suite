@@ -12,9 +12,42 @@ public class MidiLoader {
 
     int trackCount;
 
-    public MidiLoader(Soundbank soundbank, int tracks) throws MidiUnavailableException {
+    public MidiLoader() {
 
-        trackCount = tracks;
+    }
+
+    private Patch[] getPatchList() {
+
+        Patch[] patches = null;
+        int bankSelect = 0;
+
+        for (Track track : sequence.getTracks()) {
+            for (int index = 0; index < track.size(); index++) {
+                MidiEvent midiEvent = track.get(index);
+                MidiMessage midiMessage = midiEvent.getMessage();
+                if (midiMessage instanceof ShortMessage) {
+                    ShortMessage shortMessage = (ShortMessage) midiMessage;
+                    if (shortMessage.getCommand() == ShortMessage.CONTROL_CHANGE) {
+                        if (shortMessage.getData1() == 32) {
+                            bankSelect = shortMessage.getData2();
+                        }
+                    }
+
+                    if (shortMessage.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+                        Patch patch = new Patch(bankSelect, shortMessage.getData1());
+                        patches = new Patch[]{patch};
+                    }
+                }
+            }
+        }
+        return patches;
+    }
+
+    public void load(Soundbank soundbank, File midi) throws InvalidMidiDataException, IOException, MidiUnavailableException {
+
+        sequence = MidiSystem.getSequence(midi);
+        trackCount = sequence.getTracks().length;
+
         sequencers = new Sequencer[trackCount];
 
         for (int index = 0; index < sequencers.length; index++) {
@@ -32,12 +65,6 @@ public class MidiLoader {
 
             sequencers[index].getTransmitter().setReceiver(synthesizers[index].getReceiver());
         }
-    }
-
-    public void load(File midi) throws InvalidMidiDataException, IOException {
-
-        sequence = MidiSystem.getSequence(midi);
-        trackCount = sequence.getTracks().length;
 
         for (int track = 0; track < trackCount; track++) {
             sequencers[track].setSequence(sequence);

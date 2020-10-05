@@ -23,7 +23,7 @@ public class MusicPatch extends Node {
     MusicPatchNode2[] musicPatchNode2;
     byte[] loopMode;
     int[] sampleOffset;
-    int velocity;
+    int baseVelocity;
 
     static File localSoundBankSamples;
     static File localSoundBankPatches;
@@ -276,7 +276,7 @@ public class MusicPatch extends Node {
             --var20;
         }
 
-        this.velocity = patchBuffer.readUnsignedByte() + 1;
+        this.baseVelocity = patchBuffer.readUnsignedByte() + 1;
 
         MusicPatchNode2 var28;
         int var29;
@@ -576,7 +576,7 @@ public class MusicPatch extends Node {
         this.loopMode = new byte[128];
         this.sampleOffset = new int[128];
 
-        this.velocity = 32;
+        this.baseVelocity = 32;
 
         short lowestNote = -32768;
         for (int index = 0; index < 128; index++) {
@@ -795,6 +795,7 @@ public class MusicPatch extends Node {
 
         patch = new Patch(bank, patchNumber);
 
+        System.out.println();
         System.out.println(bank);
         System.out.println(patchNumber);
         System.out.println(sf2Soundbank.getInstrument(patch));
@@ -808,30 +809,31 @@ public class MusicPatch extends Node {
                     SF2Sample sf2Sample = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getSample();
                     byte[] noteRange = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_KEYRANGE);
                     int loopMode = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_SAMPLEMODES);
+                    int pitchCorrection = sf2Sample.getPitchCorrection();
 
                     byte[] overridingNote = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_OVERRIDINGROOTKEY);
 
-                    if (noteRange[1] >= noteRange[0]) {
+                    if (noteRange[0] == noteRange[1]) {
                         noteRange[1]++;
                     }
 
-                    for (int note = noteRange[0]; note < noteRange[1]; note++) {
+                    for (int note = noteRange[0]; note < noteRange[1] + 1; note++) {
 
                         if (loopMode >= 1) {
                             audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), (int) sf2Sample.getStartLoop(), (int) sf2Sample.getEndLoop());
                         } else {
-                            audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), -1, -1, false);
+                            audioBuffer = new AudioBuffer((int) sf2Sample.getSampleRate(), getEightBitData(sf2Sample), 0, 0);
                         }
 
                         this.audioBuffers[note] = audioBuffer;
                         this.sampleOffset[note] = 0;
 
                         if (overridingNote != null && overridingNote[0] != -1) {
-                            this.pitchOffset[note] = (short) ((overridingNote[0] * 256) - 32768);
+                            this.pitchOffset[note] = (short) (((overridingNote[0] * 256)) - 32768 + pitchCorrection);
                         }
 
                         else {
-                            this.pitchOffset[note] = (short) ((sf2Sample.getOriginalPitch() * 256) - 32768);
+                            this.pitchOffset[note] = (short) (((sf2Sample.getOriginalPitch() * 256)) - 32768 + pitchCorrection);
                         }
                     }
                 }

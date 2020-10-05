@@ -910,8 +910,8 @@ public class MidiPcmStream extends PcmStream {
                         //musicPatch.loadCustomBankPatch(sf2Soundbank);
                     }
                     else {
-                        musicPatch = PatchBanks.getCustomMusicPatch(patchID, sf2Soundbank);
-                        musicPatch.loadSf2ID(sf2Soundbank, patchID);
+                        //musicPatch = PatchBanks.getCustomMusicPatch(patchID, sf2Soundbank);
+                        //musicPatch.loadSf2ID(sf2Soundbank, patchID);
                         //musicPatch.loadCustomBankPatchID(sf2Soundbank);
                     }
                 } catch (IOException e) {
