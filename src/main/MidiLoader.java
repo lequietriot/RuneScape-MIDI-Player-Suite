@@ -11,37 +11,7 @@ public class MidiLoader {
     Synthesizer[] synthesizers;
 
     int trackCount;
-
-    public MidiLoader() {
-
-    }
-
-    private Patch[] getPatchList() {
-
-        Patch[] patches = null;
-        int bankSelect = 0;
-
-        for (Track track : sequence.getTracks()) {
-            for (int index = 0; index < track.size(); index++) {
-                MidiEvent midiEvent = track.get(index);
-                MidiMessage midiMessage = midiEvent.getMessage();
-                if (midiMessage instanceof ShortMessage) {
-                    ShortMessage shortMessage = (ShortMessage) midiMessage;
-                    if (shortMessage.getCommand() == ShortMessage.CONTROL_CHANGE) {
-                        if (shortMessage.getData1() == 32) {
-                            bankSelect = shortMessage.getData2();
-                        }
-                    }
-
-                    if (shortMessage.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-                        Patch patch = new Patch(bankSelect, shortMessage.getData1());
-                        patches = new Patch[]{patch};
-                    }
-                }
-            }
-        }
-        return patches;
-    }
+    long pausedPosition;
 
     public void load(Soundbank soundbank, File midi) throws InvalidMidiDataException, IOException, MidiUnavailableException {
 
@@ -65,11 +35,62 @@ public class MidiLoader {
 
             sequencers[index].getTransmitter().setReceiver(synthesizers[index].getReceiver());
         }
+    }
+
+    public void play() throws InvalidMidiDataException {
 
         for (int track = 0; track < trackCount; track++) {
             sequencers[track].setSequence(sequence);
             sequencers[track].setTrackSolo(track, true);
             sequencers[track].start();
+        }
+    }
+
+    public void pause() {
+
+        for (int track = 0; track < trackCount; track++) {
+            pausedPosition = sequencers[track].getMicrosecondPosition();
+            sequencers[track].stop();
+        }
+    }
+
+    public void resume() throws InvalidMidiDataException {
+
+        for (int track = 0; track < trackCount; track++) {
+
+            sequencers[track].setSequence(sequence);
+
+            if (pausedPosition != 0) {
+                sequencers[track].setMicrosecondPosition(pausedPosition);
+            }
+
+            sequencers[track].setTrackSolo(track, true);
+            sequencers[track].start();
+        }
+    }
+
+    public void stop() {
+
+        for (int track = 0; track < trackCount; track++) {
+            sequencers[track].stop();
+        }
+    }
+
+    public boolean isSequencerRunning() {
+        return sequencers[0].isRunning();
+    }
+
+    public long getSequencePosition() {
+        return sequencers[0].getMicrosecondPosition();
+    }
+
+    public void setLoop(long loopStart, long loopEnd, int loopCount) throws InvalidMidiDataException {
+
+        for (int track = 0; track < trackCount; track++) {
+            sequencers[track].setSequence(sequence);
+            sequencers[track].setLoopStartPoint(loopStart);
+            sequencers[track].setLoopEndPoint(loopEnd);
+            sequencers[track].setLoopCount(loopCount);
         }
     }
 }

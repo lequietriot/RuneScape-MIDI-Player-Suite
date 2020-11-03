@@ -148,15 +148,15 @@ public class MidiFixerRSHD {
 	final static String patch184 = "Special Effects Drum Kit";
 	final static String patch255 = "Standard Drum Kit";
 	
-	final static String patch256 = "Choir Aahs (2)"; //This patch is transposed down 12 notes.
-	final static String patch257 = "Warm Pad (2)";
+	final static String patch256 = "Choir Aahs (2)"; // This patch is transposed down 12 notes.
+	final static String patch257 = "Warm Pad (2)"; // This patch is transposed up 12 notes.
 	final static String patch258 = "Pizzicato Strings (2)";
 	final static String patch259 = "Taiko Drum (2)";
 	final static String patch260 = "Pan Flute (2)"; // This patch is transposed up 12 notes.
 	final static String patch261 = "Strings Marcato";
 	final static String patch262 = "Slow Strings (2)";
 	final static String patch263 = "Acoustic Grand Piano (2)";
-	final static String patch264 = "New Age Pad (2)";
+	final static String patch264 = "New Age Pad (2)"; // This patch is transposed down 12 notes.
 	final static String patch265 = "Synth Flute";
 	final static String patch266 = "Choir Aahs (3)";
 	final static String patch267 = "Spring SFX (1)";

@@ -38,4 +38,4 @@ Yes, go ahead and experiment with the soundbank dumping and packing, you can mix
 
 # To do list (Ideas)
 - Sound Encoding tools (Sound Effects, Sound Bank...)
-- Automatic soundfont creating from cache
+- Automatic soundfont creating from cache (Being worked on)

@@ -812,6 +812,8 @@ public class MusicPatch extends Node {
                     int pitchCorrection = sf2Sample.getPitchCorrection();
 
                     byte[] overridingNote = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_OVERRIDINGROOTKEY);
+                    int fineTune = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_FINETUNE);
+                    int coarseTune = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_COARSETUNE);
 
                     if (noteRange[0] == noteRange[1]) {
                         noteRange[1]++;
@@ -829,11 +831,11 @@ public class MusicPatch extends Node {
                         this.sampleOffset[note] = 0;
 
                         if (overridingNote != null && overridingNote[0] != -1) {
-                            this.pitchOffset[note] = (short) (((overridingNote[0] * 256)) - 32768 + pitchCorrection);
+                            this.pitchOffset[note] = (short) (((overridingNote[0] * 256)) - 32768 + (pitchCorrection + fineTune + coarseTune));
                         }
 
                         else {
-                            this.pitchOffset[note] = (short) (((sf2Sample.getOriginalPitch() * 256)) - 32768 + pitchCorrection);
+                            this.pitchOffset[note] = (short) (((sf2Sample.getOriginalPitch() * 256)) - 32768 + (pitchCorrection + fineTune + coarseTune));
                         }
                     }
                 }
