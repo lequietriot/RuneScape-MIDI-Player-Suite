@@ -1,0 +1,9 @@
+MIDI/
+MIDI Audio/
+Raw Data/
+SoundFonts/
+Sounds/
+out/
+
+DefaultCachePath.txt
+DefaultSoundfontPath.txt

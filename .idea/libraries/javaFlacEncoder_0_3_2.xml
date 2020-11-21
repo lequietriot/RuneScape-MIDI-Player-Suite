@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="javaFlacEncoder-0.3.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libs/javaFlacEncoder-0.3.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
