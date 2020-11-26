@@ -7,6 +7,8 @@ import java.io.IOException;
 public class MidiLoader {
 
     Sequence sequence;
+    Sequencer sequencer;
+
     Sequencer[] sequencers;
     Synthesizer[] synthesizers;
 
@@ -92,5 +94,13 @@ public class MidiLoader {
             sequencers[track].setLoopEndPoint(loopEnd);
             sequencers[track].setLoopCount(loopCount);
         }
+    }
+
+    public void setMusicTrack(Sequence sequence, boolean loop) {
+
+    }
+
+    public void loadMusicTrack(Soundbank soundbank) {
+
     }
 }

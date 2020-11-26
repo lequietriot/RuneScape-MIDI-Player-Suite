@@ -1,6 +1,5 @@
 package main;
 
-import com.sun.media.sound.AudioSynthesizer;
 import main.utils.ByteArrayNode;
 import org.displee.CacheLibrary;
 import org.displee.cache.index.Index;
@@ -19,9 +18,8 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class GUI {
 	
@@ -80,11 +78,6 @@ public class GUI {
 	private JCheckBox fixAttemptOS;
 	private JCheckBox fixAttemptHD;
 
-	private ControllerEventListener volumeListener;
-	private ControllerEventListener retriggerListener;
-	private boolean retriggerEffect = false;
-	private int retriggerValue;
-
 	private JTextPane volumeInfo;
 	private JTextPane sampleRateInfo;
 	private int volume = 256;
@@ -137,7 +130,7 @@ public class GUI {
 
 			preferencesMenu.add("Set Default SoundFont").addActionListener(new DefaultSoundFontSetter());
 			preferencesMenu.add("SoundBank - Audio Settings").addActionListener(new SoundBankSettings());
-			//preferencesMenu.add("SoundBank - Audio Controllers").addActionListener(new SoundBankControls());
+			preferencesMenu.add("SoundBank - MIDI Effects").addActionListener(new SoundBankControls());
 
 			utilityMenu = new JMenu();
 			utilityMenu.setText("Tools");
@@ -146,7 +139,7 @@ public class GUI {
 
 			utilityMenu.add("Encode Data - MIDI Music...").addActionListener(new MidiEncoder());
 			utilityMenu.add("Create Sound Bank Patch").addActionListener(new PatchCreator());
-			//utilityMenu.add("Generate Sound - MIDI Note...").addActionListener(new MidiNoteGenerator());
+			utilityMenu.add("Generate Sound - MIDI Note...").addActionListener(new MidiNoteGenerator());
 			//utilityMenu.add("Generate Random Music").addActionListener(new RandomMidiGenerator());
 			//utilityMenu.add("Modify Existing Music").addActionListener(new MidiTransposer());
 
@@ -174,7 +167,7 @@ public class GUI {
 			utilityMenu.add("Write song to file using custom SoundBank").addActionListener(new CustomSoundBankDumper());
 			utilityMenu.add("Batch Convert with SoundBank").addActionListener(new BatchConverter());
 			utilityMenu.add("Batch Convert with custom SoundBank").addActionListener(new CustomBatchConverter());
-			//utilityMenu.add("Encode Data - Soundbank Sample...").addActionListener(new SoundBankEncoder());
+			utilityMenu.add("Encode Data - Soundbank Sample...").addActionListener(new SoundBankEncoder());
 
 			playlistMenu = new JMenu();
 			playlistMenu.setText("Playlist");
@@ -1940,35 +1933,38 @@ public class GUI {
 
 			for (int idInt = 0; idInt < cacheLibrary.getIndex(4).getArchives().length; idInt++) {
 
-				ByteBuffer sfxBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(4).getArchive(idInt).getFile(0).getData());
-				SoundEffect soundEffect = new SoundEffect();
-				soundEffect.decode(sfxBuffer);
+				if (cacheLibrary.getIndex(4).getArchive(idInt) != null) {
 
-				try {
-					File dir = new File("./Sounds/Sound Effects/");
-					if (dir.mkdirs()) {
-						System.out.println("Created new directory: /Sounds/Sound Effects/");
-						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
-						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-						AudioBuffer audioBuffer = soundEffect.toAudioBuffer();
-						AudioInputStream audioInputStream;
-						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
-						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
-						dos.write(byteArrayOutputStream.toByteArray());
-						System.out.println("Wrote sound effect data to WAVE file!");
-					} else {
-						System.out.println("Couldn't create new directory (It might already exist).");
-						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
-						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-						AudioBuffer audioBuffer = soundEffect.toAudioBuffer();
-						AudioInputStream audioInputStream;
-						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
-						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
-						dos.write(byteArrayOutputStream.toByteArray());
-						System.out.println("Wrote sound effect data to WAVE file!");
+					ByteBuffer sfxBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(4).getArchive(idInt).getFile(0).getData());
+					SoundEffect soundEffect = new SoundEffect();
+					soundEffect.decode(sfxBuffer);
+
+					try {
+						File dir = new File("./Sounds/Sound Effects/");
+						if (dir.mkdirs()) {
+							System.out.println("Created new directory: /Sounds/Sound Effects/");
+							DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
+							ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+							AudioBuffer audioBuffer = soundEffect.toAudioBuffer();
+							AudioInputStream audioInputStream;
+							audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
+							AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+							dos.write(byteArrayOutputStream.toByteArray());
+							System.out.println("Wrote sound effect data to WAVE file!");
+						} else {
+							System.out.println("Couldn't create new directory (It might already exist).");
+							DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
+							ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+							AudioBuffer audioBuffer = soundEffect.toAudioBuffer();
+							AudioInputStream audioInputStream;
+							audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
+							AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+							dos.write(byteArrayOutputStream.toByteArray());
+							System.out.println("Wrote sound effect data to WAVE file!");
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
 					}
-				} catch (IOException e) {
-					e.printStackTrace();
 				}
 			}
 		}
@@ -2117,12 +2113,15 @@ public class GUI {
 		private JTextField noteInput;
 
 		private static Sequence sequence;
+		private Index index4;
+		private Index index14;
 		private Index index15;
 		private SoundBankCache soundBankCache;
 		private static int bankLSBValue;
 		private static int programValue;
 		private static int patchValue;
 		private static int noteValue;
+		private MidiPcmStream midiPcmStream;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -2131,7 +2130,7 @@ public class GUI {
 
 				try {
 
-					sequence = new Sequence(Sequence.PPQ, 480);
+					sequence = new Sequence(Sequence.PPQ, 960);
 
 					generateMidi();
 
@@ -2150,7 +2149,10 @@ public class GUI {
 
 		public synchronized void generateSound() {
 
+			index4 = cacheLibrary.getIndex(4);
+			index14 = cacheLibrary.getIndex(14);
 			index15 = cacheLibrary.getIndex(15);
+
 			soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
 
 			File filePath = new File("./Generated Midi/");
@@ -2160,6 +2162,61 @@ public class GUI {
 				try {
 					DataOutputStream dos = new DataOutputStream(new FileOutputStream(generatedMidi));
 					MidiSystem.write(sequence, 1, dos);
+
+					SoundBankCache soundBankCache = new SoundBankCache(index4, index14);
+					midiPcmStream = new MidiPcmStream();
+					Path path = Paths.get(generatedMidi.toURI());
+
+					try {
+
+						PcmPlayer.pcmPlayer_stereo = true;
+
+						ByteBuffer byteBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(0).getFile(0).getData());
+
+						MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+						MidiTrack.midi = Files.readAllBytes(path);
+						MidiTrack.loadMidiTrackInfo();
+
+						midiPcmStream.init(9, 128);
+						midiPcmStream.setMusicTrack(midiTrack, false);
+						midiPcmStream.setPcmStreamVolume(255 / 2);
+						midiPcmStream.loadMusicTrack(midiTrack, index15, soundBankCache, 0);
+
+						SoundPlayer soundPlayer = new SoundPlayer();
+						soundPlayer.setStream(midiPcmStream);
+						soundPlayer.samples = new int[512];
+						soundPlayer.capacity = 16384;
+						soundPlayer.init();
+						soundPlayer.open(soundPlayer.capacity);
+
+						while (midiPcmStream.active) {
+
+							soundPlayer.fill(soundPlayer.samples, 256);
+							soundPlayer.writeToBuffer();
+
+							if (midiPcmStream.midiFile.isDone()) {
+								break;
+							}
+						}
+
+						byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+
+						File outFile = new File("./MIDI Audio/" + generatedMidi.getName().replace(".mid", "") + ".wav/");
+						FileOutputStream fos;
+
+						try {
+
+							fos = new FileOutputStream(outFile);
+							AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+							AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+							AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+
+						} catch (IOException ex) {
+							ex.printStackTrace();
+						}
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -2171,12 +2228,58 @@ public class GUI {
 					DataOutputStream dos = new DataOutputStream(new FileOutputStream(generatedMidi));
 					MidiSystem.write(sequence, 1, dos);
 
-					File encodedMidi = MidiTrack.encode(sequence);
-					byte[] encodedData = Files.readAllBytes(Paths.get(encodedMidi.getPath()));
+					SoundBankCache soundBankCache = new SoundBankCache(index4, index14);
+					midiPcmStream = new MidiPcmStream();
+					Path path = Paths.get(generatedMidi.toURI());
 
-					cacheLibrary.getIndex(6).getArchive(0).removeFile(0);
-					cacheLibrary.getIndex(6).addArchive(0).addFile(encodedData);
-					cacheLibrary.getIndex(6).update();
+					try {
+
+						PcmPlayer.pcmPlayer_stereo = true;
+
+						ByteBuffer byteBuffer = ByteBuffer.wrap(cacheLibrary.getIndex(6).getArchive(0).getFile(0).getData());
+
+						MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+						MidiTrack.midi = Files.readAllBytes(path);
+						MidiTrack.loadMidiTrackInfo();
+
+						midiPcmStream.init(9, 128);
+						midiPcmStream.setMusicTrack(midiTrack, false);
+						midiPcmStream.setPcmStreamVolume(255 / 2);
+						midiPcmStream.loadMusicTrack(midiTrack, index15, soundBankCache, 0);
+
+						SoundPlayer soundPlayer = new SoundPlayer();
+						soundPlayer.setStream(midiPcmStream);
+						soundPlayer.samples = new int[512];
+						soundPlayer.capacity = 16384;
+						soundPlayer.init();
+						soundPlayer.open(soundPlayer.capacity);
+
+						while (midiPcmStream.active) {
+							soundPlayer.fill(soundPlayer.samples, 256);
+							soundPlayer.writeToBuffer();
+							if (midiPcmStream.midiFile.isDone()) {
+								break;
+							}
+						}
+
+						byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+
+						File outFile = new File("./MIDI Audio/" + generatedMidi.getName().replace(".mid", "") + ".wav/");
+						FileOutputStream fos;
+
+						try {
+
+							fos = new FileOutputStream(outFile);
+							AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+							AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+							AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+
+						} catch (IOException ex) {
+							ex.printStackTrace();
+						}
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
 
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -2270,9 +2373,11 @@ public class GUI {
 					track.add(new MidiEvent(volumeValue, 1));
 					track.add(new MidiEvent(volumeValueLSB, 1));
 					track.add(new MidiEvent(expression, 1));
-					track.add(new MidiEvent(sustain, 1));
+					//track.add(new MidiEvent(sustain, 1));
 					track.add(new MidiEvent(noteOnValue, 3));
 					track.add(new MidiEvent(noteOffValue, 30003));
+					track.add(new MidiEvent(noteOnValue, 60003));
+					track.add(new MidiEvent(noteOffValue, 60006));
 					track.add(new MidiEvent(programChange, 2));
 					track.add(new MidiEvent(bankSelectMSB, 2));
 					track.add(new MidiEvent(bankSelectLSB, 1));
@@ -2342,13 +2447,18 @@ public class GUI {
 				midiPcmStream.init(9, 128);
 				midiPcmStream.setMusicTrack(midiTrack, false);
 				midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
+			}
 
+			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
+
+			for (int archive = 0; archive < 1; archive++) {
 				MakeSoundFont makeSoundFont = new MakeSoundFont();
 				makeSoundFont.initSoundFont();
-
-				int archive = 6;
-				makeSoundFont.makeSoundFont(new MusicPatch(patchIndex.getArchive(archive).getFile(0).getData()), soundBankCache, archive);
-				makeSoundFont.saveSoundBank(archive);
+				if (patchIndex.getArchive(archive) != null) {
+					makeSoundFont.makeSoundFont(new MusicPatch(patchIndex.getArchive(archive).getFile(0).getData()), soundBankCache, archive);
+					makeSoundFont.saveSoundBank(archive);
+					System.out.println("Created a new SoundFont using Patch " + archive);
+				}
 			}
 		}
 	}
@@ -2374,133 +2484,120 @@ public class GUI {
 
 	private class TestButtonListener implements ActionListener {
 
-		AudioFormat audioFormat;
-		int trackCount;
+		MidiTrack midiTrack;
+		MidiDevice midiDevice;
+
+		Sequence sequence;
+		Sequencer sequencer;
+
+		Index index4;
+		Index index14;
+		Index index15;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			audioFormat = new AudioFormat(44100, 16, 2, true, false);
+			Index musicIndex = cacheLibrary.getIndex(6);
 
 			try {
-				Sequencer sequencer = MidiSystem.getSequencer(false);
-				Sequence sequence = MidiSystem.getSequence(midiFile);
-				Soundbank soundbank = MidiSystem.getSoundbank(soundsetFile);
+				midiPcmStream = new MidiPcmStream();
+				Path path = Paths.get(midiFile.toURI());
+				PcmPlayer.pcmPlayer_stereo = true;
 
-				sequencer.open();
-				sequencer.setSequence(sequence);
-				trackCount = sequence.getTracks().length;
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				MidiTrack.midi = Files.readAllBytes(path);
+				MidiTrack.loadMidiTrackInfo();
 
-				System.out.println("Track Count - " + trackCount);
+				midiPcmStream.init(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				midiPcmStream.loadTestSoundBank(midiTrack);
 
-				for (int track = 0; track < trackCount; track++) {
+				SoundPlayer soundPlayer = new SoundPlayer();
+				soundPlayer.setStream(midiPcmStream);
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 16384;
+				soundPlayer.init();
+				soundPlayer.open(soundPlayer.capacity);
 
-					File file = new File("./Tracks/" + track + ".wav/");
-					FileOutputStream fileOutputStream = new FileOutputStream(file);
+				Thread songThread = new Thread(() -> {
+					while (midiPcmStream.active) {
+						soundPlayer.fill(soundPlayer.samples, 256);
+						soundPlayer.write();
 
-					System.out.println("Rendering... Track " + track);
-
-					AudioSynthesizer audioSynthesizer = findAudioSynthesizer();
-
-					Map<String,Object> infoMap = new HashMap<>();
-					infoMap.put("resamplerType", "sinc");
-					infoMap.put("maxPolyphony", "1024");
-					AudioInputStream audioInputStream = audioSynthesizer.openStream(audioFormat, infoMap);
-
-					audioSynthesizer.unloadAllInstruments(audioSynthesizer.getDefaultSoundbank());
-					audioSynthesizer.loadAllInstruments(soundbank);
-
-					sequencer.setTrackSolo(track, true);
-					sequencer.getTransmitter().setReceiver(audioSynthesizer.getReceiver());
-
-					Sequence soloTrack = new Sequence(sequence.getDivisionType(), sequence.getResolution());
-					Track soloedTrack = soloTrack.createTrack();
-
-					for (int index = 0; index < sequence.getTracks()[track].size(); index++) {
-						MidiEvent midiEvent = sequence.getTracks()[track].get(index);
-						soloedTrack.add(midiEvent);
-					}
-
-					double total = send(soloTrack, audioSynthesizer.getReceiver());
-
-					long length = (long) (audioInputStream.getFormat().getFrameRate() * (total + 4));
-					audioInputStream = new AudioInputStream(audioInputStream, audioInputStream.getFormat(), length);
-
-					AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, fileOutputStream);
-				}
-
-			} catch (MidiUnavailableException | IOException | InvalidMidiDataException exception) {
-				exception.printStackTrace();
-			}
-		}
-
-		public double send(Sequence seq, Receiver recv) {
-			float divtype = seq.getDivisionType();
-			assert (seq.getDivisionType() == Sequence.PPQ);
-			Track[] tracks = seq.getTracks();
-			int[] trackspos = new int[tracks.length];
-			int mpq = 500000;
-			int seqres = seq.getResolution();
-			long lasttick = 0;
-			long curtime = 0;
-			while (true) {
-				MidiEvent selevent = null;
-				int seltrack = -1;
-				for (int i = 0; i < tracks.length; i++) {
-					int trackpos = trackspos[i];
-					Track track = tracks[i];
-					if (trackpos < track.size()) {
-						MidiEvent event = track.get(trackpos);
-						if (selevent == null
-								|| event.getTick() < selevent.getTick()) {
-							selevent = event;
-							seltrack = i;
+						if (midiPcmStream.midiFile.isDone()) {
+							break;
 						}
 					}
-				}
-				if (seltrack == -1)
-					break;
-				trackspos[seltrack]++;
-				long tick = selevent.getTick();
-				if (divtype == Sequence.PPQ)
-					curtime += ((tick - lasttick) * mpq) / seqres;
-				else
-					curtime = (long) ((tick * 1000000.0 * divtype) / seqres);
-				lasttick = tick;
-				MidiMessage msg = selevent.getMessage();
-				if (msg instanceof MetaMessage) {
-					if (divtype == Sequence.PPQ)
-						if (((MetaMessage) msg).getType() == 0x51) {
-							byte[] data = ((MetaMessage) msg).getData();
-							mpq = ((data[0] & 0xff) << 16)
-									| ((data[1] & 0xff) << 8) | (data[2] & 0xff);
+				});
+
+				songThread.start();
+
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+		}
+
+		private void initMidi() throws InvalidMidiDataException, InterruptedException {
+
+			Sequence sequence = new Sequence(Sequence.PPQ, 960);
+			sequencer.setSequence(sequence);
+
+			for (int track = 0; track < 16; track++) {
+				sequencer.recordEnable(sequence.createTrack(), track);
+			}
+
+			sequencer.startRecording();
+			Thread.sleep(10000);
+			sequencer.stopRecording();
+		}
+
+		/**
+		public void unusedAction() {
+
+			Index musicIndex = cacheLibrary.getIndex(6);
+
+			try {
+				midiPcmStream = new MidiPcmStream();
+				Path path = Paths.get(midiFile.toURI());
+				PcmPlayer.pcmPlayer_stereo = true;
+
+				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
+				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
+				MidiTrack.midi = Files.readAllBytes(path);
+				MidiTrack.loadMidiTrackInfo();
+
+				midiPcmStream.init(9, 128);
+				midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				midiPcmStream.loadTestSoundBank(midiTrack);
+
+				SoundPlayer soundPlayer = new SoundPlayer();
+				soundPlayer.setStream(midiPcmStream);
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 16384;
+				soundPlayer.init();
+				soundPlayer.open(soundPlayer.capacity);
+
+				Thread songThread = new Thread(() -> {
+					while (midiPcmStream.active) {
+						soundPlayer.fill(soundPlayer.samples, 256);
+						soundPlayer.write();
+
+						if (midiPcmStream.midiFile.isDone()) {
+							break;
 						}
-				} else {
-					if (recv != null)
-						recv.send(msg, curtime);
-				}
+					}
+				});
+
+				songThread.start();
+
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
 			}
-			return curtime / 1000000.0;
 		}
-
-		public AudioSynthesizer findAudioSynthesizer() throws MidiUnavailableException {
-
-			Synthesizer synth = MidiSystem.getSynthesizer();
-
-			if (synth instanceof AudioSynthesizer) {
-				return (AudioSynthesizer) synth;
-			}
-
-			MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
-
-			for (MidiDevice.Info info : infos) {
-				MidiDevice dev = MidiSystem.getMidiDevice(info);
-				if (dev instanceof AudioSynthesizer) {
-					return (AudioSynthesizer) dev;
-				}
-			}
-			return null;
-		}
+		 **/
 	}
 
 	private class CustomSoundBankSongTester implements ActionListener {
@@ -2608,11 +2705,10 @@ public class GUI {
 						soundPlayer.write();
 
 						for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
-							for (int index = 0; index < 128; index++) {
-								//musicPatchNode.patch.musicPatchNode2[index].volEnvAttack = 100;
-								//musicPatchNode.patch.musicPatchNode2[index].field2394 = 0;
-								//musicPatchNode.patch.musicPatchNode2[index].field2401 = 128;
-							}
+							//System.out.println();
+							//System.out.println("volume : " + midiPcmStream.calculateVolume(musicPatchNode));
+							//System.out.println("method 3864 : " + midiPcmStream.method3864(musicPatchNode));
+							//System.out.println("method 3819 : " + midiPcmStream.method3819(musicPatchNode));
 						}
 
 						if (midiPcmStream.midiFile.isDone()) {
@@ -2761,21 +2857,26 @@ public class GUI {
 
 			try {
 
-				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./Test.wav/"));
+				//AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./Test.wav/"));
 
-				FileOutputStream fileOutputStream = new FileOutputStream(new File("./Test.dat/"));
-				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+				//FileOutputStream fileOutputStream = new FileOutputStream(new File("./Test.ogg/"));
 
-				MusicSample musicSample = new MusicSample(audioInputStream, dataOutputStream, 0);
+				//MusicSample musicSample = new MusicSample(audioInputStream, dataOutputStream, 0);
 
-				Path path = Paths.get("./Test.dat/");
+				Path path = Paths.get("./TestF.ogg/");
+				byte[] bytes = Files.readAllBytes(path);
+				for (int index = 0; index < bytes.length; index++) {
+					//bytes[index] = (byte) (bytes[index] & 0xFF);
+				}
+
+				//VorbisEncoder.encode(new File("./Test2.wav/"), new File("./Test.ogg/"));
 
 				cacheLibrary.getIndex(14).getArchive(1).removeFile(0);
-				cacheLibrary.getIndex(14).addArchive(1).addFile(Files.readAllBytes(path));
+				cacheLibrary.getIndex(14).addArchive(1).addFile(bytes);
 				cacheLibrary.getIndex(14).getArchive(1).getFile(0).setName(0);
 				cacheLibrary.getIndex(14).update();
 
-			} catch (IOException | UnsupportedAudioFileException ex) {
+			} catch (IOException ex) {
 				ex.printStackTrace();
 			}
 		}
@@ -3075,7 +3176,7 @@ public class GUI {
 				Thread songThread = new Thread(() -> {
 					while (midiPcmStream.active) {
 						soundPlayer.fill(soundPlayer.samples, 256);
-						soundPlayer.write();
+						soundPlayer.writeCustom(); //write
 
 						if (midiPcmStream.midiFile.isDone()) {
 							break;
@@ -3110,20 +3211,81 @@ public class GUI {
 			//MakeSoundFont makeSoundFont = new MakeSoundFont();
 			//makeSoundFont.initSoundFont();
 
-			int id = 45;
-			File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
-			//File patch = new File("./Patch.dat/");
+			for (int id = 0; id < 300; id++) {
 
-			try {
-				MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
-				for (int index = 0; index < 128; index++) {
-					System.out.println();
-					System.out.println("Sample: " + index + " - " + (musicPatch.sampleOffset[index] >> 2));
-					System.out.println("Note Velocity: " + index + " - " + (musicPatch.baseVelocity + musicPatch.volume[index]));
-					System.out.println("Note Pan: " + index + " : " + ((musicPatch.panOffset[index] - 64) * 1.28));
+				File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
+
+				if (patch.exists()) {
+
+					try {
+
+						MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
+
+						File patchText = new File("./Patch Text Files/" + id + ".txt/");
+						FileOutputStream patchFileOut = new FileOutputStream(patchText);
+						BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(patchFileOut), 160);
+
+						bufferedWriter.write(PatchBanks.PATCH_NAME + id);
+						bufferedWriter.newLine();
+
+						for (int index = 0; index < 128; index++) {
+
+							if (musicPatch.musicPatchNode2[index] != null) {
+
+								bufferedWriter.write('\n');
+								bufferedWriter.write(PatchBanks.SAMPLE_NAME + getSampleOffsetID(musicPatch, index));
+
+								int rootKey = ((musicPatch.pitchOffset[index] / 256) + 128);
+
+								while (rootKey > 128) {
+									rootKey = rootKey - 128;
+								}
+
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.SAMPLE_ROOT_KEY + rootKey);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.KEY_LOW_RANGE + index);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.KEY_HIGH_RANGE + index);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.MASTER_VOLUME + musicPatch.baseVelocity);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.LOOP_START + getLoopStart(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.LOOP_END + getLoopEnd(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.SAMPLE_VOLUME + musicPatch.volumeOffset[index]);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.SAMPLE_PAN + musicPatch.panOffset[index]);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.PARAMETER_1 + musicPatch.musicPatchNode2[index].volumeEnvelopeDecay);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.PARAMETER_2 + musicPatch.musicPatchNode2[index].volumeEnvelopeRelease);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.PARAMETER_3 + musicPatch.musicPatchNode2[index].vibratoLFODelay);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.PARAMETER_4 + musicPatch.musicPatchNode2[index].vibratoLFOFrequency);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.PARAMETER_5 + musicPatch.musicPatchNode2[index].vibratoLFOPitch);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.PARAMETER_6 + musicPatch.musicPatchNode2[index].volumeEnvelopeSustain);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.PARAMETER_7 + musicPatch.musicPatchNode2[index].field2394);
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.ARRAY_1 + Arrays.toString(musicPatch.musicPatchNode2[index].field2398));
+								bufferedWriter.newLine();
+								bufferedWriter.write(PatchBanks.ARRAY_2 + Arrays.toString(musicPatch.musicPatchNode2[index].field2402));
+								bufferedWriter.newLine();
+								bufferedWriter.flush();
+							}
+						}
+
+						System.out.println("Wrote patch " + id);
+
+					} catch (IOException ioException) {
+						ioException.printStackTrace();
+					}
 				}
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
 			}
 
 			/**
@@ -3149,7 +3311,65 @@ public class GUI {
 
 			//makeSoundFont.saveSoundBank();
 		}
+
+		private boolean isSfx(MusicPatch musicPatch, int note) {
+
+			int var5 = 0;
+			int var8 = musicPatch.sampleOffset[note];
+
+			if (var8 != 0) {
+				if (var5 != var8) {
+					var5 = var8--;
+					if ((var8 & 1) == 0) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		private int getLoopStart(SoundBankCache soundBankCache, int sampleOffsetID, boolean soundEffects) {
+
+			if (soundEffects) {
+				return soundBankCache.getSoundEffect(sampleOffsetID, null).start;
+			}
+			else {
+				return soundBankCache.getMusicSample(sampleOffsetID, null).start;
+			}
+		}
+
+		private int getLoopEnd(SoundBankCache soundBankCache, int sampleOffsetID, boolean soundEffects) {
+
+			if (soundEffects) {
+				return soundBankCache.getSoundEffect(sampleOffsetID, null).end;
+			}
+			else {
+				return soundBankCache.getMusicSample(sampleOffsetID, null).end;
+			}
+		}
+
+		private int getSampleOffsetID(MusicPatch musicPatch, int note) {
+
+			int var5 = 0;
+			int var8 = musicPatch.sampleOffset[note];
+
+			if (var8 != 0) {
+				if (var5 != var8) {
+					var5 = var8--;
+					if ((var8 & 1) == 0) {
+						return var8 >> 2;
+					} else {
+						return var8 >> 2;
+					}
+				}
+			}
+			return var5;
+		}
 	}
+
 	private class CustomSoundBankDumper implements ActionListener {
 
 		@Override
@@ -3227,7 +3447,7 @@ public class GUI {
 			JPanel controlPanel = new JPanel();
 			controlPanel.setVisible(true);
 
-			patchVolumeTextField = new JTextField("Volume");
+			patchVolumeTextField = new JTextField("Value");
 			patchVolumeTextField.setVisible(true);
 			patchVolumeTextField.addActionListener(actionEvent -> checkForVolumeInput(this.patchVolumeTextField));
 
@@ -3249,7 +3469,12 @@ public class GUI {
 			int value = Integer.parseInt(volumeInput);
 
 			if (midiPcmStream != null) {
-				System.out.println();
+				for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
+					for (int index = 0; index < 128; index++) {
+						musicPatchNode.patch.musicPatchNode2[index].volumeEnvelopeDecay = value;
+
+					}
+				}
 			}
 		}
 	}
@@ -3305,7 +3530,7 @@ public class GUI {
 					midiPcmStream.setMusicTrack(midiTrack, loopMode);
 					midiPcmStream.setPcmStreamVolume(volume);
 					//midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-					midiPcmStream.loadAllSoundFontBankPatches(soundBank);
+					midiPcmStream.loadSoundFontBank(midiTrack, MidiSystem.getSoundbank(soundsetFile));
 
 					SoundPlayer soundPlayer = new SoundPlayer();
 					soundPlayer.setStream(midiPcmStream);

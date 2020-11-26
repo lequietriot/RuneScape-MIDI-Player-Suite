@@ -105,7 +105,7 @@ public class SoundBankCache {
         int sampleRate = (int) AudioSystem.getAudioInputStream(soundEffectFile).getFormat().getSampleRate();
 
         for (int l = 0; l < data.length; l++) {
-            data[l] = (byte) ((data[l] ^ 127) & 0xFF);
+            data[l] = (byte) ((data[l] ^ 255) & 0xFF);
         }
 
         return new AudioBuffer(sampleRate, data, 0, 0);
@@ -123,7 +123,7 @@ public class SoundBankCache {
             sampleRate = (int) AudioSystem.getAudioInputStream(sampleFile).getFormat().getSampleRate();
 
             for (int l = 0; l < data.length; l++) {
-                data[l] = (byte) ((data[l] ^ 127) & 0xFF);
+                data[l] = (byte) ((data[l] ^ 255) & 0xFF);
             }
 
             raw = new AudioBuffer(sampleRate, data, 0, 0);

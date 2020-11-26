@@ -12,9 +12,6 @@ public class SoundPlayer extends PcmPlayer {
     DataOutputStream dataOutputStream;
     ByteArrayOutputStream byteArrayOutputStream;
 
-    int sixteenBitMax = Short.MAX_VALUE;
-    int eightBitMax = Byte.MAX_VALUE;
-
     public void init() {
         this.audioFormat = new AudioFormat((float) PcmPlayer.pcmPlayer_sampleRate, 16, PcmPlayer.pcmPlayer_stereo ? 2 : 1, true, false);
         this.byteSamples = new byte[256 << (PcmPlayer.pcmPlayer_stereo ? 2 : 1)];
@@ -84,14 +81,13 @@ public class SoundPlayer extends PcmPlayer {
         }
 
         for(int var2 = 0; var2 < var1; ++var2) {
-            int var3 = super.samples[var2] ^ Short.MAX_VALUE;
+            int var3 = super.samples[var2];
+            if((var3 + 8388608 & -16777216) != 0) {
+                var3 = 8388607 ^ var3 >> 31;
+            }
 
-            this.byteSamples[var2 * 2] = (byte) (var3 >> 8);
-            this.byteSamples[var2 * 2 + 1] = (byte) (var3 >> 16);
-        }
-
-        for (int index = 0; index < this.byteSamples.length; index++) {
-            this.byteSamples[index] = (byte) (this.byteSamples[index] >> 1);
+            this.byteSamples[var2 * 2] = (byte)(var3 >> 8);
+            this.byteSamples[var2 * 2 + 1] = (byte)(var3 >> 16);
         }
 
         this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);

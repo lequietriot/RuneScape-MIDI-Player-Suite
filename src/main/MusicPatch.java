@@ -9,16 +9,19 @@ import main.utils.Node;
 import org.displee.cache.index.Index;
 
 import javax.sound.midi.Patch;
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 public class MusicPatch extends Node {
 
     AudioBuffer[] audioBuffers;
     short[] pitchOffset;
-    byte[] volume;
+    byte[] volumeOffset;
     byte[] panOffset;
     MusicPatchNode2[] musicPatchNode2;
     byte[] loopMode;
@@ -30,15 +33,29 @@ public class MusicPatch extends Node {
     static File localSoundEffects;
     static File localCustomSoundBank;
 
+    public MusicPatch(int patchID) {
+        createNewPatch(patchID);
+    }
+
     public static MusicPatch getMusicPatch(Index index, int archiveID, int fileID) {
         byte[] data = index.getArchive(archiveID).getFile(fileID).getData();
         return new MusicPatch(data);
     }
 
+    MusicPatch() {
+        this.audioBuffers = new AudioBuffer[128];
+        this.pitchOffset = new short[128];
+        this.volumeOffset = new byte[128];
+        this.panOffset = new byte[128];
+        this.musicPatchNode2 = new MusicPatchNode2[128];
+        this.loopMode = new byte[128];
+        this.sampleOffset = new int[128];
+    }
+
     MusicPatch(byte[] patchData) {
         this.audioBuffers = new AudioBuffer[128];
         this.pitchOffset = new short[128];
-        this.volume = new byte[128];
+        this.volumeOffset = new byte[128];
         this.panOffset = new byte[128];
         this.musicPatchNode2 = new MusicPatchNode2[128];
         this.loopMode = new byte[128];
@@ -272,7 +289,7 @@ public class MusicPatch extends Node {
                 }
             }
 
-            this.volume[var27] = (byte)var26;
+            this.volumeOffset[var27] = (byte)var26;
             --var20;
         }
 
@@ -352,7 +369,7 @@ public class MusicPatch extends Node {
             byte var43 = var47[1];
 
             for (var29 = 0; var29 < var46; ++var29) {
-                this.volume[var29] = (byte)(var43 * this.volume[var29] + 32 >> 6);
+                this.volumeOffset[var29] = (byte)(var43 * this.volumeOffset[var29] + 32 >> 6);
             }
 
             for (var29 = 2; var29 < var47.length; var29 += 2) {
@@ -364,7 +381,7 @@ public class MusicPatch extends Node {
                     var35 = var30 - var46;
                     var36 = var32 >>> 31;
                     var34 = (var36 + var32) / var35 - var36;
-                    this.volume[var33] = (byte)(var34 * this.volume[var33] + 32 >> 6);
+                    this.volumeOffset[var33] = (byte)(var34 * this.volumeOffset[var33] + 32 >> 6);
                     var32 += var31 - var43;
                 }
 
@@ -373,7 +390,7 @@ public class MusicPatch extends Node {
             }
 
             for (var44 = var46; var44 < 128; ++var44) {
-                this.volume[var44] = (byte)(var43 * this.volume[var44] + 32 >> 6);
+                this.volumeOffset[var44] = (byte)(var43 * this.volumeOffset[var44] + 32 >> 6);
             }
         }
 
@@ -463,12 +480,12 @@ public class MusicPatch extends Node {
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
-            var39[var27].voiceCount = patchBuffer.readUnsignedByte();
+            var39[var27].volumeEnvelopeSustain = patchBuffer.readUnsignedByte();
         }
 
         for (var27 = 0; var27 < var12; ++var27) {
             var28 = var39[var27];
-            if (var28.voiceCount > 0) {
+            if (var28.volumeEnvelopeSustain > 0) {
                 var28.vibratoLFOPitch = patchBuffer.readUnsignedByte();
             }
         }
@@ -556,12 +573,12 @@ public class MusicPatch extends Node {
             musicPatchNode2[index] = new MusicPatchNode2();
             musicPatchNode2[index].field2398 = null;
             musicPatchNode2[index].field2402 = null;
-            musicPatchNode2[index].volumeEnvelopeRelease = 128;
-            musicPatchNode2[index].volumeEnvelopeDecay = 3;
+            musicPatchNode2[index].volumeEnvelopeRelease = 0;
+            musicPatchNode2[index].volumeEnvelopeDecay = 0;
             musicPatchNode2[index].vibratoLFOFrequency = 0;
             musicPatchNode2[index].vibratoLFOPitch = 0;
             musicPatchNode2[index].vibratoLFODelay = 0;
-            musicPatchNode2[index].voiceCount = 24;
+            musicPatchNode2[index].volumeEnvelopeSustain = 0;
             musicPatchNode2[index].field2394 = 0;
         }
     }
@@ -570,7 +587,7 @@ public class MusicPatch extends Node {
 
         this.audioBuffers = new AudioBuffer[128];
         this.pitchOffset = new short[128];
-        this.volume = new byte[128];
+        this.volumeOffset = new byte[128];
         this.panOffset = new byte[128];
         this.musicPatchNode2 = new MusicPatchNode2[128];
         this.loopMode = new byte[128];
@@ -586,7 +603,7 @@ public class MusicPatch extends Node {
 
         byte volumeValue = 32;
         for (int index = 0; index < 128; index++) {
-            volume[index] = volumeValue;
+            volumeOffset[index] = volumeValue;
         }
 
         byte panning = 64;
@@ -609,12 +626,12 @@ public class MusicPatch extends Node {
             musicPatchNode2[index] = new MusicPatchNode2();
             musicPatchNode2[index].field2398 = null;
             musicPatchNode2[index].field2402 = null;
-            musicPatchNode2[index].volumeEnvelopeRelease = 0;
-            musicPatchNode2[index].volumeEnvelopeDecay = 0;
-            musicPatchNode2[index].vibratoLFOFrequency = 0;
+            musicPatchNode2[index].volumeEnvelopeRelease = 0; //Pitch Correction?
+            musicPatchNode2[index].volumeEnvelopeDecay = 0; //Volume Sustain?
+            musicPatchNode2[index].vibratoLFOFrequency = 0; //Volume Hold?
             musicPatchNode2[index].vibratoLFOPitch = 0;
             musicPatchNode2[index].vibratoLFODelay = 0;
-            musicPatchNode2[index].voiceCount = 24;
+            musicPatchNode2[index].volumeEnvelopeSustain = 0;
             musicPatchNode2[index].field2394 = 0;
         }
     }
@@ -811,6 +828,11 @@ public class MusicPatch extends Node {
                     int loopMode = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_SAMPLEMODES);
                     int pitchCorrection = sf2Sample.getPitchCorrection();
 
+                    //byte[] volumeAttackEnv = (((SF2Instrument) sf2Soundbank.getInstrument(patch)).getRegions().get(region).getLayer().getGlobalRegion().getBytes(SF2Region.GENERATOR_ATTACKVOLENV));
+                    //byte[] volumeDecayEnv = (((SF2Instrument) sf2Soundbank.getInstrument(patch)).getRegions().get(region).getLayer().getGlobalRegion().getBytes(SF2Region.GENERATOR_DECAYVOLENV));
+                    //byte[] volumeSustainEnv = (((SF2Instrument) sf2Soundbank.getInstrument(patch)).getRegions().get(region).getLayer().getGlobalRegion().getBytes(SF2Region.GENERATOR_SUSTAINVOLENV));
+                    //byte[] volumeReleaseEnv = (((SF2Instrument) sf2Soundbank.getInstrument(patch)).getRegions().get(region).getLayer().getGlobalRegion().getBytes(SF2Region.GENERATOR_RELEASEVOLENV));
+
                     byte[] overridingNote = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_OVERRIDINGROOTKEY);
                     int fineTune = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_FINETUNE);
                     int coarseTune = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_COARSETUNE);
@@ -837,9 +859,187 @@ public class MusicPatch extends Node {
                         else {
                             this.pitchOffset[note] = (short) (((sf2Sample.getOriginalPitch() * 256)) - 32768 + (pitchCorrection + fineTune + coarseTune));
                         }
+
+                        musicPatchNode2[note].field2402 = new byte[]{0, 64}; //Patch Duration?
+                        musicPatchNode2[note].field2398 = new byte[]{0, 16, 16, 8, 8, 16, 16, 8, 8, 0}; //ADSR Envelope?
                     }
                 }
             }
         }
+    }
+
+    public void loadCustomPatch(String[] patchInfoList) throws IOException, UnsupportedAudioFileException {
+
+        String sampleName = patchInfoList[0].replace(PatchBanks.SAMPLE_NAME, "").trim();
+        int rootKey = Integer.parseInt((patchInfoList[1].replace(PatchBanks.SAMPLE_ROOT_KEY, "").trim()));
+        int lowKeyRange = Integer.parseInt(patchInfoList[2].replace(PatchBanks.KEY_LOW_RANGE, "").trim());
+        int highKeyRange = Integer.parseInt(patchInfoList[3].replace(PatchBanks.KEY_HIGH_RANGE, "").trim());
+        int masterVolume = Integer.parseInt(patchInfoList[4].replace(PatchBanks.MASTER_VOLUME, "").trim());
+        int loopStart = Integer.parseInt(patchInfoList[5].replace(PatchBanks.LOOP_START, "").trim());
+        int loopEnd = Integer.parseInt(patchInfoList[6].replace(PatchBanks.LOOP_END, "").trim());
+        int volume = Integer.parseInt(patchInfoList[7].replace(PatchBanks.SAMPLE_VOLUME, "").trim());
+        int pan = Integer.parseInt(patchInfoList[8].replace(PatchBanks.SAMPLE_PAN, "").trim());
+
+        baseVelocity = masterVolume;
+
+        System.out.println(sampleName);
+
+        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(PatchBanks.CUSTOM_SOUND_PATH + "/Instrument Samples/" + sampleName + ".wav/"));
+        AudioFormat audioFormat = audioInputStream.getFormat();
+
+        byte[] audioSample = audioInputStream.readAllBytes();
+
+        if (audioFormat.getChannels() == 2 && audioFormat.getSampleSizeInBits() == 16) {
+
+            byte[] monoSample = downmixStereoToMono(audioSample);
+            byte[] finalSample = downmix16BitsTo8Bits(monoSample);
+
+            AudioBuffer audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), finalSample, loopStart, loopEnd);
+
+            for (int note = lowKeyRange; note < highKeyRange; note++) {
+                audioBuffers[note] = audioBuffer;
+                pitchOffset[note] = (short) ((rootKey * 256) - 32768);
+                panOffset[note] = (byte) pan;
+                volumeOffset[note] = (byte) volume;
+            }
+
+            if (lowKeyRange == highKeyRange) {
+                audioBuffers[lowKeyRange] = audioBuffer;
+                pitchOffset[lowKeyRange] = (short) ((rootKey * 256) - 32768);
+                panOffset[lowKeyRange] = (byte) pan;
+                volumeOffset[lowKeyRange] = (byte) volume;
+            }
+        }
+
+        if (audioFormat.getChannels() == 1 && audioFormat.getSampleSizeInBits() == 16) {
+
+            byte[] finalSample = downmix16BitsTo8Bits(audioSample);
+
+            AudioBuffer audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), finalSample, loopStart, loopEnd);
+
+            for (int note = lowKeyRange; note < highKeyRange; note++) {
+                audioBuffers[note] = audioBuffer;
+                pitchOffset[note] = (short) ((rootKey * 256) - 32768);
+                panOffset[note] = (byte) pan;
+                volumeOffset[note] = (byte) volume;
+            }
+
+            if (lowKeyRange == highKeyRange) {
+                audioBuffers[lowKeyRange] = audioBuffer;
+                pitchOffset[lowKeyRange] = (short) ((rootKey * 256) - 32768);
+                panOffset[lowKeyRange] = (byte) pan;
+                volumeOffset[lowKeyRange] = (byte) volume;
+            }
+        }
+
+        else {
+
+            byte[] finalSample = new byte[audioSample.length];
+
+            for (int index = 0; index < finalSample.length; index++) {
+                finalSample[index] = (byte) ((audioSample[index] + 128) & 0xFF);
+            }
+
+            AudioBuffer audioBuffer;
+
+            if (loopStart == 0) {
+                audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), finalSample, 0, 0);
+            }
+
+            else {
+                audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), finalSample, loopStart, loopEnd);
+            }
+
+            for (int note = lowKeyRange; note < highKeyRange; note++) {
+                audioBuffers[note] = audioBuffer;
+                pitchOffset[note] = (short) ((rootKey * 256) - 32768);
+                panOffset[note] = (byte) pan;
+                volumeOffset[note] = (byte) volume;
+            }
+
+            if (lowKeyRange == highKeyRange) {
+                audioBuffers[lowKeyRange] = audioBuffer;
+                pitchOffset[lowKeyRange] = (short) ((rootKey * 256) - 32768);
+                panOffset[lowKeyRange] = (byte) pan;
+                volumeOffset[lowKeyRange] = (byte) volume;
+            }
+        }
+    }
+
+    public void setParameters(String[] patchParameterList) {
+
+        int globalParameter1 = Integer.parseInt(patchParameterList[0].replace(PatchBanks.PARAMETER_1, "").trim());
+        int globalParameter2 = Integer.parseInt(patchParameterList[1].replace(PatchBanks.PARAMETER_2, "").trim());
+        int globalParameter3 = Integer.parseInt(patchParameterList[2].replace(PatchBanks.PARAMETER_3, "").trim());
+        int globalParameter4 = Integer.parseInt(patchParameterList[3].replace(PatchBanks.PARAMETER_4, "").trim());
+        int globalParameter5 = Integer.parseInt(patchParameterList[4].replace(PatchBanks.PARAMETER_5, "").trim());
+        int globalParameter6 = Integer.parseInt(patchParameterList[5].replace(PatchBanks.PARAMETER_6, "").trim());
+        int globalParameter7 = Integer.parseInt(patchParameterList[6].replace(PatchBanks.PARAMETER_7, "").trim());
+
+        String[] globalStringArray1 = patchParameterList[7].replace(PatchBanks.ARRAY_1, "").split(",");
+        byte[] globalArray1 = new byte[globalStringArray1.length];
+
+        if (globalStringArray1[0].contains("null")) {
+            globalArray1 = null;
+        }
+        else {
+            for (int index = 0; index < Objects.requireNonNull(globalArray1).length; index++) {
+                if (globalStringArray1[index].indexOf("[") != 0) {
+                    String strings = globalStringArray1[index].substring(globalStringArray1[index].indexOf("[") + 1).trim();
+                    globalArray1[index] = Byte.parseByte(strings.replace("[", "").replace("]", ""));
+                }
+            }
+        }
+
+        String[] globalStringArray2 = patchParameterList[8].replace(PatchBanks.ARRAY_2, "").split(",");
+        byte[] globalArray2 = new byte[globalStringArray2.length];
+
+        if (globalStringArray2[0].contains("null")) {
+            globalArray2 = null;
+        }
+
+        else {
+
+        for (int index = 0; index < Objects.requireNonNull(globalArray2).length; index++) {
+                if (globalStringArray2[index].indexOf("[") != 0) {
+                    String strings = globalStringArray2[index].substring(globalStringArray2[index].indexOf("[") + 1).trim();
+                    globalArray2[index] = Byte.parseByte(strings.replace("[", "").replace("]", ""));
+                }
+            }
+        }
+
+        for (int note = 0; note < 128; note++) {
+            musicPatchNode2[note].field2398 = globalArray1;
+            musicPatchNode2[note].field2402 = globalArray2;
+            musicPatchNode2[note].volumeEnvelopeDecay = globalParameter1;
+            musicPatchNode2[note].volumeEnvelopeRelease = globalParameter2;
+            musicPatchNode2[note].vibratoLFODelay = globalParameter3;
+            musicPatchNode2[note].vibratoLFOFrequency = globalParameter4;
+            musicPatchNode2[note].vibratoLFOPitch = globalParameter5;
+            musicPatchNode2[note].volumeEnvelopeSustain = globalParameter6;
+            musicPatchNode2[note].field2394 = globalParameter7;
+        }
+    }
+
+    private byte[] downmixStereoToMono(byte[] stereoSample) {
+
+        byte[] monoSample = new byte[stereoSample.length / 2];
+
+        for (int index = 0; index < monoSample.length; index++) {
+            monoSample[index] = stereoSample[index * 2];
+        }
+
+        return monoSample;
+    }
+
+    private byte[] downmix16BitsTo8Bits(byte[] sample) {
+
+        byte[] compressedData = new byte[sample.length / 2];
+
+        for (int index = 0; index < compressedData.length; index++) {
+            compressedData[index] = sample[index * 2 + 1];
+        }
+
+        return compressedData;
     }
 }

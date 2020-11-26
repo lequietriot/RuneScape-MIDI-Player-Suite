@@ -39,6 +39,10 @@ public class MidiTrack extends Node {
 
     static NodeHashTable table;
 
+    MidiTrack() {
+
+    }
+
     /**
      * The class to decode RuneScape's custom encoded MIDI data.
      * @param buffer initialize the decoder with the buffer data.

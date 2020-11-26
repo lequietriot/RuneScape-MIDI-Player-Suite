@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class MidiPcmStream extends PcmStream {
 
@@ -252,7 +253,7 @@ public class MidiPcmStream extends PcmStream {
                 musicPatchNode.musicPatchInfo = musicPatch.musicPatchNode2[note];
                 musicPatchNode.loopVariable = musicPatch.loopMode[note];
                 musicPatchNode.currentNotePitch = note;
-                musicPatchNode.maxVolumeLevel = velocity * velocity * musicPatch.volume[note] * musicPatch.panOffset[note] + 1024 >> 11;
+                musicPatchNode.maxVolumeLevel = velocity * velocity * musicPatch.volumeOffset[note] * musicPatch.panOffset[note] + 1024 >> 11;
                 musicPatchNode.currentPanValue = musicPatch.panOffset[note] & 255;
                 musicPatchNode.frequencyCorrection = (note << 8) - (musicPatch.pitchOffset[note] & 32767);
                 musicPatchNode.field2456 = 0;
@@ -639,7 +640,7 @@ public class MidiPcmStream extends PcmStream {
         var2 += (this.field2423[var1.currentTrack] - 8192) * this.dataEntry[var1.currentTrack] >> 12;
         MusicPatchNode2 var3 = var1.musicPatchInfo;
         int var4;
-        if (var3.voiceCount > 0 && (var3.vibratoLFOPitch > 0 || this.modulation[var1.currentTrack] > 0)) {
+        if (var3.volumeEnvelopeSustain > 0 && (var3.vibratoLFOPitch > 0 || this.modulation[var1.currentTrack] > 0)) {
             var4 = var3.vibratoLFOPitch << 2;
             int var5 = var3.field2394 << 1;
             if (var1.field2461 < var5) {
@@ -773,7 +774,7 @@ public class MidiPcmStream extends PcmStream {
             MusicPatchNode2 var6 = var1.musicPatchInfo;
             boolean var7 = false;
             ++var1.field2461;
-            var1.field2449 += var6.voiceCount;
+            var1.field2449 += var6.volumeEnvelopeSustain;
             double var8 = (double)((var1.currentNotePitch - 60 << 8) + (var1.field2455 * var1.field2454 >> 12)) * 5.086263020833333E-6D;
             if (var6.volumeEnvelopeDecay > 0) {
                 if (var6.vibratoLFOFrequency > 0) {
@@ -910,8 +911,8 @@ public class MidiPcmStream extends PcmStream {
                         //musicPatch.loadCustomBankPatch(sf2Soundbank);
                     }
                     else {
-                        //musicPatch = PatchBanks.getCustomMusicPatch(patchID, sf2Soundbank);
-                        //musicPatch.loadSf2ID(sf2Soundbank, patchID);
+                        musicPatch = PatchBanks.getCustomMusicPatch(patchID, sf2Soundbank);
+                        musicPatch.loadSf2ID(sf2Soundbank, patchID);
                         //musicPatch.loadCustomBankPatchID(sf2Soundbank);
                     }
                 } catch (IOException e) {
@@ -988,6 +989,59 @@ public class MidiPcmStream extends PcmStream {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    public void loadTestSoundBank(MidiTrack midiTrack) {
+
+        midiTrack.loadMidiTrackInfo();
+
+        for (ByteArrayNode tableIndex = (ByteArrayNode) midiTrack.table.first(); tableIndex != null; tableIndex = (ByteArrayNode) midiTrack.table.next()) {
+            int patchID = (int) tableIndex.key;
+            MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+            if (musicPatch == null) {
+                musicPatch = PatchBanks.makeCustomMusicPatch(patchID);
+                Path patchPath = Paths.get(PatchBanks.CUSTOM_SOUND_PATH + "/Instrument Info/" + patchID + ".txt/");
+
+                try {
+
+                    List<String> list = Files.readAllLines(patchPath);
+
+                    for (int index = 0; index < list.size(); index++) {
+
+                        if (list.get(index).contains(PatchBanks.PATCH_NAME)) {
+                            System.out.println("Instrument Loading: " + list.get(index).replace(PatchBanks.PATCH_NAME, ""));
+                        }
+
+                        if (list.get(index).contains(PatchBanks.SAMPLE_NAME)) {
+
+                            String[] patchInfoList = new String[9];
+
+                            for (int infoIndex = 0; infoIndex < 9; infoIndex++) {
+                                patchInfoList[infoIndex] = list.get(index);
+                                index++;
+                            }
+
+                            musicPatch.loadCustomPatch(patchInfoList);
+                        }
+
+                        if (list.get(index).contains(PatchBanks.PARAMETER_1)) {
+
+                            String[] patchParameterList = new String[9];
+
+                            for (int parameter = 0; parameter < 9; parameter++) {
+                                patchParameterList[parameter] = list.get(index);
+                                index++;
+                            }
+
+                            musicPatch.setParameters(patchParameterList);
+                        }
+                    }
+                } catch (IOException | UnsupportedAudioFileException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+            this.musicPatches.put(musicPatch, patchID);
         }
     }
 }

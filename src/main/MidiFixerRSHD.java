@@ -151,7 +151,7 @@ public class MidiFixerRSHD {
 	final static String patch256 = "Choir Aahs (2)"; // This patch is transposed down 12 notes.
 	final static String patch257 = "Warm Pad (2)"; // This patch is transposed up 12 notes.
 	final static String patch258 = "Pizzicato Strings (2)";
-	final static String patch259 = "Taiko Drum (2)";
+	final static String patch259 = "Bass Drum";
 	final static String patch260 = "Pan Flute (2)"; // This patch is transposed up 12 notes.
 	final static String patch261 = "Strings Marcato";
 	final static String patch262 = "Slow Strings (2)";
@@ -305,7 +305,7 @@ public class MidiFixerRSHD {
 	final static String patch2070 = "The Cave";
 	final static String patch2071 = "The Chozan One";
 	final static String patch2072 = "Quicksand!";
-	final static String patch2073 = "Kalphite Nursery Ambience";
+	final static String patch2073 = "Desert Ambience";
 	final static String patch2074 = "Desert Fanfares, Part 1";
 	final static String patch2075 = "Final Showdown";
 	final static String patch2076 = "Desert Fanfares, Part 2";
