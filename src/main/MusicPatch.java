@@ -882,8 +882,6 @@ public class MusicPatch extends Node {
 
         baseVelocity = masterVolume;
 
-        System.out.println(sampleName);
-
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(PatchBanks.CUSTOM_SOUND_PATH + "/Instrument Samples/" + sampleName + ".wav/"));
         AudioFormat audioFormat = audioInputStream.getFormat();
 

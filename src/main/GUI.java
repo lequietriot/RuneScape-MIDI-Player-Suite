@@ -2595,16 +2595,6 @@ public class GUI {
 
 	private class TestButtonListener implements ActionListener {
 
-		MidiTrack midiTrack;
-		MidiDevice midiDevice;
-
-		Sequence sequence;
-		Sequencer sequencer;
-
-		Index index4;
-		Index index14;
-		Index index15;
-
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
@@ -2638,6 +2628,8 @@ public class GUI {
 						soundPlayer.write();
 
 						if (midiPcmStream.midiFile.isDone()) {
+							soundPlayer.discard();
+							soundPlayer.close();
 							break;
 						}
 					}
@@ -3373,7 +3365,7 @@ public class GUI {
 			//MakeSoundFont makeSoundFont = new MakeSoundFont();
 			//makeSoundFont.initSoundFont();
 
-			for (int id = 0; id < 300; id++) {
+			for (int id = 0; id < 4000; id++) {
 
 				File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
 
