@@ -71,6 +71,7 @@ public class GUI {
 	private JButton pauseButton;
 	private JButton stopButton;
 	private JButton loopButton;
+	private JButton shuffleButton;
 	private JButton testButton;
 	private JButton renderMIDItoWavButton;
 
@@ -83,9 +84,12 @@ public class GUI {
 
 	private JTextPane volumeInfo;
 	private JTextPane sampleRateInfo;
+	private JTextPane engineInfo;
 	private int volume = 256;
 
 	private boolean loopMode = false;
+	private boolean shuffleMode = false;
+
 	private MidiPcmStream midiPcmStream;
 
 	private MidiDevice externalDevice;
@@ -95,10 +99,10 @@ public class GUI {
 	GUI() throws IOException, ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
 
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		frame = new JFrame("RuneScape MIDI Player");
+		frame = new JFrame("RuneScape MIDI Player Suite - v2.0");
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		frame.setMinimumSize(new Dimension(700, 250));
+		frame.setMinimumSize(new Dimension(700, 300));
 		panel = new JPanel(new BorderLayout());
 		panel.setLayout(null);
 		panel.setBorder(BorderFactory.createEmptyBorder());
@@ -273,12 +277,14 @@ public class GUI {
 		pauseButton = new JButton();
 		stopButton = new JButton();
 		loopButton = new JButton();
+		shuffleButton = new JButton();
 		testButton = new JButton();
 		
 		startButton.addActionListener(new StartButtonListener());
 		pauseButton.addActionListener(new PauseButtonListener());
 		stopButton.addActionListener(new StopButtonListener());
 		loopButton.addActionListener(new LoopButtonListener());
+		shuffleButton.addActionListener(new ShuffleButtonListener());
 		testButton.addActionListener(new TestButtonListener());
 		
 		buttonsPanel.add(startButton);
@@ -295,10 +301,6 @@ public class GUI {
 
 		buttonsPanel.add(loopButton);
 
-		testButton.setText("Test");
-		testButton.setVisible(true);
-		buttonsPanel.add(testButton);
-
 		if (loopMode) {
 			loopButton.setText("Loop Mode: On");
 		}
@@ -308,6 +310,21 @@ public class GUI {
 
 		loopButton.setVisible(true);
 
+		buttonsPanel.add(shuffleButton);
+
+		if (shuffleMode) {
+			shuffleButton.setText("Shuffle Mode: On");
+		}
+		else {
+			shuffleButton.setText("Shuffle Mode: Off");
+		}
+
+		shuffleButton.setVisible(true);
+
+		testButton.setText("Test");
+		testButton.setVisible(true);
+		buttonsPanel.add(testButton);
+
 		buttonsPanel.setVisible(true);
 		buttonsPanel.setBackground(Color.LIGHT_GRAY);
 		
@@ -316,6 +333,7 @@ public class GUI {
 		songSliderInfo = new JTextPane();
 		volumeInfo = new JTextPane();
 		sampleRateInfo = new JTextPane();
+		engineInfo = new JTextPane();
 		
 		if (midiFile == null) {
 			songSlider.setEnabled(false);
@@ -338,7 +356,7 @@ public class GUI {
 
 		volumeInfo.setBackground(Color.LIGHT_GRAY);
 		volumeInfo.setSelectedTextColor(Color.BLACK);
-		volumeInfo.setText("Sound Bank Volume is: " + volume + " (" + ((volume / 256) * 100) + "%) |");
+		volumeInfo.setText("SoundBank Volume is: " + volume + " (" + ((volume / 256) * 100) + "%) |");
 		volumeInfo.setEnabled(true);
 		volumeInfo.setEditable(false);
 		volumeInfo.setVisible(true);
@@ -347,12 +365,21 @@ public class GUI {
 
 		sampleRateInfo.setBackground(Color.LIGHT_GRAY);
 		sampleRateInfo.setSelectedTextColor(Color.BLACK);
-		sampleRateInfo.setText("Sample Rate is: " + PcmPlayer.pcmPlayer_sampleRate);
+		sampleRateInfo.setText("SoundBank Sample Rate is: " + PcmPlayer.pcmPlayer_sampleRate + " |");
 		sampleRateInfo.setEnabled(true);
 		sampleRateInfo.setEditable(false);
 		sampleRateInfo.setVisible(true);
 		sampleRateInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
 		sampleRateInfo.setAlignmentY(Component.TOP_ALIGNMENT);
+
+		engineInfo.setBackground(Color.LIGHT_GRAY);
+		engineInfo.setSelectedTextColor(Color.BLACK);
+		engineInfo.setText("SoundBank Engine: " + PatchBanks.RUNESCAPE_VERSION);
+		engineInfo.setEnabled(true);
+		engineInfo.setEditable(false);
+		engineInfo.setVisible(true);
+		engineInfo.setAlignmentX(Component.LEFT_ALIGNMENT);
+		engineInfo.setAlignmentY(Component.BOTTOM_ALIGNMENT);
 
 		songPanel.add(songSliderInfo);
 		songPanel.setBackground(Color.LIGHT_GRAY);
@@ -380,6 +407,7 @@ public class GUI {
 		infoPanel.setBackground(Color.LIGHT_GRAY);
 		infoPanel.add(volumeInfo);
 		infoPanel.add(sampleRateInfo);
+		infoPanel.add(engineInfo);
 
 		frame.add(infoPanel);
 		frame.add(buttonsPanel);
@@ -2598,48 +2626,56 @@ public class GUI {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			Index musicIndex = cacheLibrary.getIndex(6);
+			Thread songThread = new Thread(() -> {
 
-			try {
-				midiPcmStream = new MidiPcmStream();
-				Path path = Paths.get(midiFile.toURI());
-				PcmPlayer.pcmPlayer_stereo = true;
+				try {
 
-				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
-				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-				MidiTrack.midi = Files.readAllBytes(path);
-				MidiTrack.loadMidiTrackInfo();
+					SoundPlayer soundPlayer = initMidiStream(midiFile);
 
-				midiPcmStream.init(9, 128);
-				midiPcmStream.setMusicTrack(midiTrack, loopMode);
-				midiPcmStream.setPcmStreamVolume(volume);
-				midiPcmStream.loadTestSoundBank(midiTrack);
-
-				SoundPlayer soundPlayer = new SoundPlayer();
-				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[512];
-				soundPlayer.capacity = 16384;
-				soundPlayer.init();
-				soundPlayer.open(soundPlayer.capacity);
-
-				Thread songThread = new Thread(() -> {
 					while (midiPcmStream.active) {
-						soundPlayer.fill(soundPlayer.samples, 256);
-						soundPlayer.write();
+						playSound(soundPlayer);
 
-						if (midiPcmStream.midiFile.isDone()) {
-							soundPlayer.discard();
-							soundPlayer.close();
-							break;
+						if (shuffleMode && midiPcmStream.midiFile.isDone()) {
+							soundPlayer = initMidiStream(midiFiles[(int) (Math.random() * midiFiles.length)]);
 						}
 					}
-				});
+				} catch (IOException exception) {
+					exception.printStackTrace();
+				}
+			});
+			songThread.start();
+		}
 
-				songThread.start();
+		private void playSound(SoundPlayer soundPlayer) {
+			soundPlayer.fill(soundPlayer.samples, 256);
+			soundPlayer.write();
+		}
 
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
-			}
+		private SoundPlayer initMidiStream(File midi) throws IOException {
+
+			songSliderInfo.setText("Song loaded: " + midi.getName());
+
+			midiPcmStream = new MidiPcmStream();
+			Path path = Paths.get(midi.toURI());
+			PcmPlayer.pcmPlayer_stereo = true;
+
+			MidiTrack midiTrack = new MidiTrack();
+			MidiTrack.midi = Files.readAllBytes(path);
+			MidiTrack.loadMidiTrackInfo();
+
+			midiPcmStream.init(9, 128);
+			midiPcmStream.setMusicTrack(midiTrack, loopMode);
+			midiPcmStream.setPcmStreamVolume(volume);
+			midiPcmStream.loadTestSoundBankCompletely();
+
+			SoundPlayer soundPlayer = new SoundPlayer();
+			soundPlayer.setStream(midiPcmStream);
+			soundPlayer.samples = new int[512];
+			soundPlayer.capacity = 16384;
+			soundPlayer.init();
+			soundPlayer.open(soundPlayer.capacity);
+
+			return soundPlayer;
 		}
 
 		private void initMidi() throws InvalidMidiDataException, InterruptedException {
@@ -3826,6 +3862,21 @@ public class GUI {
 			}
 
 			makeSoundFont.saveSoundBank(songID);
+		}
+	}
+
+	private class ShuffleButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			shuffleMode = !shuffleMode;
+
+			if (shuffleMode) {
+				shuffleButton.setText("Shuffle Mode: On");
+			}
+			else {
+				shuffleButton.setText("Shuffle Mode: Off");
+			}
 		}
 	}
 }

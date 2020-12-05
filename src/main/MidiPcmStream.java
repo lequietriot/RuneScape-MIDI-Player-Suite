@@ -994,14 +994,70 @@ public class MidiPcmStream extends PcmStream {
 
     public void loadTestSoundBank(MidiTrack midiTrack) {
 
-        midiTrack.loadMidiTrackInfo();
+        MidiTrack.loadMidiTrackInfo();
 
-        for (ByteArrayNode tableIndex = (ByteArrayNode) midiTrack.table.first(); tableIndex != null; tableIndex = (ByteArrayNode) midiTrack.table.next()) {
+        for (ByteArrayNode tableIndex = (ByteArrayNode) MidiTrack.table.first(); tableIndex != null; tableIndex = (ByteArrayNode) MidiTrack.table.next()) {
             int patchID = (int) tableIndex.key;
             MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
             if (musicPatch == null) {
                 musicPatch = PatchBanks.makeCustomMusicPatch(patchID);
                 Path patchPath = Paths.get(PatchBanks.CUSTOM_SOUND_PATH + "/Instrument Info/" + patchID + ".txt/");
+
+                try {
+
+                    List<String> list = Files.readAllLines(patchPath);
+
+                    for (int index = 0; index < list.size(); index++) {
+
+                        if (list.get(index).contains(PatchBanks.PATCH_NAME)) {
+                            System.out.println("Instrument Loading: " + list.get(index).replace(PatchBanks.PATCH_NAME, ""));
+                        }
+
+                        if (list.get(index).contains(PatchBanks.SAMPLE_NAME)) {
+
+                            String[] patchInfoList = new String[9];
+
+                            for (int infoIndex = 0; infoIndex < 9; infoIndex++) {
+                                patchInfoList[infoIndex] = list.get(index);
+                                index++;
+                            }
+
+                            musicPatch.loadCustomPatch(patchInfoList);
+                        }
+
+                        if (list.get(index).contains(PatchBanks.PARAMETER_1)) {
+
+                            String[] patchParameterList = new String[9];
+
+                            for (int parameter = 0; parameter < 9; parameter++) {
+                                patchParameterList[parameter] = list.get(index);
+                                index++;
+                            }
+
+                            musicPatch.setParameters(patchParameterList);
+                        }
+                    }
+                } catch (IOException | UnsupportedAudioFileException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+            this.musicPatches.put(musicPatch, patchID);
+        }
+    }
+
+    public void loadTestSoundBankCompletely() {
+
+        for (int patchID = 0; patchID < 4000; patchID++) {
+
+            MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+
+            if (musicPatch == null) {
+                musicPatch = PatchBanks.makeCustomMusicPatch(patchID);
+                Path patchPath = Paths.get(PatchBanks.CUSTOM_SOUND_PATH + "/Instrument Info/" + patchID + ".txt/");
+
+                if (!patchPath.toFile().exists()) {
+                    continue;
+                }
 
                 try {
 

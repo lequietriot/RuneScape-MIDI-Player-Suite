@@ -860,8 +860,8 @@ public class MusicPatch extends Node {
                             this.pitchOffset[note] = (short) (((sf2Sample.getOriginalPitch() * 256)) - 32768 + (pitchCorrection + fineTune + coarseTune));
                         }
 
-                        musicPatchNode2[note].field2402 = new byte[]{0, 64}; //Patch Duration?
-                        musicPatchNode2[note].field2398 = new byte[]{0, 16, 16, 8, 8, 16, 16, 8, 8, 0}; //ADSR Envelope?
+                        //musicPatchNode2[note].field2402 = new byte[]{0, 64}; //Patch Duration?
+                        //musicPatchNode2[note].field2398 = new byte[]{0, 16, 16, 8, 8, 16, 16, 8, 8, 0}; //ADSR Envelope?
                     }
                 }
             }
