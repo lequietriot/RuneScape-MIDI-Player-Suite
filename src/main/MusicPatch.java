@@ -13,8 +13,8 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class MusicPatch extends Node {
@@ -882,85 +882,33 @@ public class MusicPatch extends Node {
 
         baseVelocity = masterVolume;
 
-        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(PatchBanks.CUSTOM_SOUND_PATH + "/Instrument Samples/" + sampleName + ".wav/"));
+        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(PatchBanks.CUSTOM_SOUND_PATH + "/Samples/" + sampleName + ".au/"));
         AudioFormat audioFormat = audioInputStream.getFormat();
 
         byte[] audioSample = audioInputStream.readAllBytes();
 
-        if (audioFormat.getChannels() == 2 && audioFormat.getSampleSizeInBits() == 16) {
+        AudioBuffer audioBuffer;
 
-            byte[] monoSample = downmixStereoToMono(audioSample);
-            byte[] finalSample = downmix16BitsTo8Bits(monoSample);
-
-            AudioBuffer audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), finalSample, loopStart, loopEnd);
-
-            for (int note = lowKeyRange; note < highKeyRange; note++) {
-                audioBuffers[note] = audioBuffer;
-                pitchOffset[note] = (short) ((rootKey * 256) - 32768);
-                panOffset[note] = (byte) pan;
-                volumeOffset[note] = (byte) volume;
-            }
-
-            if (lowKeyRange == highKeyRange) {
-                audioBuffers[lowKeyRange] = audioBuffer;
-                pitchOffset[lowKeyRange] = (short) ((rootKey * 256) - 32768);
-                panOffset[lowKeyRange] = (byte) pan;
-                volumeOffset[lowKeyRange] = (byte) volume;
-            }
-        }
-
-        if (audioFormat.getChannels() == 1 && audioFormat.getSampleSizeInBits() == 16) {
-
-            byte[] finalSample = downmix16BitsTo8Bits(audioSample);
-
-            AudioBuffer audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), finalSample, loopStart, loopEnd);
-
-            for (int note = lowKeyRange; note < highKeyRange; note++) {
-                audioBuffers[note] = audioBuffer;
-                pitchOffset[note] = (short) ((rootKey * 256) - 32768);
-                panOffset[note] = (byte) pan;
-                volumeOffset[note] = (byte) volume;
-            }
-
-            if (lowKeyRange == highKeyRange) {
-                audioBuffers[lowKeyRange] = audioBuffer;
-                pitchOffset[lowKeyRange] = (short) ((rootKey * 256) - 32768);
-                panOffset[lowKeyRange] = (byte) pan;
-                volumeOffset[lowKeyRange] = (byte) volume;
-            }
+        if (loopStart == 0) {
+            audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), audioSample, 0, 0);
         }
 
         else {
+            audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), audioSample, loopStart, loopEnd);
+        }
 
-            byte[] finalSample = new byte[audioSample.length];
+        for (int note = lowKeyRange; note < highKeyRange; note++) {
+            audioBuffers[note] = audioBuffer;
+            pitchOffset[note] = (short) ((rootKey));// * 256) - 32768);
+            panOffset[note] = (byte) pan;
+            volumeOffset[note] = (byte) (volume / 1.5);
+        }
 
-            for (int index = 0; index < finalSample.length; index++) {
-                finalSample[index] = (byte) ((audioSample[index] + 128) & 0xFF);
-            }
-
-            AudioBuffer audioBuffer;
-
-            if (loopStart == 0) {
-                audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), finalSample, 0, 0);
-            }
-
-            else {
-                audioBuffer = new AudioBuffer((int) audioFormat.getSampleRate(), finalSample, loopStart, loopEnd);
-            }
-
-            for (int note = lowKeyRange; note < highKeyRange; note++) {
-                audioBuffers[note] = audioBuffer;
-                pitchOffset[note] = (short) ((rootKey * 256) - 32768);
-                panOffset[note] = (byte) pan;
-                volumeOffset[note] = (byte) volume;
-            }
-
-            if (lowKeyRange == highKeyRange) {
-                audioBuffers[lowKeyRange] = audioBuffer;
-                pitchOffset[lowKeyRange] = (short) ((rootKey * 256) - 32768);
-                panOffset[lowKeyRange] = (byte) pan;
-                volumeOffset[lowKeyRange] = (byte) volume;
-            }
+        if (lowKeyRange == highKeyRange) {
+            audioBuffers[lowKeyRange] = audioBuffer;
+            pitchOffset[lowKeyRange] = (short) ((rootKey));// * 256) - 32768);
+            panOffset[lowKeyRange] = (byte) pan;
+            volumeOffset[lowKeyRange] = (byte) (volume / 1.5);
         }
     }
 
@@ -1039,5 +987,113 @@ public class MusicPatch extends Node {
         }
 
         return compressedData;
+    }
+
+    public void writeTextPatch(SF2Soundbank sf2Soundbank, int id) {
+
+        Patch patch;
+
+        int bank = 0;
+        int patchNumber = id;
+
+        while (patchNumber > 127) {
+            patchNumber = patchNumber - 128;
+            bank++;
+        }
+
+        bank = bank * 128;
+
+        patch = new Patch(bank, patchNumber);
+
+        try {
+            File patchText = new File("./Patch Text Files/" + id + ".txt/");
+            FileOutputStream patchFileOut = new FileOutputStream(patchText);
+            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(patchFileOut), 160);
+
+            bufferedWriter.write(PatchBanks.PATCH_NAME + id);
+            bufferedWriter.newLine();
+
+            if (sf2Soundbank.getInstrument(patch) != null) {
+
+                for (int region = 0; region < ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().toArray().length; region++) {
+
+                    for (int layer = 0; layer < ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().toArray().length; layer++) {
+
+                        SF2Sample sf2Sample = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getSample();
+                        byte[] noteRange = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_KEYRANGE);
+                        int pitchCorrection = sf2Sample.getPitchCorrection();
+                        int fineTune = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_FINETUNE);
+                        //int coarseTune = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_COARSETUNE);
+                        int loopMode = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_SAMPLEMODES);
+                        int pitchOverride = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_OVERRIDINGROOTKEY)[0];
+
+                        if (this.musicPatchNode2[noteRange[0]] != null) {
+
+                            bufferedWriter.write('\n');
+                            bufferedWriter.write(PatchBanks.SAMPLE_NAME + ((SF2Instrument) sf2Soundbank.getInstrument(patch)).getRegions().get(region).getLayer().getRegions().get(layer).getSample().getName());
+
+                            int rootKey = (sf2Sample.getOriginalPitch());
+                            short tuneAdjust;
+
+                            if (pitchOverride != -1) {
+                                rootKey = pitchOverride;
+                            }
+
+                            tuneAdjust = (short) ((fineTune + pitchCorrection) / (1.28));
+
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.SAMPLE_ROOT_KEY + (((rootKey * 256) - 32768) + tuneAdjust));
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.KEY_LOW_RANGE + noteRange[0]);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.KEY_HIGH_RANGE + noteRange[0]);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.MASTER_VOLUME + this.baseVelocity);
+                            bufferedWriter.newLine();
+                            if (loopMode != 1) {
+                                bufferedWriter.write(PatchBanks.LOOP_START + 0);
+                                bufferedWriter.newLine();
+                                bufferedWriter.write(PatchBanks.LOOP_END + 0);
+                                bufferedWriter.newLine();
+                            }
+                            else {
+                                bufferedWriter.write(PatchBanks.LOOP_START + ((SF2Instrument) sf2Soundbank.getInstrument(patch)).getRegions().get(region).getLayer().getRegions().get(layer).getSample().getStartLoop());
+                                bufferedWriter.newLine();
+                                bufferedWriter.write(PatchBanks.LOOP_END + ((SF2Instrument) sf2Soundbank.getInstrument(patch)).getRegions().get(region).getLayer().getRegions().get(layer).getSample().getEndLoop());
+                                bufferedWriter.newLine();
+                            }
+                            bufferedWriter.write(PatchBanks.SAMPLE_VOLUME + this.volumeOffset[noteRange[0]]);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.SAMPLE_PAN + this.panOffset[noteRange[0]]);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.PARAMETER_1 + this.musicPatchNode2[noteRange[0]].volumeEnvelopeDecay);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.PARAMETER_2 + this.musicPatchNode2[noteRange[0]].volumeEnvelopeRelease);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.PARAMETER_3 + this.musicPatchNode2[noteRange[0]].vibratoLFODelay);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.PARAMETER_4 + this.musicPatchNode2[noteRange[0]].vibratoLFOFrequency);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.PARAMETER_5 + this.musicPatchNode2[noteRange[0]].vibratoLFOPitch);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.PARAMETER_6 + this.musicPatchNode2[noteRange[0]].volumeEnvelopeSustain);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.PARAMETER_7 + this.musicPatchNode2[noteRange[0]].field2394);
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.ARRAY_1 + Arrays.toString(this.musicPatchNode2[noteRange[0]].field2398));
+                            bufferedWriter.newLine();
+                            bufferedWriter.write(PatchBanks.ARRAY_2 + Arrays.toString(this.musicPatchNode2[noteRange[0]].field2402));
+                            bufferedWriter.newLine();
+                            bufferedWriter.flush();
+                        }
+                    }
+                }
+            }
+
+            System.out.println("Wrote patch " + id);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

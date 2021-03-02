@@ -1053,7 +1053,7 @@ public class MidiPcmStream extends PcmStream {
 
             if (musicPatch == null) {
                 musicPatch = PatchBanks.makeCustomMusicPatch(patchID);
-                Path patchPath = Paths.get(PatchBanks.CUSTOM_SOUND_PATH + "/Instrument Info/" + patchID + ".txt/");
+                Path patchPath = Paths.get(PatchBanks.CUSTOM_SOUND_PATH + "/Info/" + patchID + ".txt/");
 
                 if (!patchPath.toFile().exists()) {
                     continue;

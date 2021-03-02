@@ -21,7 +21,7 @@ public class MakeSoundFont {
         sf2Soundbank.setRomVersionMinor(0);
     }
 
-    public void addSamplesToBank(MusicPatch musicPatch, SF2Sample sf2Sample, int patchID, byte[] noteRanges) {
+    public void addSamplesToBank(MusicPatch musicPatch, SF2Sample sf2Sample, int patchID, byte[] noteRanges, int note) {
 
         sf2Soundbank.addResource(sf2Sample);
 
@@ -36,7 +36,7 @@ public class MakeSoundFont {
                     program = program - 128;
                     bank++;
                 }
-                sf2Instrument.setPatch(new Patch(bank, program));
+                sf2Instrument.setPatch(new Patch(bank, patchID));
             }
         }
 
@@ -46,11 +46,29 @@ public class MakeSoundFont {
         SF2LayerRegion sf2LayerRegion = new SF2LayerRegion();
         sf2LayerRegion.setSample(sf2Sample);
         sf2LayerRegion.putBytes(SF2Region.GENERATOR_KEYRANGE, noteRanges);
-        sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, musicPatch.loopMode[noteRanges[0]] * -1);
-        sf2LayerRegion.putShort(SF2Region.GENERATOR_RELEASEVOLENV, (short) 0);
-        sf2LayerRegion.putShort(SF2Region.GENERATOR_INITIALATTENUATION, (short) lookUpAttenuation(musicPatch.baseVelocity + musicPatch.volumeOffset[noteRanges[0]]));
-        sf2LayerRegion.putShort(SF2Region.GENERATOR_PAN, (short) ((musicPatch.panOffset[noteRanges[0]] - 64) * 16));
-        sf2LayerRegion.putBytes(SF2Region.GENERATOR_ATTACKVOLENV, new byte[]{0, 64});
+        short pitchOffset = (short) ((musicPatch.pitchOffset[note] / 256) + 128);
+        short pitchCorrection = musicPatch.pitchOffset[note];
+
+        while (pitchOffset >= 128) {
+            pitchOffset = (short) (pitchOffset - 128);
+        }
+
+        while (pitchCorrection <= -256) {
+            pitchCorrection = (short) (pitchCorrection + 256);
+        }
+
+        while (pitchCorrection >= 256) {
+            pitchCorrection = (short) (pitchCorrection - 256);
+        }
+
+        sf2LayerRegion.putShort(SF2Region.GENERATOR_OVERRIDINGROOTKEY, pitchOffset);
+        sf2LayerRegion.putShort(SF2Region.GENERATOR_FINETUNE, pitchCorrection);
+        sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, musicPatch.loopMode[note] * -1);
+        sf2LayerRegion.putShort(SF2Region.GENERATOR_PAN, (short) ((musicPatch.panOffset[note] - 64) * 4));
+        sf2LayerRegion.putShort(SF2Region.GENERATOR_INITIALATTENUATION, (short) ((musicPatch.volumeOffset[note] + musicPatch.baseVelocity)));
+        //sf2LayerRegion.putShort(SF2Region.GENERATOR_RELEASEVOLENV, (short) 0);
+        //sf2LayerRegion.putShort(SF2Region.GENERATOR_INITIALATTENUATION, (short) lookUpAttenuation(musicPatch.baseVelocity));
+        //sf2LayerRegion.putBytes(SF2Region.GENERATOR_ATTACKVOLENV, new byte[]{0, 64});
         sf2Layer.getRegions().add(sf2LayerRegion);
 
         SF2InstrumentRegion sf2InstrumentRegion = new SF2InstrumentRegion();
@@ -355,10 +373,10 @@ public class MakeSoundFont {
                             audioData[frame * 2 + 1] = (rawData[frame]);
                         }
 
-                        int samplePitch = (musicPatch.pitchOffset[noteIndex] / 256) + 128;
+                        short samplePitch = (short) ((musicPatch.pitchOffset[noteIndex] / 256) + 128);
 
                         while (samplePitch > 127) {
-                            samplePitch = samplePitch - 128;
+                            samplePitch = (short) (samplePitch - 128);
                         }
 
                         sf2Sample = new SF2Sample();
@@ -373,14 +391,19 @@ public class MakeSoundFont {
 
                         for (int index = noteIndex; index < 128; index++) {
                             if (musicPatch.sampleOffset[index] == var5) {
+                                noteRange[0] = (byte) nextNoteRange;
+                                noteRange[1] = (byte) nextNoteRange;
+                                if (nextNoteRange < 128) {
+                                    addSamplesToBank(musicPatch, sf2Sample, archiveID, noteRange, nextNoteRange);
+                                }
                                 nextNoteRange++;
                             }
                         }
 
-                        noteRange[0] = (byte) noteIndex;
-                        noteRange[1] = (byte) nextNoteRange;
+                        //noteRange[0] = (byte) noteIndex;
+                        //noteRange[1] = (byte) nextNoteRange;
 
-                        addSamplesToBank(musicPatch, sf2Sample, archiveID, noteRange);
+                        //addSamplesToBank(musicPatch, sf2Sample, archiveID, noteRange);
 
                         if (nextNoteRange >= 127) {
                             //sf2Soundbank.addInstrument(sf2Instrument);
@@ -417,6 +440,11 @@ public class MakeSoundFont {
 
                         for (int index = noteIndex; index < 128; index++) {
                             if (musicPatch.sampleOffset[index] == var5) {
+                                noteRange[0] = (byte) nextNoteRange;
+                                noteRange[1] = (byte) nextNoteRange;
+                                if (nextNoteRange < 128) {
+                                    addSamplesToBank(musicPatch, sf2Sample, archiveID, noteRange, nextNoteRange);
+                                }
                                 nextNoteRange++;
                             }
                         }
@@ -424,7 +452,10 @@ public class MakeSoundFont {
                         noteRange[0] = (byte) noteIndex;
                         noteRange[1] = (byte) nextNoteRange;
 
-                        addSamplesToBank(musicPatch, sf2Sample, archiveID, noteRange);
+                        //noteRange[0] = (byte) noteIndex;
+                        //noteRange[1] = (byte) noteIndex;
+
+                        //addSamplesToBank(musicPatch, sf2Sample, archiveID, noteRange);
 
                         if (nextNoteRange >= 127) {
                             //sf2Soundbank.addInstrument(sf2Instrument);

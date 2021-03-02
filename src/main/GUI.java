@@ -1,5 +1,6 @@
 package main;
 
+import com.sun.media.sound.SF2Soundbank;
 import main.utils.ByteArrayNode;
 import org.displee.CacheLibrary;
 import org.displee.cache.index.Index;
@@ -24,7 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class GUI {
-	
+
 	private static File midiFile;
 	private File soundFontFile;
 	private static File[] midiFiles;
@@ -109,27 +110,27 @@ public class GUI {
 		frame.setContentPane(panel);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
-		
+
 		JPanel buttonsPanel = new JPanel();
-		
+
 		try {
-			
+
 			JMenuBar jMenuBar = new JMenuBar();
 			jMenuBar.setSize(20, 20);
 			jMenuBar.setVisible(true);
-			
+
 			frame.setJMenuBar(jMenuBar);
-			
+
 			fileMenu = new JMenu();
 			fileMenu.setText("File");
 			fileMenu.setSize(100, 20);
 			fileMenu.setVisible(true);
-			
+
 			fileMenu.add("Load MIDI File").addActionListener(new MIDILoader());
 			fileMenu.add("Load SoundFont File").addActionListener(new SF2Loader());
 			fileMenu.add("Load RuneScape Cache").addActionListener(new CacheLoader());
 			fileMenu.add("Render MIDI to Audio File").addActionListener(new RenderMIDIProcess());
-			
+
 			preferencesMenu = new JMenu();
 			preferencesMenu.setText("Preferences");
 			preferencesMenu.setSize(100, 20);
@@ -187,10 +188,10 @@ public class GUI {
 			jMenuBar.add(preferencesMenu);
 			jMenuBar.add(utilityMenu);
 			jMenuBar.add(playlistMenu);
-			
+
 			System.out.println("Application loaded successfully!");
 		}
-		
+
 		finally {
 
 			Path midiFolderFile = Paths.get("./DefaultMidiPath.txt/");
@@ -208,7 +209,7 @@ public class GUI {
 
 			if (sf2PrefFile.toFile().exists()) {
 				List<String> prefString = Files.readAllLines(sf2PrefFile);
-				
+
 				for (int s = 0; s < prefString.size(); s++) {
 				String pathString = prefString.get(s);
 				System.out.println("Automatically set Soundfont to " + prefString);
@@ -228,7 +229,7 @@ public class GUI {
                     cacheLibrary = new CacheLibrary(pathString);
                 }
             }
-			
+
 			else if (!sf2PrefFile.toFile().exists()) {
 				FileOutputStream fos = new FileOutputStream("./DefaultSoundfontPath.txt/");
 				DataOutputStream dos = new DataOutputStream(fos);
@@ -279,22 +280,22 @@ public class GUI {
 		loopButton = new JButton();
 		shuffleButton = new JButton();
 		testButton = new JButton();
-		
+
 		startButton.addActionListener(new StartButtonListener());
 		pauseButton.addActionListener(new PauseButtonListener());
 		stopButton.addActionListener(new StopButtonListener());
 		loopButton.addActionListener(new LoopButtonListener());
 		shuffleButton.addActionListener(new ShuffleButtonListener());
 		testButton.addActionListener(new TestButtonListener());
-		
+
 		buttonsPanel.add(startButton);
 		startButton.setText("Play");
 		startButton.setVisible(true);
-		
+
 		buttonsPanel.add(pauseButton);
 		pauseButton.setText("Pause");
 		pauseButton.setVisible(true);
-		
+
 		buttonsPanel.add(stopButton);
 		stopButton.setText("Stop");
 		stopButton.setVisible(true);
@@ -327,23 +328,23 @@ public class GUI {
 
 		buttonsPanel.setVisible(true);
 		buttonsPanel.setBackground(Color.LIGHT_GRAY);
-		
+
 		songPanel = new JPanel();
 		songSlider = new JSlider();
 		songSliderInfo = new JTextPane();
 		volumeInfo = new JTextPane();
 		sampleRateInfo = new JTextPane();
 		engineInfo = new JTextPane();
-		
+
 		if (midiFile == null) {
 			songSlider.setEnabled(false);
 			songSlider.setToolTipText("MIDI file not loaded!");
 		}
-		
+
 		songSlider.setValue(0);
 		songSlider.addChangeListener(new SongSliderListener());
 		songPanel.add(songSlider);
-		
+
 		if (midiFile == null) {
 			songSliderInfo.setText("We're not playing anything! Try loading a MIDI.");
 		}
@@ -386,17 +387,17 @@ public class GUI {
 		songPanel.setAlignmentX(0);
 		songPanel.setAlignmentY(0);
 		songPanel.setVisible(true);
-		
+
 		fixAttemptOS = new JCheckBox();
 		fixAttemptOS.setText("Attempt to fix songs (OSRS)");
 		fixAttemptOS.addActionListener(new FixAttempterOS());
 		fixAttemptOS.setVisible(true);
-		
+
 		fixAttemptHD = new JCheckBox();
 		fixAttemptHD.setText("Attempt to fix songs (RSHD)");
 		fixAttemptHD.addActionListener(new FixAttempterHD());
 		fixAttemptHD.setVisible(true);
-		
+
 		buttonsPanel.setBounds(0, 0, frame.getWidth(), frame.getHeight());
 		buttonsPanel.add(songPanel);
 		buttonsPanel.add(fixAttemptOS);
@@ -570,13 +571,13 @@ public class GUI {
 			}
 		}
 	}
-	
+
 	public class SongSliderListener implements ChangeListener {
 
 		@Override
 		public void stateChanged(ChangeEvent e) {
 			int i = songSlider.getValue();
-			
+
 			if (sequence == null) {
 				try {
 					sequence = MidiSystem.getSequence(midiFile);
@@ -593,7 +594,7 @@ public class GUI {
 			}
 		}
 	}
-	
+
 	public class SF2Loader implements ActionListener {
 
 		@Override
@@ -601,16 +602,16 @@ public class GUI {
 			LoadSoundFont(frame);
 		}
 	}
-	
+
 	public class DefaultSoundFontSetter implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			LoadSoundFont(frame);
-			
+
 			File preferences = new File("./DefaultSoundfontPath.txt/");
 			FileOutputStream fos;
-			
+
 			try {
 				fos = new FileOutputStream(preferences);
 				DataOutputStream dos = new DataOutputStream(fos);
@@ -624,7 +625,7 @@ public class GUI {
 	}
 
 	public class StartButtonListener implements ActionListener {
-		
+
 		int bankLSB;
 
 		int drumChannel = 9;
@@ -639,6 +640,7 @@ public class GUI {
 
 			try {
 				midiLoader.load(MidiSystem.getSoundbank(soundFontFile), midiFile);
+				midiLoader.setReverbOff();
 
 				if (loopMode) {
 					setLoop(MidiSystem.getSequence(midiFile));
@@ -784,110 +786,110 @@ public class GUI {
 		public Sequence adjustForPlayOS(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
-					
+
 					MidiEvent midiEvent = track.get(i);
-					
+
 					MidiMessage midiMessage = midiEvent.getMessage();
-						
+
 						if (midiMessage instanceof ShortMessage) {
-							
+
 							ShortMessage sm = (ShortMessage) midiMessage;
-								
+
 							if (sm.getChannel() < 16) {
 								getBankLSB(sm);
-								
+
 								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
 									chPosition++;
 									if (chPosition == 9) {
 										chPosition = 10;
 									}
 								}
-								
+
 								if (customBank == false) {
-									
+
 									if (sm.getChannel() == 9) {
 										bankLSB = 1;
 									}
-									
+
 									if (sm.getChannel() != 9) {
 										bankLSB = 0;
 									}
 								}
 							}
-							
+
 							if (bankLSB == 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
 							}
-							
+
 							else if (bankLSB != 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
@@ -901,110 +903,110 @@ public class GUI {
 		public Sequence adjustForPlayHD(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
-					
+
 					MidiEvent midiEvent = track.get(i);
-					
+
 					MidiMessage midiMessage = midiEvent.getMessage();
-						
+
 						if (midiMessage instanceof ShortMessage) {
-							
+
 							ShortMessage sm = (ShortMessage) midiMessage;
-								
+
 							if (sm.getChannel() < 16) {
 								getBankLSB(sm);
-								
+
 								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
 									chPosition++;
 									if (chPosition == 9) {
 										chPosition = 10;
 									}
 								}
-								
+
 								if (customBank == false) {
-									
+
 									if (sm.getChannel() == 9) {
 										bankLSB = 1;
 									}
-									
+
 									if (sm.getChannel() != 9) {
 										bankLSB = 0;
 									}
 								}
 							}
-							
+
 							if (bankLSB == 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
 							}
-							
+
 							else if (bankLSB != 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
@@ -1016,9 +1018,9 @@ public class GUI {
 			}
 
 		public void getBankLSB(ShortMessage sm) {
-			
+
 				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-					
+
 					if (sm.getData1() == 32) {
 						bankLSB = sm.getData2();
 						customBank = true;
@@ -1026,7 +1028,7 @@ public class GUI {
 				}
 			}
 		}
-	
+
 	public class PauseButtonListener implements ActionListener {
 
 		@Override
@@ -1036,7 +1038,7 @@ public class GUI {
 			pausedTime = midiLoader.pausedPosition;
 
 			//sequencer.stop();
-			
+
 			if (pausedTime != 0) {
 				pauseButton.setEnabled(false);
 			}
@@ -1044,14 +1046,14 @@ public class GUI {
 			if (!midiLoader.isSequencerRunning()) {
 				startButton.setEnabled(true);
 			}
-			
+
 			if (!midiLoader.isSequencerRunning()) {
 				Timer timer = new Timer(0, new TimerListener());
 				timer.stop();
 			}
 		}
 	}
-	
+
 	public class StopButtonListener implements ActionListener {
 
 		@Override
@@ -1060,12 +1062,12 @@ public class GUI {
 
 			//sequencer.stop();
 			midiLoader.stop();
-			
+
 			if (!midiLoader.isSequencerRunning()) {
 				pauseButton.setEnabled(true);
 				startButton.setEnabled(true);
 			}
-			
+
 			if (!midiLoader.isSequencerRunning()) {
 				Timer timer = new Timer(100, new TimerListener());
 				timer.stop();
@@ -1097,7 +1099,7 @@ public class GUI {
 			songSlider.setValue(position);
 		}
 	}
-	
+
 	public class FixAttempterOS implements ActionListener {
 
 		@Override
@@ -1105,13 +1107,13 @@ public class GUI {
 			if (fixAttemptOS.isEnabled()) {
 				fixAttemptingOS = true;
 			}
-			
+
 			else if (!fixAttemptOS.isEnabled()) {
 				fixAttemptingOS = false;
 			}
 		}
 	}
-	
+
 	public class FixAttempterHD implements ActionListener {
 
 		@Override
@@ -1119,17 +1121,17 @@ public class GUI {
 			if (fixAttemptOS.isEnabled()) {
 				fixAttemptingHD = true;
 			}
-			
+
 			else if (!fixAttemptOS.isEnabled()) {
 				fixAttemptingHD = false;
 			}
 		}
 	}
-	
+
 	public class RenderMIDIProcess implements ActionListener {
 
 		int bankLSB;
-		
+
 		int drumChannel = 9;
 		int chPosition = -1;
 
@@ -1141,25 +1143,25 @@ public class GUI {
 			try {
 				soundbank = MidiSystem.getSoundbank(soundFontFile);
 				sequence = MidiSystem.getSequence(midiFile);
-				
+
 				if (fixAttemptingOS == false) {
 					Midi2WavRender.render(soundbank, sequence, new File("./Rendered.wav/"));
 				}
-				
+
 				else if (fixAttemptingOS == true) {
-					Midi2WavRender.render(soundbank, adjustForRenderOS(sequence), new File("./Rendered.wav/"));	
+					Midi2WavRender.render(soundbank, adjustForRenderOS(sequence), new File("./Rendered.wav/"));
 				}
 
 				if (fixAttemptingHD == false) {
 					Midi2WavRender.render(soundbank, sequence, new File("./Rendered.wav/"));
 				}
-				
+
 				else if (fixAttemptingHD == true) {
-					Midi2WavRender.render(soundbank, adjustForRenderHD(sequence), new File("./Rendered.wav/"));	
+					Midi2WavRender.render(soundbank, adjustForRenderHD(sequence), new File("./Rendered.wav/"));
 				}
-				
+
 				System.out.println("Successfully rendered MIDI to Audio!");
-				
+
 			} catch (InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
 			}
@@ -1168,241 +1170,241 @@ public class GUI {
 		public Sequence adjustForRenderOS(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
-					
+
 					MidiEvent midiEvent = track.get(i);
-					
+
 					MidiMessage midiMessage = midiEvent.getMessage();
-						
+
 						if (midiMessage instanceof ShortMessage) {
-							
+
 							ShortMessage sm = (ShortMessage) midiMessage;
-								
+
 							if (sm.getChannel() < 16) {
 								getBankLSB(sm);
-								
+
 								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
 									chPosition++;
 									if (chPosition == 9) {
 										chPosition = 10;
 									}
 								}
-								
+
 								if (customBank == false) {
-									
+
 									if (sm.getChannel() == 9) {
 										bankLSB = 1;
 									}
-									
+
 									if (sm.getChannel() != 9) {
 										bankLSB = 0;
 									}
 								}
 							}
-							
+
 							if (bankLSB == 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
 							}
-							
+
 							else if (bankLSB != 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
-				}		
+				}
 				return MidiFixerOSRS.returnFixedMIDI(sequence, false, customBank);
 			}
 
 		public Sequence adjustForRenderHD(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
-					
+
 					MidiEvent midiEvent = track.get(i);
-					
+
 					MidiMessage midiMessage = midiEvent.getMessage();
-						
+
 						if (midiMessage instanceof ShortMessage) {
-							
+
 							ShortMessage sm = (ShortMessage) midiMessage;
-								
+
 							if (sm.getChannel() < 16) {
 								getBankLSB(sm);
-								
+
 								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
 									chPosition++;
 									if (chPosition == 9) {
 										chPosition = 10;
 									}
 								}
-								
+
 								if (customBank == false) {
-									
+
 									if (sm.getChannel() == 9) {
 										bankLSB = 1;
 									}
-									
+
 									if (sm.getChannel() != 9) {
 										bankLSB = 0;
 									}
 								}
 							}
-							
+
 							if (bankLSB == 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
 							}
-							
+
 							else if (bankLSB != 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
-				}	
+				}
 				return MidiFixerRSHD.returnFixedMIDI(sequence, false, customBank);
 			}
 
 		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
-			
+
 				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-					
+
 					if (sm.getData1() == 32) {
 						bankLSB = sm.getData2();
 						customBank = true;
@@ -1410,27 +1412,27 @@ public class GUI {
 				}
 			}
 		}
-	
+
 	public class FixButtonListenerOSRS implements ActionListener {
 
 		boolean customBank = false;
-		
+
 		int bankLSB = 0;
-		
+
 		int drumChannel = 9;
 		int chPosition = -1;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			
+
 			try {
-				
+
 				sequence = MidiSystem.getSequence(midiFile);
-				
+
 				reorderChannels(sequence);
-				
+
 				System.out.println("Sucessfully wrote the fixed Old School RuneScape MIDI to file!");
-				
+
 			} catch (InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
 			}
@@ -1439,124 +1441,124 @@ public class GUI {
 		public void reorderChannels(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
-					
+
 					MidiEvent midiEvent = track.get(i);
-					
+
 					MidiMessage midiMessage = midiEvent.getMessage();
-						
+
 						if (midiMessage instanceof ShortMessage) {
-							
+
 							ShortMessage sm = (ShortMessage) midiMessage;
-								
+
 							if (sm.getChannel() < 16) {
 								getBankLSB(sm);
-								
+
 								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
 									chPosition++;
 									if (chPosition == 9) {
 										chPosition = 10;
 									}
 								}
-								
+
 								if (customBank == false) {
-									
+
 									if (sm.getChannel() == 9) {
 										bankLSB = 1;
 									}
-									
+
 									if (sm.getChannel() != 9) {
 										bankLSB = 0;
 									}
 								}
 							}
-							
+
 							if (bankLSB == 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
 							}
-							
+
 							else if (bankLSB != 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
-				}		
+				}
 				MidiFixerOSRS.returnFixedMIDI(sequence, true, customBank);
 			}
 
 		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
-			
+
 				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-					
+
 					if (sm.getData1() == 32) {
 						bankLSB = sm.getData2();
 						customBank = true;
@@ -1564,153 +1566,210 @@ public class GUI {
 				}
 			}
 		}
-	
+
 	public class FixButtonListenerRSHD implements ActionListener {
 
 		boolean customBank = false;
-		
+
 		int bankLSB = 0;
-		
+
 		int drumChannel = 9;
 		int chPosition = -1;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			
+
 			try {
-				
+
 				sequence = MidiSystem.getSequence(midiFile);
-				
-				reorderChannels(sequence);
-				
-				System.out.println("Sucessfully wrote the fixed RuneScape HD MIDI to file!");
-				
+
+				adjustToGeneralMIDI();
+				//reorderChannels(sequence);
+
+				System.out.println("Successfully wrote the fixed RuneScape HD MIDI to file!");
+
 			} catch (InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
+			}
+		}
+
+		private void adjustToGeneralMIDI() throws IOException, InvalidMidiDataException {
+			Sequence sequence = MidiSystem.getSequence(midiFile);
+			for (int track = 0; track < sequence.getTracks().length; track++) {
+				for (int index = 0; index < sequence.getTracks()[track].size(); index++) {
+					MidiEvent midiEvent = sequence.getTracks()[track].get(index);
+					MidiMessage midiMessage = midiEvent.getMessage();
+					if (midiMessage instanceof ShortMessage) {
+						ShortMessage shortMessage = (ShortMessage) midiMessage;
+
+						if (shortMessage.getCommand() == ShortMessage.CONTROL_CHANGE) {
+							if (shortMessage.getData1() == 32) {
+								bankLSB = shortMessage.getData2();
+							}
+						}
+
+						if (shortMessage.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+							int program = shortMessage.getData1() + (bankLSB * 128);
+							adjustTrack(sequence, track, program);
+							System.out.println(program);
+						}
+					}
+				}
+			}
+			MidiSystem.write(sequence, 1, new File("./Fixed.mid/"));
+		}
+
+		private void adjustTrack(Sequence sequence, int track, int program) throws InvalidMidiDataException, IOException {
+			for (int index = 0; index < sequence.getTracks()[track].size(); index++) {
+				MidiMessage midiMessage = sequence.getTracks()[track].get(index).getMessage();
+				if (midiMessage instanceof ShortMessage) {
+					ShortMessage shortMessage = (ShortMessage) midiMessage;
+					if (shortMessage.getCommand() == ShortMessage.CONTROL_CHANGE) {
+
+						if (shortMessage.getData1() == 32) {
+							sequence.getTracks()[track].remove(sequence.getTracks()[track].get(index));
+						}
+					}
+
+					if (shortMessage.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+						switch (program) {
+							case 129:
+								shortMessage.setMessage(ShortMessage.PROGRAM_CHANGE, 9, 128, shortMessage.getData2());
+							case 178:
+								shortMessage.setMessage(ShortMessage.PROGRAM_CHANGE, 9, 176, shortMessage.getData2());
+							case 179:
+								shortMessage.setMessage(ShortMessage.PROGRAM_CHANGE, 9, 176, shortMessage.getData2());
+							case 256:
+								shortMessage.setMessage(ShortMessage.PROGRAM_CHANGE, track, 52, shortMessage.getData2());
+						}
+					}
+
+					shortMessage.setMessage(shortMessage.getCommand(), track, shortMessage.getData1(), shortMessage.getData2());
+				}
 			}
 		}
 
 		public void reorderChannels(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
 				for (int i = 0; i < track.size(); i++) {
-					
+
 					MidiEvent midiEvent = track.get(i);
-					
+
 					MidiMessage midiMessage = midiEvent.getMessage();
-						
+
 						if (midiMessage instanceof ShortMessage) {
-							
+
 							ShortMessage sm = (ShortMessage) midiMessage;
-								
+
 							if (sm.getChannel() < 16) {
 								getBankLSB(sm);
-								
+
 								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
 									chPosition++;
 									if (chPosition == 9) {
 										chPosition = 10;
 									}
 								}
-								
+
 								if (customBank == false) {
-									
+
 									if (sm.getChannel() == 9) {
 										bankLSB = 1;
 									}
-									
+
 									if (sm.getChannel() != 9) {
 										bankLSB = 0;
 									}
 								}
 							}
-							
+
 							if (bankLSB == 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
 								}
 							}
-							
+
 							else if (bankLSB != 1) {
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
 									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.NOTE_ON) {
 									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
 									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
 									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
 									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
-								
+
 								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
 									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 								}
 							}
 						}
 					}
-				}		
+				}
 				MidiFixerRSHD.returnFixedMIDI(sequence, true, customBank);
 			}
 
 		public void getBankLSB(ShortMessage sm) throws InvalidMidiDataException {
-			
+
 				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-					
+
 					if (sm.getData1() == 32) {
 						bankLSB = sm.getData2();
 						customBank = true;
@@ -2043,22 +2102,22 @@ public class GUI {
 					File dir = new File("./Sounds/Sound Effects/");
 					if (dir.mkdirs()) {
 						System.out.println("Created new directory: /Sounds/Sound Effects/");
-						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".au")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 						AudioBuffer audioBuffer = soundEffect.toAudioBuffer();
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
-						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound effect data to WAVE file!");
 					} else {
 						System.out.println("Couldn't create new directory (It might already exist).");
-						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".wav")));
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Effects/" + idInt + ".au")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 						AudioBuffer audioBuffer = soundEffect.toAudioBuffer();
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(22050, 8, 1, true, false), audioBuffer.samples.length);
-						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound effect data to WAVE file!");
 					}
@@ -2172,12 +2231,12 @@ public class GUI {
 					File dir = new File("./Sounds/Sound Bank Samples/");
 					if (dir.mkdirs()) {
 						System.out.println("Created new directory: /Sounds/Sound Bank Samples/");
-						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".au")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 						AudioBuffer audioBuffer = soundBankCache.getMusicSample(idInt, null);
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(audioBuffer.sampleRate, 8, 1, true, false), audioBuffer.samples.length);
-						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
 
@@ -2185,12 +2244,12 @@ public class GUI {
 						System.out.println("Loop End: " + audioBuffer.end);
 					} else {
 						System.out.println("Couldn't create new directory (It might already exist).");
-						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".au")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 						AudioBuffer audioBuffer = soundBankCache.getMusicSample(idInt, null);
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(audioBuffer.sampleRate, 8, 1, true, false), audioBuffer.samples.length);
-						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
 
@@ -2214,7 +2273,7 @@ public class GUI {
 					File dir = new File("./Sounds/Sound Bank Samples/");
 					if (dir.mkdirs()) {
 						System.out.println("Created new directory: /Sounds/Sound Bank Samples/");
-						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".au")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 						AudioBuffer audioBuffer = soundBankCache.getMusicSample(idInt, null);
 						if (audioBuffer == null) {
@@ -2222,12 +2281,12 @@ public class GUI {
 						}
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(audioBuffer.sampleRate, 8, 1, true, false), audioBuffer.samples.length);
-						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
 					} else {
 						System.out.println("Couldn't create new directory (It might already exist).");
-						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".wav")));
+						DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./Sounds/Sound Bank Samples/" + idInt + ".au")));
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 						AudioBuffer audioBuffer = soundBankCache.getMusicSample(idInt, null);
 						if (audioBuffer == null) {
@@ -2235,7 +2294,7 @@ public class GUI {
 						}
 						AudioInputStream audioInputStream;
 						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(audioBuffer.sampleRate, 8, 1, true, false), audioBuffer.samples.length);
-						AudioSystem.write(audioInputStream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
 					}
@@ -2590,7 +2649,7 @@ public class GUI {
 
 			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
 
-			for (int archive = 0; archive < 1; archive++) {
+			for (int archive = 0; archive < 4000; archive++) {
 				MakeSoundFont makeSoundFont = new MakeSoundFont();
 				makeSoundFont.initSoundFont();
 				if (patchIndex.getArchive(archive) != null) {
@@ -2633,7 +2692,8 @@ public class GUI {
 					SoundPlayer soundPlayer = initMidiStream(midiFile);
 
 					while (midiPcmStream.active) {
-						playSound(soundPlayer);
+						writeSound(soundPlayer);
+						//playSound(soundPlayer);
 
 						if (shuffleMode && midiPcmStream.midiFile.isDone()) {
 							soundPlayer = initMidiStream(midiFiles[(int) (Math.random() * midiFiles.length)]);
@@ -2649,6 +2709,50 @@ public class GUI {
 		private void playSound(SoundPlayer soundPlayer) {
 			soundPlayer.fill(soundPlayer.samples, 256);
 			soundPlayer.write();
+		}
+
+		private void writeSound(SoundPlayer soundPlayer) {
+
+			soundPlayer.fill(soundPlayer.samples, 256);
+			soundPlayer.writeToBuffer();
+
+			if (midiPcmStream.midiFile.isDone()) {
+
+				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
+
+				File midiAudioDirectory = new File("./MIDI Audio/");
+
+				if (midiAudioDirectory.mkdirs()) {
+
+					File outFile = new File(midiAudioDirectory + "/" + midiFile.getName().replace(".mid", "") + ".wav/");
+					FileOutputStream fos;
+
+					try {
+
+						fos = new FileOutputStream(outFile);
+						AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+						AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+						AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				} else {
+
+					File outFile = new File(midiAudioDirectory + "/" + midiFile.getName().replace(".mid", "") + ".wav/");
+					FileOutputStream fos;
+
+					try {
+						fos = new FileOutputStream(outFile);
+						AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+						AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(data), format, data.length);
+						AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+
+				midiPcmStream.active = false;
+			}
 		}
 
 		private SoundPlayer initMidiStream(File midi) throws IOException {
@@ -2873,7 +2977,7 @@ public class GUI {
 			Index soundBankIndex = cacheLibrary.getIndex(14);
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
-			
+
 			for (int i = 0; i < soundEffectIndex.getArchives().length; i++) {
 				try {
 					if (soundEffectIndex.getArchive(i) != null) {
@@ -2998,75 +3102,89 @@ public class GUI {
 
 			try {
 
-				customReceiver = new CustomReceiver();
-				sequencer = MidiSystem.getSequencer();
-				sequencer.open();
-
-				MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
-
-				for (int index = 0; index < infos.length; index++) {
-
-					MidiDevice midiDevice = MidiSystem.getMidiDevice(infos[index]);
-
-					if (midiDevice.getDeviceInfo().getName().contains("Bus")) {
-
-						if (!midiDevice.isOpen()) {
-							midiDevice.open();
-							MidiSystem.getTransmitter().setReceiver(customReceiver);
-							//midiDevice.getTransmitter().setReceiver(customReceiver);
-							System.out.println(infos[index].getName());
-							break;
-						}
-					}
-				}
+				File output = new File("./0.dat/");
+				FileOutputStream fileOutputStream = new FileOutputStream(output);
+				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
 
 				Index soundEffectIndex = cacheLibrary.getIndex(4);
 				Index soundBankIndex = cacheLibrary.getIndex(14);
 				Index musicPatchIndex = cacheLibrary.getIndex(15);
 
 				SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
-				midiPcmStream = new MidiPcmStream();
 
 				PcmPlayer.pcmPlayer_stereo = true;
 
-				if (customReceiver.midiData != null) {
-					MidiTrack midiTrack = new MidiTrack();
-					midiTrack.midi = customReceiver.midiData;
-					MidiTrack.loadMidiTrackInfo();
-					midiPcmStream.init(9, 128);
-					midiPcmStream.setMusicTrack(midiTrack, false);
-					midiPcmStream.setPcmStreamVolume(volume);
-					midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-				}
+				midiPcmStream = new MidiPcmStream();
 
-				CustomReceiver finalCustomReceiver = customReceiver;
+				//MidiTrack midiTrack = new MidiTrack();
+				//midiTrack.midi = Files.readAllBytes(Paths.get(midiFile.toURI()));
+				//sequencer.setSequence(MidiSystem.getSequence(midiFile));
+				//sequencer.start();
+
+				midiPcmStream.init(9, 128);
+				//midiPcmStream.setMusicTrack(midiTrack, loopMode);
+				midiPcmStream.setPcmStreamVolume(volume);
+				//midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
+				midiPcmStream.loadTestSoundBankCompletely();
+
+				customReceiver = new CustomReceiver(midiPcmStream);
+
+				MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+
+				for (MidiDevice.Info info : infos) {
+					MidiDevice midiDevice = MidiSystem.getMidiDevice(info);
+					if (!midiDevice.isOpen()) {
+						midiDevice.open();
+					}
+
+					else {
+						midiDevice.close();
+					}
+
+					if (midiDevice.getDeviceInfo().getName().contains("Bus")) {
+						if (midiDevice.getMaxTransmitters() != 0) {
+							midiDevice.getTransmitter().setReceiver(customReceiver);
+							System.out.println(midiDevice.getDeviceInfo() + " set!");
+						}
+
+						else {
+							if (midiDevice.getTransmitters().size() != 0) {
+								midiDevice.getTransmitter().setReceiver(customReceiver);
+								System.out.println(midiDevice.getDeviceInfo() + " set!");
+							}
+						}
+					}
+				}
 
 				SoundPlayer soundPlayer = new SoundPlayer();
 				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[16384];
+				soundPlayer.samples = new int[16384 * 16384];
 				soundPlayer.capacity = 16384;
 				soundPlayer.init();
 				soundPlayer.open(soundPlayer.capacity);
 
-				do {
+				Thread runThread = new Thread(() -> {
 
-					while (finalCustomReceiver.midiData != null) {
-						MidiTrack nextMidi = new MidiTrack();
-						nextMidi.midi = finalCustomReceiver.midiData;
-						midiPcmStream = new MidiPcmStream();
-						midiPcmStream.init(9, 128);
-						midiPcmStream.setPcmStreamVolume(volume);
-						midiPcmStream.setMusicTrack(nextMidi, false);
-						midiPcmStream.loadMusicTrack(nextMidi, musicPatchIndex, soundBankCache, 0);
+					while (soundPlayer.stream != null) {
 
-						soundPlayer.setStream(midiPcmStream);
-						soundPlayer.fill(soundPlayer.samples, 256);
-						soundPlayer.write();
+						soundPlayer.samples = new int[16384];
+
+						if (customReceiver.midiData != null) {
+							soundPlayer.fill(soundPlayer.samples, 256);
+							soundPlayer.write();
+						}
+
+						else {
+							soundPlayer.write();
+							//soundPlayer.fill(soundPlayer.samples, 256);
+							//soundPlayer.write();
+						}
 					}
+				});
 
-				} while (true);
+				runThread.start();
 
-			} catch (MidiUnavailableException midiUnavailableException) {
+			} catch (MidiUnavailableException | IOException midiUnavailableException) {
 				midiUnavailableException.printStackTrace();
 			}
 		}
@@ -3108,7 +3226,7 @@ public class GUI {
 
 				SoundPlayer soundPlayer = new SoundPlayer();
 				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[512];
+				soundPlayer.samples = new int[1024];
 				soundPlayer.capacity = 16384;
 				soundPlayer.init();
 				soundPlayer.open(soundPlayer.capacity);
@@ -3272,7 +3390,10 @@ public class GUI {
 
 					if (midiAudioDirectory.mkdirs()) {
 
-						File outFile = new File(midiAudioDirectory + "/" + midiSeqFile.getName().replace(".mid", "") + ".wav/");
+						int index = midiSeqFile.getName().lastIndexOf(" - ");
+						String name = midiSeqFile.getName().substring(index).replace(".mid", "").replace(" - ", "").trim();
+
+						File outFile = new File(midiAudioDirectory + "/" + name + ".wav/");
 						FileOutputStream fos;
 
 						try {
@@ -3286,7 +3407,10 @@ public class GUI {
 						}
 					} else {
 
-						File outFile = new File(midiAudioDirectory + "/" + midiSeqFile.getName().replace(".mid", "") + ".wav/");
+						int index = midiSeqFile.getName().lastIndexOf(" - ");
+						String name = midiSeqFile.getName().substring(index).replace(".mid", "").replace(" - ", "").trim();
+
+						File outFile = new File(midiAudioDirectory + "/" + name + ".wav/");
 						FileOutputStream fos;
 
 						try {
@@ -3403,13 +3527,13 @@ public class GUI {
 
 			for (int id = 0; id < 4000; id++) {
 
-				File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
+				//File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
 
-				if (patch.exists()) {
+				if (musicPatchIndex.getArchive(id) != null) {
 
 					try {
 
-						MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
+						MusicPatch musicPatch = new MusicPatch(musicPatchIndex.getArchive(id).getFile(0).getData());//Files.readAllBytes(Path.of(patch.getPath())));
 
 						File patchText = new File("./Patch Text Files/" + id + ".txt/");
 						FileOutputStream patchFileOut = new FileOutputStream(patchText);
@@ -3425,11 +3549,13 @@ public class GUI {
 								bufferedWriter.write('\n');
 								bufferedWriter.write(PatchBanks.SAMPLE_NAME + getSampleOffsetID(musicPatch, index));
 
-								int rootKey = ((musicPatch.pitchOffset[index] / 256) + 128);
+								int rootKey = ((musicPatch.pitchOffset[index]));// / 256) + 128);
 
+								/**
 								while (rootKey > 128) {
 									rootKey = rootKey - 128;
 								}
+								 **/
 
 								bufferedWriter.newLine();
 								bufferedWriter.write(PatchBanks.SAMPLE_ROOT_KEY + rootKey);
@@ -3478,6 +3604,13 @@ public class GUI {
 				}
 			}
 
+			try {
+				MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
+				writeCustom();
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+
 			/**
 			for (int index = 0; index < 4000; index++) {
 				File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + index + ".dat/");
@@ -3500,6 +3633,22 @@ public class GUI {
 			 **/
 
 			//makeSoundFont.saveSoundBank();
+		}
+
+		private void writeCustom() throws IOException {
+
+			SF2Soundbank sf2Soundbank = new SF2Soundbank(soundFontFile);
+
+			for (int patchID = 0; patchID < 4000; patchID++) {
+				//sf2Soundbank = new SF2Soundbank(new File("./SoundFonts/" + patchID + ".sf2/"));
+				//if (new File("./SoundFonts/" + patchID + ".sf2/").exists()) {
+					Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
+					if (path.toFile().exists()) {
+						MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(path));
+						musicPatch.writeTextPatch(sf2Soundbank, patchID);
+					}
+				}
+			//}
 		}
 
 		private boolean isSfx(MusicPatch musicPatch, int note) {
