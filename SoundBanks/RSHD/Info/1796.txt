@@ -1,0 +1,20 @@
+Instrument Name = 1796
+
+Sample = 16959
+Root Key = 3072
+Lower Key Range = 12
+Upper Key Range = 12
+Patch Volume = 64
+Sample Loop Start = 0
+Sample Loop End = 337475
+Sample Volume = 62
+Sample Pan = 64
+Parameter 1 = 0
+Parameter 2 = 0
+Parameter 3 = 0
+Parameter 4 = 0
+Parameter 5 = 0
+Parameter 6 = 24
+Parameter 7 = 0
+Array 1 = null
+Array 2 = null

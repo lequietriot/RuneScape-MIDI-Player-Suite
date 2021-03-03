@@ -3102,9 +3102,9 @@ public class GUI {
 
 			try {
 
-				File output = new File("./0.dat/");
-				FileOutputStream fileOutputStream = new FileOutputStream(output);
-				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+				//File output = new File("./0.dat/");
+				//FileOutputStream fileOutputStream = new FileOutputStream(output);
+				//DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
 
 				Index soundEffectIndex = cacheLibrary.getIndex(4);
 				Index soundBankIndex = cacheLibrary.getIndex(14);
@@ -3158,8 +3158,8 @@ public class GUI {
 
 				SoundPlayer soundPlayer = new SoundPlayer();
 				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[16384 * 16384];
-				soundPlayer.capacity = 16384;
+				soundPlayer.samples = new int[512];
+				soundPlayer.capacity = 1024;
 				soundPlayer.init();
 				soundPlayer.open(soundPlayer.capacity);
 
@@ -3167,7 +3167,7 @@ public class GUI {
 
 					while (soundPlayer.stream != null) {
 
-						soundPlayer.samples = new int[16384];
+						soundPlayer.samples = new int[512];
 
 						if (customReceiver.midiData != null) {
 							soundPlayer.fill(soundPlayer.samples, 256);
@@ -3175,16 +3175,15 @@ public class GUI {
 						}
 
 						else {
+							soundPlayer.fill(soundPlayer.samples, 256);
 							soundPlayer.write();
-							//soundPlayer.fill(soundPlayer.samples, 256);
-							//soundPlayer.write();
 						}
 					}
 				});
 
 				runThread.start();
 
-			} catch (MidiUnavailableException | IOException midiUnavailableException) {
+			} catch (MidiUnavailableException midiUnavailableException) {
 				midiUnavailableException.printStackTrace();
 			}
 		}
@@ -3508,11 +3507,14 @@ public class GUI {
 
 	private class SoundBankPatchDumper implements ActionListener {
 
+		Index soundEffectIndex;
+		Index soundBankIndex;
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			Index soundEffectIndex = cacheLibrary.getIndex(4);
-			Index soundBankIndex = cacheLibrary.getIndex(14);
+			soundEffectIndex = cacheLibrary.getIndex(4);
+			soundBankIndex = cacheLibrary.getIndex(14);
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
 			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
@@ -3527,13 +3529,13 @@ public class GUI {
 
 			for (int id = 0; id < 4000; id++) {
 
-				//File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
+				File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
 
-				if (musicPatchIndex.getArchive(id) != null) {
+				if (patch.exists()) {
 
 					try {
 
-						MusicPatch musicPatch = new MusicPatch(musicPatchIndex.getArchive(id).getFile(0).getData());//Files.readAllBytes(Path.of(patch.getPath())));
+						MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
 
 						File patchText = new File("./Patch Text Files/" + id + ".txt/");
 						FileOutputStream patchFileOut = new FileOutputStream(patchText);
@@ -3604,12 +3606,8 @@ public class GUI {
 				}
 			}
 
-			try {
-				MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
-				writeCustom();
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
-			}
+			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
+			//writeCustom();
 
 			/**
 			for (int index = 0; index < 4000; index++) {
@@ -3673,20 +3671,40 @@ public class GUI {
 		private int getLoopStart(SoundBankCache soundBankCache, int sampleOffsetID, boolean soundEffects) {
 
 			if (soundEffects) {
-				return soundBankCache.getSoundEffect(sampleOffsetID, null).start;
+				if (soundEffectIndex.getArchive(sampleOffsetID) != null) {
+					return soundBankCache.getSoundEffect(sampleOffsetID, null).start;
+				}
+				else {
+					return 0;
+				}
 			}
 			else {
-				return soundBankCache.getMusicSample(sampleOffsetID, null).start;
+				if (soundBankIndex.getArchive(sampleOffsetID) != null) {
+					return soundBankCache.getMusicSample(sampleOffsetID, null).start;
+				}
+				else {
+					return 0;
+				}
 			}
 		}
 
 		private int getLoopEnd(SoundBankCache soundBankCache, int sampleOffsetID, boolean soundEffects) {
 
 			if (soundEffects) {
-				return soundBankCache.getSoundEffect(sampleOffsetID, null).end;
+				if (soundEffectIndex.getArchive(sampleOffsetID) != null) {
+					return soundBankCache.getSoundEffect(sampleOffsetID, null).end;
+				}
+				else {
+					return 0;
+				}
 			}
 			else {
-				return soundBankCache.getMusicSample(sampleOffsetID, null).end;
+				if (soundBankIndex.getArchive(sampleOffsetID) != null) {
+					return soundBankCache.getMusicSample(sampleOffsetID, null).end;
+				}
+				else {
+					return 0;
+				}
 			}
 		}
 
