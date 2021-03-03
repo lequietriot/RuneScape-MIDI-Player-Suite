@@ -3168,6 +3168,8 @@ public class GUI {
 					while (soundPlayer.stream != null) {
 
 						soundPlayer.samples = new int[512];
+						soundPlayer.capacity = 1024;
+						soundPlayer.capacity2 = 1024;
 
 						if (customReceiver.midiData != null) {
 							soundPlayer.fill(soundPlayer.samples, 256);
@@ -3554,8 +3556,8 @@ public class GUI {
 								int rootKey = ((musicPatch.pitchOffset[index]));// / 256) + 128);
 
 								/**
-								while (rootKey > 128) {
-									rootKey = rootKey - 128;
+								if (rootKey > 0) {
+									rootKey = rootKey * -1;
 								}
 								 **/
 
