@@ -3531,85 +3531,94 @@ public class GUI {
 
 			for (int id = 0; id < 4000; id++) {
 
-				File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
+				//File patch = new File(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + id + ".dat/");
 
-				if (patch.exists()) {
+				//if (patch.exists()) {
 
 					try {
 
-						MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
+						//MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Path.of(patch.getPath())));
 
-						File patchText = new File("./Patch Text Files/" + id + ".txt/");
-						FileOutputStream patchFileOut = new FileOutputStream(patchText);
-						BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(patchFileOut), 160);
+						if (musicPatchIndex.getArchive(id) != null) {
 
-						bufferedWriter.write(PatchBanks.PATCH_NAME + id);
-						bufferedWriter.newLine();
+							MusicPatch musicPatch = new MusicPatch(musicPatchIndex.getArchive(id).getFile(0).getData());
 
-						for (int index = 0; index < 128; index++) {
+							File patchText = new File("./Patch Text Files/" + id + ".txt/");
+							FileOutputStream patchFileOut = new FileOutputStream(patchText);
+							BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(patchFileOut), 160);
 
-							if (musicPatch.musicPatchNode2[index] != null) {
+							bufferedWriter.write(PatchBanks.PATCH_NAME + id);
+							bufferedWriter.newLine();
 
-								bufferedWriter.write('\n');
-								bufferedWriter.write(PatchBanks.SAMPLE_NAME + getSampleOffsetID(musicPatch, index));
+							for (int index = 0; index < 128; index++) {
 
-								int rootKey = ((musicPatch.pitchOffset[index]));// / 256) + 128);
+								if (musicPatch.musicPatchNode2[index] != null) {
 
-								/**
-								if (rootKey > 0) {
-									rootKey = rootKey * -1;
+									bufferedWriter.write('\n');
+									bufferedWriter.write(PatchBanks.SAMPLE_NAME + getSampleOffsetID(musicPatch, index));
+
+									int rootKey = ((musicPatch.pitchOffset[index]));// / 256) + 128);
+
+									/**
+									 if (rootKey > 0) {
+									 rootKey = rootKey * -1;
+									 }
+									 **/
+
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.SAMPLE_ROOT_KEY + rootKey);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.KEY_LOW_RANGE + index);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.KEY_HIGH_RANGE + index);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.MASTER_VOLUME + musicPatch.baseVelocity);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.LOOP_START + getLoopStart(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.LOOP_END + getLoopEnd(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.SAMPLE_VOLUME + musicPatch.volumeOffset[index]);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.SAMPLE_PAN + musicPatch.panOffset[index]);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.PARAMETER_1 + musicPatch.musicPatchNode2[index].volumeEnvelopeDecay);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.PARAMETER_2 + musicPatch.musicPatchNode2[index].volumeEnvelopeRelease);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.PARAMETER_3 + musicPatch.musicPatchNode2[index].vibratoLFODelay);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.PARAMETER_4 + musicPatch.musicPatchNode2[index].vibratoLFOFrequency);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.PARAMETER_5 + musicPatch.musicPatchNode2[index].vibratoLFOPitch);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.PARAMETER_6 + musicPatch.musicPatchNode2[index].volumeEnvelopeSustain);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.PARAMETER_7 + musicPatch.musicPatchNode2[index].field2394);
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.ARRAY_1 + Arrays.toString(musicPatch.musicPatchNode2[index].field2398));
+									bufferedWriter.newLine();
+									bufferedWriter.write(PatchBanks.ARRAY_2 + Arrays.toString(musicPatch.musicPatchNode2[index].field2402));
+									bufferedWriter.newLine();
+									bufferedWriter.flush();
 								}
-								 **/
-
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.SAMPLE_ROOT_KEY + rootKey);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.KEY_LOW_RANGE + index);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.KEY_HIGH_RANGE + index);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.MASTER_VOLUME + musicPatch.baseVelocity);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.LOOP_START + getLoopStart(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.LOOP_END + getLoopEnd(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.SAMPLE_VOLUME + musicPatch.volumeOffset[index]);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.SAMPLE_PAN + musicPatch.panOffset[index]);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.PARAMETER_1 + musicPatch.musicPatchNode2[index].volumeEnvelopeDecay);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.PARAMETER_2 + musicPatch.musicPatchNode2[index].volumeEnvelopeRelease);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.PARAMETER_3 + musicPatch.musicPatchNode2[index].vibratoLFODelay);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.PARAMETER_4 + musicPatch.musicPatchNode2[index].vibratoLFOFrequency);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.PARAMETER_5 + musicPatch.musicPatchNode2[index].vibratoLFOPitch);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.PARAMETER_6 + musicPatch.musicPatchNode2[index].volumeEnvelopeSustain);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.PARAMETER_7 + musicPatch.musicPatchNode2[index].field2394);
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.ARRAY_1 + Arrays.toString(musicPatch.musicPatchNode2[index].field2398));
-								bufferedWriter.newLine();
-								bufferedWriter.write(PatchBanks.ARRAY_2 + Arrays.toString(musicPatch.musicPatchNode2[index].field2402));
-								bufferedWriter.newLine();
-								bufferedWriter.flush();
 							}
+
+							System.out.println("Wrote patch " + id);
+
 						}
-
-						System.out.println("Wrote patch " + id);
-
-					} catch (IOException ioException) {
+					} catch(IOException ioException) {
 						ioException.printStackTrace();
 					}
 				}
-			}
+			//}
 
 			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
-			//writeCustom();
+			try {
+				writeCustom();
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
 
 			/**
 			for (int index = 0; index < 4000; index++) {
