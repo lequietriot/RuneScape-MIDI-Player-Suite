@@ -175,7 +175,8 @@ public class GUI {
 			utilityMenu.add("Write song to file using custom SoundBank").addActionListener(new CustomSoundBankDumper());
 			utilityMenu.add("Batch Convert with SoundBank").addActionListener(new BatchConverter());
 			utilityMenu.add("Batch Convert with custom SoundBank").addActionListener(new CustomBatchConverter());
-			utilityMenu.add("Test SoundBank - Live").addActionListener(new SoundBankTester());
+			utilityMenu.add("Test SoundBank - Live").addActionListener(new TestSoundBankTester());
+			utilityMenu.add("Cache SoundBank - Live").addActionListener(new CacheSoundBankTester());
 
 			playlistMenu = new JMenu();
 			playlistMenu.setText("Playlist");
@@ -3093,7 +3094,7 @@ public class GUI {
 		}
 	}
 
-	private class SoundBankTester implements ActionListener {
+	private class TestSoundBankTester implements ActionListener {
 
 		CustomReceiver customReceiver;
 
@@ -4057,4 +4058,84 @@ public class GUI {
 			}
 		}
 	}
-}
+
+	private class CacheSoundBankTester implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+				try {
+
+					CustomReceiver customReceiver;
+
+					Index soundEffectIndex = cacheLibrary.getIndex(4);
+					Index soundBankIndex = cacheLibrary.getIndex(14);
+					Index musicPatchIndex = cacheLibrary.getIndex(15);
+
+					SoundBankCache soundBankCache = new SoundBankCache(soundEffectIndex, soundBankIndex);
+
+					PcmPlayer.pcmPlayer_stereo = true;
+
+					midiPcmStream = new MidiPcmStream();
+					midiPcmStream.init(9, 128);
+					midiPcmStream.setPcmStreamVolume(volume);
+					midiPcmStream.loadSoundBankCompletely(soundBankCache, musicPatchIndex);
+
+					customReceiver = new CustomReceiver(midiPcmStream);
+
+					MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+
+					for (MidiDevice.Info info : infos) {
+						MidiDevice midiDevice = MidiSystem.getMidiDevice(info);
+						if (!midiDevice.isOpen()) {
+							midiDevice.open();
+						} else {
+							midiDevice.close();
+						}
+
+						if (midiDevice.getDeviceInfo().getName().contains("Bus")) {
+							if (midiDevice.getMaxTransmitters() != 0) {
+								midiDevice.getTransmitter().setReceiver(customReceiver);
+								System.out.println(midiDevice.getDeviceInfo() + " set!");
+							} else {
+								if (midiDevice.getTransmitters().size() != 0) {
+									midiDevice.getTransmitter().setReceiver(customReceiver);
+									System.out.println(midiDevice.getDeviceInfo() + " set!");
+								}
+							}
+						}
+					}
+
+					SoundPlayer soundPlayer = new SoundPlayer();
+					soundPlayer.setStream(midiPcmStream);
+					soundPlayer.samples = new int[512];
+					soundPlayer.capacity = 1024;
+					soundPlayer.init();
+					soundPlayer.open(soundPlayer.capacity);
+
+					Thread runThread = new Thread(() -> {
+
+						while (soundPlayer.stream != null) {
+
+							soundPlayer.samples = new int[512];
+							soundPlayer.capacity = 1024;
+							soundPlayer.capacity2 = 1024;
+
+							if (customReceiver.midiData != null) {
+								soundPlayer.fill(soundPlayer.samples, 256);
+								soundPlayer.write();
+							} else {
+								soundPlayer.fill(soundPlayer.samples, 256);
+								soundPlayer.write();
+							}
+						}
+					});
+
+					runThread.start();
+
+				} catch (MidiUnavailableException midiUnavailableException) {
+					midiUnavailableException.printStackTrace();
+				}
+			}
+		}
+	}

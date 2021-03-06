@@ -207,7 +207,7 @@ public class CustomReceiver implements Receiver {
 
                 } else {
                     if (command == 255) {
-                        //midiStream.sendSystemResetMessage();
+                        midiStream.sendSystemResetMessage();
                     }
                 }
             }

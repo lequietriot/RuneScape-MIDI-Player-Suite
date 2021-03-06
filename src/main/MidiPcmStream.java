@@ -1100,4 +1100,23 @@ public class MidiPcmStream extends PcmStream {
             this.musicPatches.put(musicPatch, patchID);
         }
     }
+
+    public void loadSoundBankCompletely(SoundBankCache soundBankCache, Index musicPatchIndex) {
+
+        for (int patchID = 0; patchID < 4000; patchID++) {
+            MusicPatch musicPatch = (MusicPatch)this.musicPatches.get(patchID);
+            if (musicPatch == null) {
+                if (musicPatchIndex.getArchive(patchID) != null) {
+                    musicPatch = MusicPatch.getMusicPatch(musicPatchIndex, patchID, 0);
+                    this.musicPatches.put(musicPatch, patchID);
+                }
+            }
+
+            if (musicPatch != null) {
+                if (musicPatch.loadPatchSamples(soundBankCache, null, null)) {
+                    System.out.println("Loaded Patch " + patchID);
+                }
+            }
+        }
+    }
 }

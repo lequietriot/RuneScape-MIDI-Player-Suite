@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 
 public class PatchBanks {
 
-    public static String RUNESCAPE_VERSION = "RSHD";
+    public static String RUNESCAPE_VERSION = "OSRS";
 
     public static Path CUSTOM_SOUND_PATH = Paths.get("./SoundBanks/" + RUNESCAPE_VERSION);
 
