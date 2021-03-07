@@ -89,7 +89,6 @@ public class SoundPlayer extends PcmPlayer {
             this.byteSamples[var2 * 2] = (byte)(var3 >> 8);
             this.byteSamples[var2 * 2 + 1] = (byte)(var3 >> 16);
         }
-
         this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);
     }
 

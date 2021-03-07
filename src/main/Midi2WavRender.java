@@ -28,29 +28,17 @@ package main;
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import com.sun.media.sound.AudioSynthesizer;
 
-import javax.sound.midi.MetaMessage;
-import javax.sound.midi.MidiChannel;
-import javax.sound.midi.MidiDevice;
+import javax.sound.midi.*;
 import javax.sound.midi.MidiDevice.Info;
-import javax.sound.midi.MidiEvent;
-import javax.sound.midi.MidiMessage;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.Receiver;
-import javax.sound.midi.Sequence;
-import javax.sound.midi.Soundbank;
-import javax.sound.midi.Synthesizer;
-import javax.sound.midi.Track;
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-
-import com.sun.media.sound.AudioSynthesizer;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Midi2WavRender {
 
@@ -70,7 +58,9 @@ public class Midi2WavRender {
 			// Open AudioStream from AudioSynthesizer.
 			Map<String,Object> info = new HashMap<String,Object>();
 			info.put("resamplerType", "sinc");
-			info.put("maxPolyphony", "1024");
+			info.put("max polyphony", "1024");
+			info.put("reverb", false);
+			info.put("light reverb", false);
 			AudioInputStream stream = synth.openStream(new AudioFormat(44100, 16, 2, true, false), info);
 
 			// Load user-selected Soundbank into AudioSynthesizer.
@@ -131,7 +121,7 @@ public class Midi2WavRender {
 	}
 
 	/*
-	 * Send entiry MIDI Sequence into Receiver using timestamps.
+	 * Send entry MIDI Sequence into Receiver using timestamps.
 	 */
 	public static double send(Sequence seq, Receiver recv) {
 		float divtype = seq.getDivisionType();

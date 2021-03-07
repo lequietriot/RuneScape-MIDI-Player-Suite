@@ -168,7 +168,6 @@ public class GUI {
 			utilityMenu.add("Dump Raw Soundbank").addActionListener(new SoundDumper());
 			utilityMenu.add("Pack Raw Soundbank").addActionListener(new SoundPacker());
 
-			utilityMenu.add("---");
 			utilityMenu.add("Test MIDI with selected SoundBank").addActionListener(new SoundBankSongTester());
 			utilityMenu.add("Test MIDI with a custom SoundBank").addActionListener(new SoundBankPatchTest());
 			utilityMenu.add("Write song to file using SoundBank").addActionListener(new SoundBankSongDumper());
@@ -4087,18 +4086,23 @@ public class GUI {
 
 					for (MidiDevice.Info info : infos) {
 						MidiDevice midiDevice = MidiSystem.getMidiDevice(info);
-						if (!midiDevice.isOpen()) {
-							midiDevice.open();
-						} else {
-							midiDevice.close();
-						}
 
 						if (midiDevice.getDeviceInfo().getName().contains("Bus")) {
 							if (midiDevice.getMaxTransmitters() != 0) {
+								if (!midiDevice.isOpen()) {
+									midiDevice.open();
+								} else {
+									midiDevice.close();
+								}
 								midiDevice.getTransmitter().setReceiver(customReceiver);
 								System.out.println(midiDevice.getDeviceInfo() + " set!");
 							} else {
 								if (midiDevice.getTransmitters().size() != 0) {
+									if (!midiDevice.isOpen()) {
+										midiDevice.open();
+									} else {
+										midiDevice.close();
+									}
 									midiDevice.getTransmitter().setReceiver(customReceiver);
 									System.out.println(midiDevice.getDeviceInfo() + " set!");
 								}

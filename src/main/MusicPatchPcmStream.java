@@ -12,7 +12,7 @@ public class MusicPatchPcmStream extends PcmStream {
       this.superStream = midiPcmStream;
    }
 
-   void method3992(MusicPatchNode var1, int[] var2, int var3, int var4, int var5) {
+    void method3992(MusicPatchNode var1, int[] var2, int var3, int var4, int var5) {
       if ((this.superStream.sustain[var1.currentTrack] & 4) != 0 && var1.field2450 < 0) {
          int var6 = this.superStream.field2433[var1.currentTrack] / PcmPlayer.pcmPlayer_sampleRate;
 
@@ -128,7 +128,7 @@ public class MusicPatchPcmStream extends PcmStream {
                this.method3992(var6, var1, var4, var6.field2453, var4 + var5);
                var4 += var6.field2453;
                var5 -= var6.field2453;
-            } while(!this.superStream.method3884(var6, var1, var4, var5));
+            } while (!this.superStream.method3884(var6, var1, var4, var5));
          }
       }
 

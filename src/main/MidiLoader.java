@@ -1,10 +1,9 @@
 package main;
 
+import com.sun.media.sound.AudioSynthesizer;
+import com.sun.media.sound.SoftSynthesizer;
+
 import javax.sound.midi.*;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.BooleanControl;
-import javax.sound.sampled.FloatControl;
-import javax.sound.sampled.Mixer;
 import java.io.File;
 import java.io.IOException;
 
@@ -108,18 +107,11 @@ public class MidiLoader {
 
     }
 
-    public void setReverbOff() {
-        Mixer.Info[] mixerInfos = AudioSystem.getMixerInfo();
-        for (Mixer.Info info : mixerInfos) {
-            if (AudioSystem.getMixer(info).isControlSupported(BooleanControl.Type.APPLY_REVERB)) {
-                BooleanControl reverb = (BooleanControl) AudioSystem.getMixer(info).getControl(BooleanControl.Type.APPLY_REVERB);
-                FloatControl reverbReturn = (FloatControl) AudioSystem.getMixer(info).getControl(FloatControl.Type.REVERB_RETURN);
-                FloatControl reverbSend = (FloatControl) AudioSystem.getMixer(info).getControl(FloatControl.Type.REVERB_SEND);
-                if (reverb != null && reverbReturn != null && reverbSend != null) {
-                    reverb.setValue(false);
-                    reverbReturn.setValue(0);
-                    reverbSend.setValue(0);
-                }
+    public void setReverbOff() throws MidiUnavailableException {
+        for (Synthesizer synthesizer : synthesizers) {
+            if (synthesizer instanceof SoftSynthesizer) {
+                AudioSynthesizer audioSynthesizer = (AudioSynthesizer) synthesizer;
+
             }
         }
     }
