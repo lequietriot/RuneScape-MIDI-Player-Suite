@@ -226,7 +226,7 @@ public class MidiPcmStream extends PcmStream {
     }
 
     void setNoteOn(int channel, int note, int velocity) {
-        this.setNoteOff(channel, note);
+        this.setNoteOff(channel, note, 64);
         if ((this.sustain[channel] & 2) != 0) {
             for (MusicPatchNode musicPatchNode = (MusicPatchNode)this.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode)this.patchStream.queue.next()) {
                 if (musicPatchNode.currentTrack == channel && musicPatchNode.field2450 < 0) {
@@ -253,7 +253,7 @@ public class MidiPcmStream extends PcmStream {
                 musicPatchNode.musicPatchInfo = musicPatch.musicPatchNode2[note];
                 musicPatchNode.loopVariable = musicPatch.loopMode[note];
                 musicPatchNode.currentNotePitch = note;
-                musicPatchNode.maxVolumeLevel = velocity * velocity * musicPatch.volumeOffset[note] * musicPatch.panOffset[note] + 1024 >> 11;
+                musicPatchNode.maxVolumeLevel = velocity * velocity * musicPatch.volumeOffset[note] * musicPatch.baseVelocity + 1024 >> 11;
                 musicPatchNode.currentPanValue = musicPatch.panOffset[note] & 255;
                 musicPatchNode.frequencyCorrection = (note << 8) - (musicPatch.pitchOffset[note] & 32767);
                 musicPatchNode.field2456 = 0;
@@ -309,10 +309,10 @@ public class MidiPcmStream extends PcmStream {
         var1.stream.method2664(var4);
     }
 
-    void setNoteOff(int channel, int note) {
-        MusicPatchNode musicPatchNode = this.musicPatchNode1[channel][note];
+    void setNoteOff(int channel, int data1, int data2) {
+        MusicPatchNode musicPatchNode = this.musicPatchNode1[channel][data1];
         if (musicPatchNode != null) {
-            this.musicPatchNode1[channel][note] = null;
+            this.musicPatchNode1[channel][data1] = null;
             if ((this.sustain[channel] & 2) != 0) {
                 for (MusicPatchNode musicPatchNode3 = (MusicPatchNode)this.patchStream.queue.last(); musicPatchNode3 != null; musicPatchNode3 = (MusicPatchNode)this.patchStream.queue.previous()) {
                     if (musicPatchNode3.currentTrack == musicPatchNode.currentTrack && musicPatchNode3.field2450 < 0 && musicPatchNode != musicPatchNode3) {
@@ -439,7 +439,7 @@ public class MidiPcmStream extends PcmStream {
             channel = midiMessage & 15;
             data1 = midiMessage >> 8 & 127;
             data2 = midiMessage >> 16 & 127;
-            this.setNoteOff(channel, data1);
+            this.setNoteOff(channel, data1, data2);
 
         //144 = Note On
         } else if (message == 144) {
@@ -449,7 +449,7 @@ public class MidiPcmStream extends PcmStream {
             if (data2 > 0) {
                 this.setNoteOn(channel, data1, data2);
             } else {
-                this.setNoteOff(channel, data1);
+                this.setNoteOff(channel, data1, 64);
             }
 
         //160 = Polyphonic Aftertouch

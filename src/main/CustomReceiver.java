@@ -37,14 +37,14 @@ public class CustomReceiver implements Receiver {
 
                 //128 = Note Off
                 if (command == 128) {
-                    midiStream.setNoteOff(channel, data1);
+                    midiStream.setNoteOff(channel, data1, data2);
 
                     //144 = Note On
                 } else if (command == 144) {
                     if (data2 > 0) {
                         midiStream.setNoteOn(channel, data1, data2);
                     } else {
-                        midiStream.setNoteOff(channel, data1);
+                        midiStream.setNoteOff(channel, data1, 64);
                     }
 
                     //160 = Polyphonic Aftertouch

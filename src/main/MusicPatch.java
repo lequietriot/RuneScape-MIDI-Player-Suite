@@ -42,16 +42,6 @@ public class MusicPatch extends Node {
         return new MusicPatch(data);
     }
 
-    MusicPatch() {
-        this.audioBuffers = new AudioBuffer[128];
-        this.pitchOffset = new short[128];
-        this.volumeOffset = new byte[128];
-        this.panOffset = new byte[128];
-        this.musicPatchNode2 = new MusicPatchNode2[128];
-        this.loopMode = new byte[128];
-        this.sampleOffset = new int[128];
-    }
-
     MusicPatch(byte[] patchData) {
         this.audioBuffers = new AudioBuffer[128];
         this.pitchOffset = new short[128];
@@ -627,12 +617,16 @@ public class MusicPatch extends Node {
             musicPatchNode2[index].field2398 = null;
             musicPatchNode2[index].field2402 = null;
             musicPatchNode2[index].volumeEnvelopeRelease = 0; //Pitch Correction?
-            musicPatchNode2[index].volumeEnvelopeDecay = 0; //Volume Sustain?
+            musicPatchNode2[index].volumeEnvelopeDecay = 0; //Volume Decay Rate
             musicPatchNode2[index].vibratoLFOFrequency = 0; //Volume Hold?
             musicPatchNode2[index].vibratoLFOPitch = 0;
             musicPatchNode2[index].vibratoLFODelay = 0;
             musicPatchNode2[index].volumeEnvelopeSustain = 0;
             musicPatchNode2[index].field2394 = 0;
+
+            int timeCent = 0;
+
+            //System.out.println("Rate = " + (Math.pow(2.0, (timeCent / 1200.0))));
         }
     }
 

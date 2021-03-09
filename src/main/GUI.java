@@ -2948,10 +2948,7 @@ public class GUI {
 						soundPlayer.write();
 
 						for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
-							//System.out.println();
-							//System.out.println("volume : " + midiPcmStream.calculateVolume(musicPatchNode));
-							//System.out.println("method 3864 : " + midiPcmStream.method3864(musicPatchNode));
-							//System.out.println("method 3819 : " + midiPcmStream.method3819(musicPatchNode));
+
 						}
 
 						if (midiPcmStream.midiFile.isDone()) {
@@ -2974,6 +2971,8 @@ public class GUI {
 		public void actionPerformed(ActionEvent e) {
 
 			Index soundEffectIndex = cacheLibrary.getIndex(4);
+			Index musicTrackIndex = cacheLibrary.getIndex(6);
+			Index fanfareTrackIndex = cacheLibrary.getIndex(11);
 			Index soundBankIndex = cacheLibrary.getIndex(14);
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
@@ -2983,6 +2982,28 @@ public class GUI {
 					if (soundEffectIndex.getArchive(i) != null) {
 						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 4/" + i + ".dat/"));
 						fileOutputStream.write(soundEffectIndex.getArchive(i).getFile(0).getData());
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			for (int i = 0; i < musicTrackIndex.getArchives().length; i++) {
+				try {
+					if (musicTrackIndex.getArchive(i) != null) {
+						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 6/" + i + ".xm/"));
+						fileOutputStream.write(musicTrackIndex.getArchive(i).getFile(0).getData());
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+
+			for (int i = 0; i < fanfareTrackIndex.getArchives().length; i++) {
+				try {
+					if (fanfareTrackIndex.getArchive(i) != null) {
+						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 11/" + i + ".xm/"));
+						fileOutputStream.write(fanfareTrackIndex.getArchive(i).getFile(0).getData());
 					}
 				} catch (IOException ex) {
 					ex.printStackTrace();

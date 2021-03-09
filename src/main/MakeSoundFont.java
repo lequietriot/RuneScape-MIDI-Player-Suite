@@ -64,8 +64,8 @@ public class MakeSoundFont {
         sf2LayerRegion.putShort(SF2Region.GENERATOR_OVERRIDINGROOTKEY, pitchOffset);
         sf2LayerRegion.putShort(SF2Region.GENERATOR_FINETUNE, pitchCorrection);
         sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, musicPatch.loopMode[note] * -1);
-        sf2LayerRegion.putShort(SF2Region.GENERATOR_PAN, (short) ((musicPatch.panOffset[note] - 64) * 4));
-        sf2LayerRegion.putShort(SF2Region.GENERATOR_INITIALATTENUATION, (short) ((musicPatch.volumeOffset[note] + musicPatch.baseVelocity)));
+        sf2LayerRegion.putInteger(SF2Region.GENERATOR_PAN, (short) ((musicPatch.panOffset[note] - 64)));
+        sf2LayerRegion.putInteger(SF2Region.GENERATOR_INITIALATTENUATION, (short) ((musicPatch.volumeOffset[note] + musicPatch.baseVelocity)));
         //sf2LayerRegion.putShort(SF2Region.GENERATOR_RELEASEVOLENV, (short) 0);
         //sf2LayerRegion.putShort(SF2Region.GENERATOR_INITIALATTENUATION, (short) lookUpAttenuation(musicPatch.baseVelocity));
         //sf2LayerRegion.putBytes(SF2Region.GENERATOR_ATTACKVOLENV, new byte[]{0, 64});
