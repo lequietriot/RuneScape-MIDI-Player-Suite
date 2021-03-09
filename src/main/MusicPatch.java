@@ -895,14 +895,14 @@ public class MusicPatch extends Node {
             audioBuffers[note] = audioBuffer;
             pitchOffset[note] = (short) ((rootKey));// * 256) - 32768);
             panOffset[note] = (byte) pan;
-            volumeOffset[note] = (byte) (volume / 1.5);
+            volumeOffset[note] = (byte) (volume);
         }
 
         if (lowKeyRange == highKeyRange) {
             audioBuffers[lowKeyRange] = audioBuffer;
             pitchOffset[lowKeyRange] = (short) ((rootKey));// * 256) - 32768);
             panOffset[lowKeyRange] = (byte) pan;
-            volumeOffset[lowKeyRange] = (byte) (volume / 1.5);
+            volumeOffset[lowKeyRange] = (byte) (volume);
         }
     }
 
@@ -1015,7 +1015,7 @@ public class MusicPatch extends Node {
 
                         SF2Sample sf2Sample = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getSample();
                         byte[] noteRange = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getBytes(SF2Region.GENERATOR_KEYRANGE);
-                        int pitchCorrection = sf2Sample.getPitchCorrection();
+                        int pitchCorrection = (int) (sf2Sample.getPitchCorrection() * 1.28);
                         int fineTune = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_FINETUNE);
                         //int coarseTune = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_COARSETUNE);
                         int loopMode = ((SF2Instrument) (sf2Soundbank.getInstrument(patch))).getRegions().get(region).getLayer().getRegions().get(layer).getInteger(SF2Region.GENERATOR_SAMPLEMODES);
@@ -1033,7 +1033,8 @@ public class MusicPatch extends Node {
                                 rootKey = pitchOverride;
                             }
 
-                            tuneAdjust = (short) ((fineTune + pitchCorrection) / (1.28));
+                            tuneAdjust = (short) ((fineTune + pitchCorrection));
+                            System.out.println(sf2Sample.getPitchCorrection());
 
                             bufferedWriter.newLine();
                             bufferedWriter.write(PatchBanks.SAMPLE_ROOT_KEY + (((rootKey * 256) - 32768) + tuneAdjust));

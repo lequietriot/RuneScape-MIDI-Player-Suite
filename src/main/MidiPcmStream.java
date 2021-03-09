@@ -1079,18 +1079,18 @@ public class MidiPcmStream extends PcmStream {
                             }
 
                             musicPatch.loadCustomPatch(patchInfoList);
-                        }
 
-                        if (list.get(index).contains(PatchBanks.PARAMETER_1)) {
+                            if (list.get(index).contains(PatchBanks.PARAMETER_1)) {
 
-                            String[] patchParameterList = new String[9];
+                                String[] patchParameterList = new String[9];
 
-                            for (int parameter = 0; parameter < 9; parameter++) {
-                                patchParameterList[parameter] = list.get(index);
-                                index++;
+                                for (int parameter = 0; parameter < 9; parameter++) {
+                                    patchParameterList[parameter] = list.get(index);
+                                    index++;
+                                }
+
+                                musicPatch.setParameters(patchParameterList);
                             }
-
-                            musicPatch.setParameters(patchParameterList);
                         }
                     }
                 } catch (IOException | UnsupportedAudioFileException ioException) {

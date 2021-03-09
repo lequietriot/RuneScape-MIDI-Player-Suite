@@ -1,7 +1,7 @@
 Instrument Name = 176
 
 Sample = KICK264
-Root Key = -23575
+Root Key = -23590
 Lower Key Range = 35
 Upper Key Range = 35
 Patch Volume = 33
@@ -20,7 +20,7 @@ Array 1 = null
 Array 2 = [0, 64]
 
 Sample = TMPNI47
-Root Key = -17442
+Root Key = -17464
 Lower Key Range = 36
 Upper Key Range = 36
 Patch Volume = 33
@@ -39,7 +39,7 @@ Array 1 = [0, 64, 25, 0]
 Array 2 = [0, 64, 25, 0]
 
 Sample = SIDE_60
-Root Key = -23281
+Root Key = -23271
 Lower Key Range = 37
 Upper Key Range = 37
 Patch Volume = 33
@@ -115,7 +115,7 @@ Array 1 = [0, 64, 6, 38, 15, 13, 31, 0]
 Array 2 = [0, 64, 8, 35, 20, 14, 37, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 41
 Upper Key Range = 41
 Patch Volume = 33
@@ -134,7 +134,7 @@ Array 1 = [0, 64, 25, 0]
 Array 2 = [0, 64, 25, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 42
 Upper Key Range = 42
 Patch Volume = 33
@@ -153,7 +153,7 @@ Array 1 = [0, 64, 1, 0]
 Array 2 = [0, 64, 2, 10, 5, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 43
 Upper Key Range = 43
 Patch Volume = 33
@@ -172,7 +172,7 @@ Array 1 = [0, 64, 25, 0]
 Array 2 = [0, 64, 25, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 44
 Upper Key Range = 44
 Patch Volume = 33
@@ -191,7 +191,7 @@ Array 1 = [0, 64, 1, 0]
 Array 2 = [0, 64, 11, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 45
 Upper Key Range = 45
 Patch Volume = 33
@@ -210,7 +210,7 @@ Array 1 = [0, 64, 25, 0]
 Array 2 = [0, 64, 25, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 46
 Upper Key Range = 46
 Patch Volume = 33
@@ -229,7 +229,7 @@ Array 1 = [0, 64, 1, 0]
 Array 2 = [0, 62, 6, 20, 25, 7, 50, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 47
 Upper Key Range = 47
 Patch Volume = 33
@@ -248,7 +248,7 @@ Array 1 = [0, 64, 25, 0]
 Array 2 = [0, 64, 25, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 48
 Upper Key Range = 48
 Patch Volume = 33
@@ -267,7 +267,7 @@ Array 1 = [0, 64, 25, 0]
 Array 2 = [0, 64, 25, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 49
 Upper Key Range = 49
 Patch Volume = 33
@@ -286,7 +286,7 @@ Array 1 = null
 Array 2 = [0, 64, -106, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 50
 Upper Key Range = 50
 Patch Volume = 33
@@ -305,7 +305,7 @@ Array 1 = [0, 64, 25, 0]
 Array 2 = [0, 64, 25, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 51
 Upper Key Range = 51
 Patch Volume = 33
@@ -324,7 +324,7 @@ Array 1 = null
 Array 2 = [0, 64, -106, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 52
 Upper Key Range = 52
 Patch Volume = 33
@@ -343,7 +343,7 @@ Array 1 = null
 Array 2 = [0, 64, 20, 37, 43, 20, 100, 0]
 
 Sample = TMPNI47
-Root Key = -18722
+Root Key = -18744
 Lower Key Range = 53
 Upper Key Range = 53
 Patch Volume = 33
@@ -381,7 +381,7 @@ Array 1 = null
 Array 2 = [0, 0, 1, 64, 12, 17, 24, 0]
 
 Sample = CRASH60B
-Root Key = -21257
+Root Key = -21263
 Lower Key Range = 55
 Upper Key Range = 55
 Patch Volume = 33
@@ -400,7 +400,7 @@ Array 1 = null
 Array 2 = [0, 64, 20, 37, 43, 20, 100, 0]
 
 Sample = COWBL66
-Root Key = -16861
+Root Key = -16839
 Lower Key Range = 56
 Upper Key Range = 56
 Patch Volume = 33
@@ -419,7 +419,7 @@ Array 1 = [0, 64, 25, 0]
 Array 2 = [0, 64, 25, 0]
 
 Sample = CRASH60B
-Root Key = -17161
+Root Key = -17167
 Lower Key Range = 57
 Upper Key Range = 57
 Patch Volume = 33
@@ -457,7 +457,7 @@ Array 1 = null
 Array 2 = [0, 59, 16, 35, 45, 14, 71, 4, 102, 0]
 
 Sample = CRASH60B
-Root Key = -17929
+Root Key = -17935
 Lower Key Range = 59
 Upper Key Range = 59
 Patch Volume = 33
@@ -476,7 +476,7 @@ Array 1 = null
 Array 2 = [0, 64, 20, 37, 43, 20, 100, 0]
 
 Sample = HBNGO60
-Root Key = -16797
+Root Key = -17114
 Lower Key Range = 60
 Upper Key Range = 60
 Patch Volume = 33
@@ -495,7 +495,7 @@ Array 1 = null
 Array 2 = [0, 64]
 
 Sample = LBNGO60
-Root Key = -17167
+Root Key = -17177
 Lower Key Range = 61
 Upper Key Range = 61
 Patch Volume = 33
@@ -514,7 +514,7 @@ Array 1 = null
 Array 2 = [0, 64]
 
 Sample = MCNGA60
-Root Key = -16423
+Root Key = -16448
 Lower Key Range = 62
 Upper Key Range = 62
 Patch Volume = 33
@@ -723,7 +723,7 @@ Array 1 = null
 Array 2 = [0, 64]
 
 Sample = SGUIR60
-Root Key = -14065
+Root Key = -14055
 Lower Key Range = 73
 Upper Key Range = 73
 Patch Volume = 33
@@ -780,7 +780,7 @@ Array 1 = [0, 64, 6, 38, 15, 13, 31, 0]
 Array 2 = [0, 64, 8, 35, 20, 14, 37, 0]
 
 Sample = WODBK60
-Root Key = -13277
+Root Key = -13255
 Lower Key Range = 76
 Upper Key Range = 76
 Patch Volume = 33
@@ -799,7 +799,7 @@ Array 1 = null
 Array 2 = [0, 64]
 
 Sample = WODBK60
-Root Key = -11741
+Root Key = -11719
 Lower Key Range = 77
 Upper Key Range = 77
 Patch Volume = 33
@@ -818,7 +818,7 @@ Array 1 = null
 Array 2 = [0, 64]
 
 Sample = MCUIC60
-Root Key = -10205
+Root Key = -10183
 Lower Key Range = 78
 Upper Key Range = 78
 Patch Volume = 33
@@ -970,7 +970,7 @@ Array 1 = [0, 64, 17, 38, 43, 11, 66, 0]
 Array 2 = [0, 64, 10, 31, 30, 8, 52, 0]
 
 Sample = SURDO60
-Root Key = -7680
+Root Key = -7681
 Lower Key Range = 86
 Upper Key Range = 86
 Patch Volume = 33
@@ -989,7 +989,7 @@ Array 1 = [0, 64, 1, 0]
 Array 2 = [0, 64, 2, 27, 5, 9, 14, 0]
 
 Sample = SURDO60
-Root Key = -7424
+Root Key = -7425
 Lower Key Range = 87
 Upper Key Range = 87
 Patch Volume = 33
