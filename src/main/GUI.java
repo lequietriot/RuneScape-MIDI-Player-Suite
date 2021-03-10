@@ -375,7 +375,7 @@ public class GUI {
 
 		engineInfo.setBackground(Color.LIGHT_GRAY);
 		engineInfo.setSelectedTextColor(Color.BLACK);
-		engineInfo.setText("SoundBank Engine: " + PatchBanks.RUNESCAPE_VERSION);
+		engineInfo.setText("SoundBank Engine: " + PatchBanks.SOUNDBANK_VERSION);
 		engineInfo.setEnabled(true);
 		engineInfo.setEditable(false);
 		engineInfo.setVisible(true);
@@ -2692,8 +2692,8 @@ public class GUI {
 					SoundPlayer soundPlayer = initMidiStream(midiFile);
 
 					while (midiPcmStream.active) {
-						writeSound(soundPlayer);
-						//playSound(soundPlayer);
+						//writeSound(soundPlayer);
+						playSound(soundPlayer);
 
 						if (shuffleMode && midiPcmStream.midiFile.isDone()) {
 							soundPlayer = initMidiStream(midiFiles[(int) (Math.random() * midiFiles.length)]);
@@ -3672,7 +3672,7 @@ public class GUI {
 			for (int patchID = 0; patchID < 4000; patchID++) {
 				//sf2Soundbank = new SF2Soundbank(new File("./SoundFonts/" + patchID + ".sf2/"));
 				//if (new File("./SoundFonts/" + patchID + ".sf2/").exists()) {
-					Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
+					Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.SOUNDBANK_VERSION + "/Patches/" + patchID + ".dat/");
 					if (path.toFile().exists()) {
 						MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(path));
 						musicPatch.writeTextPatch(sf2Soundbank, patchID);

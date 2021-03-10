@@ -904,7 +904,7 @@ public class MidiPcmStream extends PcmStream {
             MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
             if (musicPatch == null) {
                 try {
-                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
+                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.SOUNDBANK_VERSION + "/Patches/" + patchID + ".dat/");
                     if (path.toFile().exists()) {
                         musicPatch = new MusicPatch(Files.readAllBytes(path));
                         musicPatch.loadSf2ID(sf2Soundbank, patchID);
@@ -967,7 +967,7 @@ public class MidiPcmStream extends PcmStream {
 
             if (musicPatch == null) {
                 try {
-                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.RUNESCAPE_VERSION + "/Patches/" + patchID + ".dat/");
+                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.SOUNDBANK_VERSION + "/Patches/" + patchID + ".dat/");
 
                     if (new File(String.valueOf(path.toFile())).exists()) {
                         musicPatch = new MusicPatch(Files.readAllBytes(path));
