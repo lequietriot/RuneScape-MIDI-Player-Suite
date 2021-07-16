@@ -370,7 +370,7 @@ public class MakeSoundFont {
 
                         for (int frame = 0; frame < rawData.length; frame++) {
                             audioData[frame * 2] = rawData[frame];
-                            audioData[frame * 2 + 1] = (rawData[frame]);
+                            audioData[frame * 2 + 1] = rawData[frame];
                         }
 
                         short samplePitch = (short) ((musicPatch.pitchOffset[noteIndex] / 256) + 128);

@@ -18,8 +18,7 @@ public class CustomReceiver implements Receiver {
 
     @Override
     public void send(MidiMessage message, long timeStamp) {
-
-        if (message != null) {
+        if (message != null && timeStamp > 0) {
             if (message instanceof ShortMessage) {
                 ShortMessage shortMessage = (ShortMessage) message;
                 int command = shortMessage.getCommand();
@@ -33,6 +32,7 @@ public class CustomReceiver implements Receiver {
                 System.out.println("Channel: " + channel);
                 System.out.println("Data 1: " + data1);
                 System.out.println("Data 2: " + data2);
+                System.out.println("Time Stamp: " + timeStamp);
                 System.out.println();
 
                 //128 = Note Off
@@ -212,6 +212,9 @@ public class CustomReceiver implements Receiver {
                 }
             }
             midiData = message.getMessage();
+        }
+        else {
+
         }
     }
 

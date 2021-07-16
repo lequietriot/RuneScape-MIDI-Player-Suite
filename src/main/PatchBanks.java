@@ -2,12 +2,13 @@ package main;
 
 import com.sun.media.sound.SF2Soundbank;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PatchBanks {
 
-    public static String SOUNDBANK_VERSION = "RSHD";
+    public static String SOUNDBANK_VERSION = "OSRS";
 
     public static Path CUSTOM_SOUND_PATH = Paths.get("./SoundBanks/" + SOUNDBANK_VERSION);
 
@@ -38,7 +39,7 @@ public class PatchBanks {
         return new MusicPatch(patchID);
     }
 
-    public static MusicPatch getCustomMusicPatch(int patchID, SF2Soundbank sf2Soundbank) {
+    public static MusicPatch getCustomMusicPatch(int patchID, SF2Soundbank sf2Soundbank) throws IOException {
 
         return new MusicPatch(patchID, sf2Soundbank);
     }

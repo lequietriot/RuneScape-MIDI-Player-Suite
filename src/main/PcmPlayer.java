@@ -179,6 +179,118 @@ public class PcmPlayer {
 
    }
 
+   final void fillCustom(int[] var1, int var2) {
+      int var3 = var2;
+      if (pcmPlayer_stereo) {
+         var3 = var2 << 2;
+      }
+
+      ByteBufferUtils.clearIntArray(var1, 0, var3);
+      this.field1439 -= var2;
+      if (this.stream != null && this.field1439 <= 0) {
+         this.field1439 += pcmPlayer_sampleRate >> 4;
+         MidiPcmStream.PcmStream_disable(this.stream);
+         this.method2571(this.stream, this.stream.vmethod2820());
+         int var4 = 0;
+         int var5 = 255;
+
+         int var6;
+         PcmStream var10;
+         label104:
+         for (var6 = 7; var5 != 0; --var6) {
+            int var7;
+            int var8;
+            if (var6 < 0) {
+               var7 = var6 & 3;
+               var8 = -(var6 >> 2);
+            } else {
+               var7 = var6;
+               var8 = 0;
+            }
+
+            for (int var9 = var5 >>> var7 & 286331153; var9 != 0; var9 >>>= 4) {
+               if ((var9 & 1) != 0) {
+                  var5 &= ~(1 << var7);
+                  var10 = null;
+                  PcmStream var11 = this.field1440[var7];
+
+                  label98:
+                  while (true) {
+                     while (true) {
+                        if (var11 == null) {
+                           break label98;
+                        }
+
+                        AbstractSound var12 = var11.sound;
+                        if (var12 != null && var12.position > var8) {
+                           var5 |= 1 << var7;
+                           var10 = var11;
+                           var11 = var11.after;
+                        } else {
+                           var11.active = true;
+                           int var13 = var11.vmethod2820();
+                           var4 += var13;
+                           if (var12 != null) {
+                              var12.position += var13;
+                           }
+
+                           if (var4 >= this.field1433) {
+                              break label104;
+                           }
+
+                           PcmStream var14 = var11.firstSubStream();
+                           if (var14 != null) {
+                              for (int var15 = var11.field1507; var14 != null; var14 = var11.nextSubStream()) {
+                                 this.method2571(var14, var15 * var14.vmethod2820() >> 8);
+                              }
+                           }
+
+                           PcmStream var18 = var11.after;
+                           var11.after = null;
+                           if (var10 == null) {
+                              this.field1440[var7] = var18;
+                           } else {
+                              var10.after = var18;
+                           }
+
+                           if (var18 == null) {
+                              this.field1434[var7] = var10;
+                           }
+
+                           var11 = var18;
+                        }
+                     }
+                  }
+               }
+
+               var7 += 4;
+               ++var8;
+            }
+         }
+
+         for (var6 = 0; var6 < 8; ++var6) {
+            PcmStream var16 = this.field1440[var6];
+            PcmStream[] var17 = this.field1440;
+            this.field1434[var6] = null;
+
+            for (var17[var6] = null; var16 != null; var16 = var10) {
+               var10 = var16.after;
+               var16.after = null;
+            }
+         }
+      }
+
+      if (this.field1439 < 0) {
+         this.field1439 = 0;
+      }
+
+      if (this.stream != null) {
+         this.stream.update(var1, 0, var2);
+      }
+
+      this.timeMs = System.currentTimeMillis();
+   }
+
    final void fill(int[] var1, int var2) {
       int var3 = var2;
       if (pcmPlayer_stereo) {

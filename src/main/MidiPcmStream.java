@@ -5,6 +5,7 @@ import main.utils.ByteArrayNode;
 import main.utils.NodeHashTable;
 import org.displee.cache.index.Index;
 
+import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.Soundbank;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
@@ -76,6 +77,22 @@ public class MidiPcmStream extends PcmStream {
 
     public int getPcmStreamVolume() {
         return this.musicVolume;
+    }
+
+    public synchronized void loadMusicPatches(Index idx15, SoundBankCache soundBank) {
+        for (int patchID = 0; patchID < 4000; patchID++) {
+            MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+            if (musicPatch == null) {
+                musicPatch = MusicPatch.getMusicPatch(idx15, patchID, 0);
+                if (musicPatch != null) {
+                    this.musicPatches.put(musicPatch, patchID);
+                }
+            }
+
+            if (musicPatch != null && !musicPatch.loadPatchSamples(soundBank, null, null)) {
+
+            }
+        }
     }
 
     public synchronized boolean loadMusicTrack(MidiTrack midiTrack, Index idx15, SoundBankCache soundBank, int sampleRate) {
@@ -232,9 +249,9 @@ public class MidiPcmStream extends PcmStream {
                 if (musicPatchNode.currentTrack == channel && musicPatchNode.field2450 < 0) {
                     this.musicPatchNode1[channel][musicPatchNode.currentNotePitch] = null;
                     this.musicPatchNode1[channel][note] = musicPatchNode;
-                    int var5 = (musicPatchNode.field2455 * musicPatchNode.field2454 >> 12) + musicPatchNode.frequencyCorrection;
-                    musicPatchNode.frequencyCorrection += note - musicPatchNode.currentNotePitch << 8;
-                    musicPatchNode.field2454 = var5 - musicPatchNode.frequencyCorrection;
+                    int var5 = (musicPatchNode.field2455 * musicPatchNode.field2454 >> 12) + musicPatchNode.notePitchAdjustment;
+                    musicPatchNode.notePitchAdjustment += note - musicPatchNode.currentNotePitch << 8;
+                    musicPatchNode.field2454 = var5 - musicPatchNode.notePitchAdjustment;
                     musicPatchNode.field2455 = 4096;
                     musicPatchNode.currentNotePitch = note;
                     return;
@@ -255,7 +272,7 @@ public class MidiPcmStream extends PcmStream {
                 musicPatchNode.currentNotePitch = note;
                 musicPatchNode.maxVolumeLevel = velocity * velocity * musicPatch.volumeOffset[note] * musicPatch.baseVelocity + 1024 >> 11;
                 musicPatchNode.currentPanValue = musicPatch.panOffset[note] & 255;
-                musicPatchNode.frequencyCorrection = (note << 8) - (musicPatch.pitchOffset[note] & 32767);
+                musicPatchNode.notePitchAdjustment = (note << 8) - (musicPatch.pitchOffset[note] & 32767);
                 musicPatchNode.field2456 = 0;
                 musicPatchNode.field2457 = 0;
                 musicPatchNode.field2458 = 0;
@@ -636,11 +653,11 @@ public class MidiPcmStream extends PcmStream {
     }
 
     int method3864(MusicPatchNode var1) {
-        int var2 = (var1.field2454 * var1.field2455 >> 12) + var1.frequencyCorrection;
+        int var2 = (var1.field2454 * var1.field2455 >> 12) + var1.notePitchAdjustment;
         var2 += (this.field2423[var1.currentTrack] - 8192) * this.dataEntry[var1.currentTrack] >> 12;
         MusicPatchNode2 var3 = var1.musicPatchInfo;
         int var4;
-        if (var3.volumeEnvelopeSustain > 0 && (var3.vibratoLFOPitch > 0 || this.modulation[var1.currentTrack] > 0)) {
+        if (var3.volumeEnvelopeRelease > 0 && (var3.vibratoLFOPitch > 0 || this.modulation[var1.currentTrack] > 0)) {
             var4 = var3.vibratoLFOPitch << 2;
             int var5 = var3.field2394 << 1;
             if (var1.field2461 < var5) {
@@ -670,6 +687,7 @@ public class MidiPcmStream extends PcmStream {
         int var5;
         int var6;
         int var7;
+        //Attack
         if (var2.field2402 != null) {
             var4 = var1.field2457;
             var5 = var2.field2402[var1.field2458 + 1];
@@ -682,6 +700,7 @@ public class MidiPcmStream extends PcmStream {
             var3 = var3 * var5 + 32 >> 6;
         }
 
+        //Release
         if (var1.field2450 > 0 && var2.field2398 != null) {
             var4 = var1.field2450;
             var5 = var2.field2398[var1.field2448 + 1];
@@ -774,7 +793,7 @@ public class MidiPcmStream extends PcmStream {
             MusicPatchNode2 var6 = var1.musicPatchInfo;
             boolean var7 = false;
             ++var1.field2461;
-            var1.field2449 += var6.volumeEnvelopeSustain;
+            var1.field2449 += var6.volumeEnvelopeRelease;
             double var8 = (double)((var1.currentNotePitch - 60 << 8) + (var1.field2455 * var1.field2454 >> 12)) * 5.086263020833333E-6D;
             if (var6.volumeEnvelopeDecay > 0) {
                 if (var6.vibratoLFOFrequency > 0) {
@@ -785,8 +804,8 @@ public class MidiPcmStream extends PcmStream {
             }
 
             if (var6.field2402 != null) {
-                if (var6.volumeEnvelopeRelease > 0) {
-                    var1.field2457 += (int)(128.0D * Math.pow(2.0D, (double)var6.volumeEnvelopeRelease * var8) + 0.5D);
+                if (var6.volumeEnvelopeSustain > 0) {
+                    var1.field2457 += (int)(128.0D * Math.pow(2.0D, (double)var6.volumeEnvelopeSustain * var8) + 0.5D);
                 } else {
                     var1.field2457 += 128;
                 }
@@ -893,8 +912,9 @@ public class MidiPcmStream extends PcmStream {
 
     }
 
-    public void loadSoundFontBank(MidiTrack midiTrack, Soundbank soundbank) {
+    public void loadSoundFontBank(MidiTrack midiTrack, Soundbank soundbank) throws InvalidMidiDataException, IOException {
 
+        Path patchPath;
         SF2Soundbank sf2Soundbank = (SF2Soundbank) soundbank;
 
         midiTrack.loadMidiTrackInfo();
@@ -902,35 +922,60 @@ public class MidiPcmStream extends PcmStream {
         for (ByteArrayNode tableIndex = (ByteArrayNode) midiTrack.table.first(); tableIndex != null; tableIndex = (ByteArrayNode) midiTrack.table.next()) {
             int patchID = (int) tableIndex.key;
             MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+
             if (musicPatch == null) {
+
+                musicPatch = PatchBanks.makeCustomMusicPatch(patchID);
+                patchPath = Paths.get("./SoundBanks/" + PatchBanks.SOUNDBANK_VERSION + "/Info/" + patchID + ".txt/");
+
+                if (!patchPath.toFile().exists()) {
+                    continue;
+                }
+
                 try {
-                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.SOUNDBANK_VERSION + "/Patches/" + patchID + ".dat/");
-                    if (path.toFile().exists()) {
-                        musicPatch = new MusicPatch(Files.readAllBytes(path));
-                        musicPatch.loadSf2ID(sf2Soundbank, patchID);
-                        //musicPatch.loadCustomBankPatch(sf2Soundbank);
+
+                    List<String> list = Files.readAllLines(patchPath);
+
+                    for (int index = 0; index < list.size(); index++) {
+
+                        if (list.get(index).contains(PatchBanks.PATCH_NAME)) {
+                            System.out.println("Instrument Loading: " + list.get(index).replace(PatchBanks.PATCH_NAME, ""));
+                        }
+
+                        if (list.get(index).contains(PatchBanks.SAMPLE_NAME)) {
+
+                            String[] patchInfoList = new String[9];
+
+                            for (int infoIndex = 0; infoIndex < 9; infoIndex++) {
+                                patchInfoList[infoIndex] = list.get(index);
+                                index++;
+                            }
+
+                            musicPatch.loadCustomSoundFontPatch(patchID, sf2Soundbank, patchInfoList);
+
+                            if (list.get(index).contains(PatchBanks.PARAMETER_1)) {
+
+                                String[] patchParameterList = new String[9];
+
+                                for (int parameter = 0; parameter < 9; parameter++) {
+                                    patchParameterList[parameter] = list.get(index);
+                                    index++;
+                                }
+
+                                musicPatch.setParameters(patchParameterList);
+                            }
+                        }
                     }
-                    else {
-                        musicPatch = PatchBanks.getCustomMusicPatch(patchID, sf2Soundbank);
-                        musicPatch.loadSf2ID(sf2Soundbank, patchID);
-                        //musicPatch.loadCustomBankPatchID(sf2Soundbank);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException | UnsupportedAudioFileException ioException) {
+                    ioException.printStackTrace();
                 }
 
-                if (musicPatch != null) {
-                    this.musicPatches.put(musicPatch, patchID);
-                }
-            }
-
-            if (musicPatch != null) {
-                //musicPatch.loadCustomBankPatch(sf2Soundbank);
+                this.musicPatches.put(musicPatch, patchID);
             }
         }
     }
 
-    public void loadCreateSoundFontBanks(Soundbank soundbank) {
+    public void loadCreateSoundFontBanks(Soundbank soundbank) throws IOException {
 
         SF2Soundbank sf2Soundbank = (SF2Soundbank) soundbank;
 
@@ -941,24 +986,21 @@ public class MidiPcmStream extends PcmStream {
             if (musicPatch == null) {
                 musicPatch = new MusicPatch(patchID, sf2Soundbank);
 
-                if (musicPatch != null) {
-                    this.musicPatches.put(musicPatch, patchID);
-                }
+                this.musicPatches.put(musicPatch, patchID);
             }
 
-            if (musicPatch != null) {
-                try {
-                    musicPatch.createNewPatch(patchID);
-                    musicPatch.loadCustomSampleID(patchID, sf2Soundbank);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            try {
+                musicPatch.createNewPatch(patchID);
+                musicPatch.loadCustomSampleID(patchID, sf2Soundbank);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
     public void loadAllSoundFontBankPatches(Soundbank soundbank) {
 
+        Path patchPath;
         SF2Soundbank sf2Soundbank = (SF2Soundbank) soundbank;
 
         for (int patchID = 0; patchID < 4000; patchID++) {
@@ -966,28 +1008,53 @@ public class MidiPcmStream extends PcmStream {
             MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
 
             if (musicPatch == null) {
-                try {
-                    Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.SOUNDBANK_VERSION + "/Patches/" + patchID + ".dat/");
 
-                    if (new File(String.valueOf(path.toFile())).exists()) {
-                        musicPatch = new MusicPatch(Files.readAllBytes(path));
+                musicPatch = PatchBanks.makeCustomMusicPatch(patchID);
+                patchPath = Paths.get("./SoundBanks/" + PatchBanks.SOUNDBANK_VERSION + "/Info/" + patchID + ".txt/");
+
+                if (!patchPath.toFile().exists()) {
+                    continue;
+                }
+
+                try {
+
+                    List<String> list = Files.readAllLines(patchPath);
+
+                    for (int index = 0; index < list.size(); index++) {
+
+                        if (list.get(index).contains(PatchBanks.PATCH_NAME)) {
+                            System.out.println("Instrument Loading: " + list.get(index).replace(PatchBanks.PATCH_NAME, ""));
+                        }
+
+                        if (list.get(index).contains(PatchBanks.SAMPLE_NAME)) {
+
+                            String[] patchInfoList = new String[9];
+
+                            for (int infoIndex = 0; infoIndex < 9; infoIndex++) {
+                                patchInfoList[infoIndex] = list.get(index);
+                                index++;
+                            }
+
+                            musicPatch.loadCustomSoundFontPatch(patchID, sf2Soundbank, patchInfoList);
+
+                            if (list.get(index).contains(PatchBanks.PARAMETER_1)) {
+
+                                String[] patchParameterList = new String[9];
+
+                                for (int parameter = 0; parameter < 9; parameter++) {
+                                    patchParameterList[parameter] = list.get(index);
+                                    index++;
+                                }
+
+                                musicPatch.setParameters(patchParameterList);
+                            }
+                        }
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (IOException | UnsupportedAudioFileException ioException) {
+                    ioException.printStackTrace();
                 }
 
-                if (musicPatch != null) {
-                    this.musicPatches.put(musicPatch, patchID);
-                }
-            }
-
-            if (musicPatch != null) {
-                try {
-                    //musicPatch.createNewPatch(patchID);
-                    musicPatch.loadCustomBankPatch(sf2Soundbank);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                this.musicPatches.put(musicPatch, patchID);
             }
         }
     }

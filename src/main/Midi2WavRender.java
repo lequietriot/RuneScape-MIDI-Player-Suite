@@ -32,11 +32,10 @@ import com.sun.media.sound.AudioSynthesizer;
 
 import javax.sound.midi.*;
 import javax.sound.midi.MidiDevice.Info;
-import javax.sound.sampled.AudioFileFormat;
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.*;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,11 +56,16 @@ public class Midi2WavRender {
 
 			// Open AudioStream from AudioSynthesizer.
 			Map<String,Object> info = new HashMap<String,Object>();
+			AudioFormat audioFormat = new AudioFormat(44100, 32, 2, true, false);
 			info.put("resamplerType", "sinc");
-			info.put("max polyphony", "1024");
-			info.put("reverb", false);
-			info.put("light reverb", false);
-			AudioInputStream stream = synth.openStream(new AudioFormat(44100, 16, 2, true, false), info);
+			info.put("max polyphony", "8192");
+			info.put("chorus", "false");
+			info.put("reverb", "false");
+			info.put("auto gain control", "false");
+			info.put("format", audioFormat);
+			info.put("large mode", "true");
+			info.put("light reverb", "true");
+			AudioInputStream stream = synth.openStream(audioFormat, info);
 
 			// Load user-selected Soundbank into AudioSynthesizer.
 			if (soundbank != null) {
@@ -89,6 +93,277 @@ public class Midi2WavRender {
 	}
 
 	/*
+	 * Render sequence using selected or default soundbank into wave audio file.
+	 */
+	public static byte[] render(Soundbank soundbank, Sequence sequence,
+							  byte[] audioBytes) {
+		try {
+			// Find available AudioSynthesizer.
+			AudioSynthesizer synth = findAudioSynthesizer();
+			if (synth == null) {
+				System.out.println("No Audio Synthesizer was found!");
+				System.exit(1);
+			}
+
+			// Open AudioStream from AudioSynthesizer.
+			Map<String,Object> info = new HashMap<String,Object>();
+			AudioFormat audioFormat = new AudioFormat(44100, 32, 2, true, false);
+			info.put("resamplerType", "sinc");
+			info.put("max polyphony", "8192");
+			info.put("chorus", "false");
+			info.put("reverb", "false");
+			info.put("auto gain control", "false");
+			info.put("format", audioFormat);
+			info.put("large mode", "true");
+			info.put("light reverb", "true");
+			AudioInputStream stream = synth.openStream(audioFormat, info);
+
+			// Load user-selected Soundbank into AudioSynthesizer.
+			if (soundbank != null) {
+				Soundbank defsbk = synth.getDefaultSoundbank();
+				if (defsbk != null)
+					synth.unloadAllInstruments(defsbk);
+				synth.loadAllInstruments(soundbank);
+			}
+
+			// Play Sequence into AudioSynthesizer Receiver.
+			double total = send(sequence, synth.getReceiver());
+
+			// Calculate how long the WAVE file needs to be.
+			long len = (long) (stream.getFormat().getFrameRate() * (total + 4));
+			stream = new AudioInputStream(stream, stream.getFormat(), len);
+
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+			// Write WAVE file to disk.
+			AudioSystem.write(stream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+
+			// We are finished, close synthesizer.
+			synth.close();
+
+			audioBytes = byteArrayOutputStream.toByteArray();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return audioBytes;
+	}
+
+	/*
+	 * Render sequence using selected or default soundbank into wave audio file.
+	 */
+	public static void renderSoloToFile(Soundbank soundbank, Sequence sequence, int track,
+										File audio_file) {
+		try {
+			// Find available AudioSynthesizer.
+			AudioSynthesizer synth = findAudioSynthesizer();
+			if (synth == null) {
+				System.out.println("No Audio Synthesizer was found!");
+			}
+
+			// Open AudioStream from AudioSynthesizer.
+			Map<String,Object> info = new HashMap<String,Object>();
+			AudioFormat audioFormat = new AudioFormat(44100, 32, 2, true, false);
+			info.put("resamplerType", "sinc");
+			info.put("max polyphony", "512");
+			info.put("chorus", "false");
+			info.put("reverb", "false");
+			info.put("auto gain control", "false");
+			info.put("format", audioFormat);
+			info.put("large mode", "true");
+			info.put("light reverb", "true");
+			assert synth != null;
+			AudioInputStream stream = synth.openStream(audioFormat, info);
+
+			// Load user-selected Soundbank into AudioSynthesizer.
+			if (soundbank != null) {
+				Soundbank defsbk = synth.getDefaultSoundbank();
+				if (defsbk != null)
+					synth.unloadAllInstruments(defsbk);
+				synth.loadAllInstruments(soundbank);
+			}
+
+			synth.getChannels()[track].setSolo(true);
+
+			// Play Sequence into AudioSynthesizer Receiver.
+			double total = send(sequence, synth.getReceiver());
+
+			// Calculate how long the WAVE file needs to be.
+			long len = (long) (stream.getFormat().getFrameRate() * (total + 4));
+			stream = new AudioInputStream(stream, stream.getFormat(), len);
+
+			// Write WAVE file to disk.
+			AudioSystem.write(stream, AudioFileFormat.Type.WAVE, audio_file);
+
+			// We are finished, close synthesizer.
+			synth.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/*
+	 * Render sequence using selected or default soundbank into an audio stream.
+	 */
+	public static ByteArrayOutputStream renderSoloToStream16Bit(Soundbank soundbank, Sequence sequence, int track) {
+
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+		try {
+			// Find available AudioSynthesizer.
+			AudioSynthesizer synth = findAudioSynthesizer();
+			if (synth == null) {
+				System.out.println("No Audio Synthesizer was found!");
+			}
+
+			// Open AudioStream from AudioSynthesizer.
+			Map<String,Object> info = new HashMap<String,Object>();
+			info.put("resamplerType", "sinc");
+			info.put("max polyphony", "256");
+			info.put("reverb", "false");
+			info.put("light reverb", "true");
+			AudioInputStream stream = null;
+			if (synth != null) {
+				stream = synth.openStream(new AudioFormat(44100, 16, 2, true, false), info);
+			}
+
+			// Load user-selected Soundbank into AudioSynthesizer.
+			if (soundbank != null) {
+				Soundbank defsbk = null;
+				if (synth != null) {
+					defsbk = synth.getDefaultSoundbank();
+				}
+				if (defsbk != null)
+					synth.unloadAllInstruments(defsbk);
+				if (synth != null) {
+					synth.loadAllInstruments(soundbank);
+				}
+			}
+
+			if (synth != null) {
+				synth.getChannels()[track].setSolo(true);
+			}
+
+			// Play Sequence into AudioSynthesizer Receiver.
+			double total = 0;
+			if (synth != null) {
+				total = send(sequence, synth.getReceiver());
+			}
+
+			// Calculate how long the WAVE file needs to be.
+			long len = 0;
+			if (stream != null) {
+				len = (long) (stream.getFormat().getFrameRate() * (total + 4));
+			}
+			if (stream != null) {
+				stream = new AudioInputStream(stream, stream.getFormat(), len);
+			}
+
+			// Write WAVE file to disk.
+			if (stream != null) {
+				AudioSystem.write(stream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+			}
+
+			// We are finished, close synthesizer.
+			if (synth != null) {
+				synth.close();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return byteArrayOutputStream;
+	}
+
+	/*
+	 * Render sequence using selected or default soundbank into an audio stream.
+	 */
+	public static ByteArrayOutputStream renderSoloToStream32Bit(Soundbank soundbank, Sequence sequence, int track) {
+
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+		ArrayList<Patch> patchList = new ArrayList<>();
+		Track currentTrack = sequence.getTracks()[track];
+		for (int index = 0; index < currentTrack.size(); index++) {
+			MidiEvent midiEvent = currentTrack.get(index);
+			MidiMessage midiMessage = midiEvent.getMessage();
+			if (midiMessage instanceof ShortMessage) {
+				ShortMessage shortMessage = (ShortMessage) midiMessage;
+				if (shortMessage.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+					patchList.add(new Patch(0, shortMessage.getData1()));
+				}
+			}
+		}
+
+		try {
+			// Find available AudioSynthesizer.
+			AudioSynthesizer synth = findAudioSynthesizer();
+			if (synth == null) {
+				System.out.println("No Audio Synthesizer was found!");
+			}
+
+			// Open AudioStream from AudioSynthesizer.
+			Map<String,Object> info = new HashMap<String,Object>();
+			info.put("resamplerType", "sinc");
+			info.put("max polyphony", "256");
+			info.put("reverb", "false");
+			info.put("light reverb", "true");
+			AudioInputStream stream = null;
+			if (synth != null) {
+				stream = synth.openStream(new AudioFormat(44100, 32, 2, true, false), info);
+			}
+
+			// Load user-selected Soundbank into AudioSynthesizer.
+			if (soundbank != null) {
+				Soundbank defsbk = null;
+				if (synth != null) {
+					defsbk = synth.getDefaultSoundbank();
+				}
+				if (defsbk != null)
+					synth.unloadAllInstruments(defsbk);
+				if (synth != null) {
+					synth.loadAllInstruments(soundbank);
+				}
+			}
+
+			if (synth != null) {
+				synth.getChannels()[track].setSolo(true);
+			}
+
+			// Play Sequence into AudioSynthesizer Receiver.
+			double total = 0;
+			if (synth != null) {
+				total = send(sequence, synth.getReceiver());
+			}
+
+			// Calculate how long the WAVE file needs to be.
+			long len = 0;
+			if (stream != null) {
+				len = (long) (stream.getFormat().getFrameRate() * (total + 4));
+			}
+			if (stream != null) {
+				stream = new AudioInputStream(stream, stream.getFormat(), len);
+			}
+
+			// Write WAVE file to disk.
+			if (stream != null) {
+				AudioSystem.write(stream, AudioFileFormat.Type.WAVE, byteArrayOutputStream);
+			}
+
+			// We are finished, close synthesizer.
+			if (synth != null) {
+				synth.close();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return byteArrayOutputStream;
+	}
+
+	/*
 	 * Find available AudioSynthesizer.
 	 */
 	public static AudioSynthesizer findAudioSynthesizer()
@@ -100,13 +375,11 @@ public class Midi2WavRender {
 
 		// If default synthesizer is not AudioSynthesizer, check others.
 
-		double gain = 0.8D;
-
 		Info[] infos = MidiSystem.getMidiDeviceInfo();
 		MidiChannel[] channels = synth.getChannels();
 
 		for (int i = 0; i < channels.length; i++) {
-			channels[i].controlChange(7, ((int) (channels[i].getController(7) * gain)));
+			channels[i].controlChange(91, -1);
 		}
 
 		for (int i = 0; i < infos.length; i++) {

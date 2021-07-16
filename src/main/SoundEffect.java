@@ -6,10 +6,9 @@ import java.nio.ByteBuffer;
 
 public class SoundEffect {
 
-    private static Tone[] tones;
-    
-    private static int start;
-    private static int end;
+    public static Tone[] tones;
+    public static int start;
+    public static int end;
 
     public static SoundEffect readSoundEffect(Index soundEffectIndex, int archiveId, int fileId) {
         SoundEffect sfx = new SoundEffect();
@@ -70,7 +69,7 @@ public class SoundEffect {
         }
     }
 
-    private static byte[] mix() {
+    public static byte[] mix() {
         int var1 = 0;
 
         int var2;

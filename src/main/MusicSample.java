@@ -3,12 +3,16 @@ package main;
 import main.utils.ByteBufferUtils;
 import main.utils.Node;
 import org.displee.cache.index.Index;
+import org.gagravarr.ogg.OggPacketReader;
+import org.gagravarr.vorbis.VorbisFile;
 
 import javax.sound.sampled.AudioInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class MusicSample extends Node {
 
@@ -51,8 +55,9 @@ public class MusicSample extends Node {
       this.read(var1);
    }
 
-   MusicSample(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, int loopStart) {
-      this.encode(audioInputStream, dataOutputStream, loopStart);
+   MusicSample(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, int loopStart, Index sampleIndex, SoundEffect soundEffect) {
+      firstFileExists(sampleIndex);
+      this.encode(audioInputStream, dataOutputStream, soundEffect, loopStart);
    }
 
    void read(byte[] var1) {
@@ -81,12 +86,12 @@ public class MusicSample extends Node {
          byte[] packetData = new byte[size];
          buffer.get(packetData, 0, size);
          this.packets[packet] = packetData;
-
-         //System.out.println("Packet " + packet + " (Length: " +  packetData.length + ")" + " - " + Arrays.toString(packetData));
+         System.out.println("Packet " + packet + " - " + size);
+         System.out.println(Arrays.toString(packetData));
       }
    }
 
-   private void encode(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, int loopStart) {
+   private void encode(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, SoundEffect soundEffect, int loopStart) {
       try {
          this.sampleRate = (int) audioInputStream.getFormat().getSampleRate();
          this.sampleCount = audioInputStream.available();
@@ -95,45 +100,37 @@ public class MusicSample extends Node {
 
          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-         dataOutputStream.writeInt(sampleRate);
+         VorbisFile vorbisFile = new VorbisFile(new File("./samples/Sample.ogg/"));
+         dataOutputStream.writeInt(vorbisFile.getInfo().getSampleRate());
          dataOutputStream.writeInt(sampleCount);
-         dataOutputStream.writeInt(start);
-         dataOutputStream.writeInt(end);
+         dataOutputStream.writeInt(0);
+         dataOutputStream.writeInt(0);
 
-         byte[] audio = audioInputStream.readAllBytes();
-         ByteBuffer byteBuffer = ByteBuffer.wrap(audio);
-
-         int channels = 1;
-         int blockCount = audio.length / 8;
-         float[][] float2DArray = new float[channels][blockCount];
-
-         for (int index = 0; index < blockCount; index++) {
-            for (int channel = 0; channel < channels; channel++) {
-               short sample = byteBuffer.getShort();
-               float2DArray[channel][index] = sample;
+         int packetCount;
+         OggPacketReader oggPacketReader = vorbisFile.getOggFile().getPacketReader();
+         for (packetCount = 0; packetCount < 10000; packetCount++) {
+            byte[] data = oggPacketReader.getNextPacket().getData();
+            if (data != null) {
+               byteArrayOutputStream.write(data.length);
+               byteArrayOutputStream.write(data);
+            }
+            else {
+               break;
             }
          }
 
-         for (int channel = 0; channel < float2DArray.length; channel++) {
-            for (int index = 0; index < float2DArray[index].length; index++) {
-               byteArrayOutputStream.write(float2DArray[channel].length);
-               byteArrayOutputStream.write(Integer.parseInt(String.valueOf((byte) float2DArray[channel][index])));
-            }
-         }
-
-         dataOutputStream.writeInt(channels);
+         dataOutputStream.writeInt(packetCount);
          dataOutputStream.write(byteArrayOutputStream.toByteArray());
 
       } catch (IOException e) {
          e.printStackTrace();
       }
-
    }
 
    float[] mdctFloatCompute(int var1) {
       setData(this.packets[var1], 0);
       getBit();
-      int modeNumber = getBits(ByteBufferUtils.method634(modes.length - 1));
+      int modeNumber = getBits(ByteBufferUtils.iLog(modes.length - 1));
       boolean blockFlag = noResidues[modeNumber];
       int n = blockFlag ? blockSize_1 : blockSize_0;
       boolean previousWindowFlag = false;
@@ -245,7 +242,7 @@ public class MusicSample extends Node {
             var21[var27 * 4 + 1] = (x - var31) * var32 + (var28 - var30) * var33;
          }
 
-         var27 = ByteBufferUtils.method634(n - 1);
+         var27 = ByteBufferUtils.iLog(n - 1);
 
          int var34;
          int var35;
@@ -425,7 +422,7 @@ public class MusicSample extends Node {
          }
 
          byte[] data = this.samples;
-         
+
          return new AudioBuffer(this.sampleRate, data, this.start, this.end, this.loopConsistency);
       }
    }
@@ -441,13 +438,13 @@ public class MusicSample extends Node {
       return (float) ((double) mantissa * Math.pow(2.0D, e - 788));
    }
 
-   static void setData(byte[] bytes, int index) {
+   public static void setData(byte[] bytes, int index) {
       source = bytes;
       byteIndex = index;
       root = 0;
    }
 
-   static int getBit() {
+   public static int getBit() {
       int bit = source[byteIndex] >> root & 1;
       ++root;
       byteIndex += root >> 3;
@@ -455,7 +452,7 @@ public class MusicSample extends Node {
       return bit;
    }
 
-   static int getBits(int bits) {
+   public static int getBits(int bits) {
       int res = 0;
 
       int index;
@@ -478,7 +475,7 @@ public class MusicSample extends Node {
       return res;
    }
 
-   static void initData(byte[] var0) {
+   public static void initData(byte[] var0) {
       setData(var0, 0);
       blockSize_0 = 1 << getBits(4);
       blockSize_1 = 1 << getBits(4);
@@ -516,7 +513,7 @@ public class MusicSample extends Node {
          }
 
          int[] var15 = new int[timeCount];
-         int var10 = ByteBufferUtils.method634(timeCount - 1);
+         int var10 = ByteBufferUtils.iLog(timeCount - 1);
 
          for(int var11 = 0; var11 < timeCount; ++var11) {
             var15[var11] = ByteBufferUtils.method87(var11, var10);
@@ -579,7 +576,6 @@ public class MusicSample extends Node {
          getBits(16);
          modes[index] = getBits(8);
       }
-
    }
 
    static boolean firstFileExists(Index musicSampleIndex) {

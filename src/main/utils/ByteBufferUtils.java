@@ -320,7 +320,7 @@ public final class ByteBufferUtils {
         buffer.position(buffer.position() + skip);
     }
 
-    public static int method634(int var0) {
+    public static int iLog(int var0) {
         int var1 = 0;
         if(var0 < 0 || var0 >= 65536) {
             var0 >>>= 16;

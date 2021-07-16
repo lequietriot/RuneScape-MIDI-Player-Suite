@@ -13,17 +13,17 @@ public class MusicPatchNode extends Node {
     int currentNotePitch; //The note pitch, valued 0 through 127, to cover all 128 keys.
     int maxVolumeLevel; //The maximum volume level?
     int currentPanValue; //Panning value, 0 (Left) through 127 (Right): value of 64 means audio is centered.
-    int frequencyCorrection; //Can be negative or positive, Each note is either -256 or +256 (octaves are -/+3072).
+    int notePitchAdjustment; //Can be negative or positive, Each note is either -256 or +256 (octaves are -/+3072).
+    int field2448;
+    int field2449;
+    int field2450;
+    int field2453;
     int field2454;
     int field2455;
     int field2456;
     int field2457;
     int field2458;
-    int field2450;
-    int field2448;
-    int field2461;
-    int field2449;
-    int field2453;
+    int field2461; //Midi Track Event Ticks
     int field2462;
 
     MusicPatchNode() {

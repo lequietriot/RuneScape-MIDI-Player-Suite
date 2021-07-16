@@ -75,21 +75,21 @@ public class SoundPlayer extends PcmPlayer {
     }
 
     public void writeCustom() {
-        int var1 = 256;
+        int var1 = 512;
         if(pcmPlayer_stereo) {
-            var1 <<= 1;
+            var1 <<= 2;
         }
 
         for(int var2 = 0; var2 < var1; ++var2) {
             int var3 = super.samples[var2];
-            if((var3 + 8388608 & -16777216) != 0) {
-                var3 = 8388607 ^ var3 >> 31;
+            if((var3 + (8388608 * 2) & (-16777216 * 2)) != 0) {
+                var3 = (8388607 * 2) ^ (var3 >> 31) >> 31;
             }
 
-            this.byteSamples[var2 * 2] = (byte)(var3 >> 8);
-            this.byteSamples[var2 * 2 + 1] = (byte)(var3 >> 16);
+            this.byteSamples[var2 * 2] = (byte)((var3 >> 8) >> 8);
+            this.byteSamples[var2 * 2 + 1] = (byte) ((var3 >> 16) >> 16);
         }
-        this.sourceDataLine.write(this.byteSamples, 0, var1 << 1);
+        this.sourceDataLine.write(this.byteSamples, 0, this.byteSamples.length);
     }
 
     public void close() {

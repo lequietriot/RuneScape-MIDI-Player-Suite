@@ -9,7 +9,7 @@ public class MusicSampleCodebook {
    int[] entryLengths;
    int[] codebookMultiplicands;
    float[][] valueVector;
-   int[] field1307;
+   int[] huffmanRoot;
 
    MusicSampleCodebook() {
       MusicSample.getBits(24);
@@ -24,7 +24,7 @@ public class MusicSampleCodebook {
          codebookLookupType = 0;
 
          for(i_2 = MusicSample.getBits(5) + 1; codebookLookupType < this.entries; ++i_2) {
-            int number = MusicSample.getBits(ByteBufferUtils.method634(this.entries - codebookLookupType));
+            int number = MusicSample.getBits(ByteBufferUtils.iLog(this.entries - codebookLookupType));
 
             for(codebookValueBits = 0; codebookValueBits < number; ++codebookValueBits) {
                this.entryLengths[codebookLookupType++] = i_2;
@@ -153,7 +153,7 @@ public class MusicSampleCodebook {
          }
       }
 
-      this.field1307 = new int[8];
+      this.huffmanRoot = new int[8];
       var10 = 0;
 
       for(var3 = 0; var3 < this.entries; ++var3) {
@@ -165,29 +165,29 @@ public class MusicSampleCodebook {
             for(var7 = 0; var7 < var4; ++var7) {
                var8 = Integer.MIN_VALUE >>> var7;
                if((var5 & var8) != 0) {
-                  if(this.field1307[var6] == 0) {
-                     this.field1307[var6] = var10;
+                  if(this.huffmanRoot[var6] == 0) {
+                     this.huffmanRoot[var6] = var10;
                   }
 
-                  var6 = this.field1307[var6];
+                  var6 = this.huffmanRoot[var6];
                } else {
                   ++var6;
                }
 
-               if(var6 >= this.field1307.length) {
-                  int[] var11 = new int[this.field1307.length * 2];
+               if(var6 >= this.huffmanRoot.length) {
+                  int[] var11 = new int[this.huffmanRoot.length * 2];
 
-                  for(var9 = 0; var9 < this.field1307.length; ++var9) {
-                     var11[var9] = this.field1307[var9];
+                  for(var9 = 0; var9 < this.huffmanRoot.length; ++var9) {
+                     var11[var9] = this.huffmanRoot[var9];
                   }
 
-                  this.field1307 = var11;
+                  this.huffmanRoot = var11;
                }
 
                var8 >>>= 1;
             }
 
-            this.field1307[var6] = ~var3;
+            this.huffmanRoot[var6] = ~var3;
             if(var6 >= var10) {
                var10 = var6 + 1;
             }
@@ -198,11 +198,11 @@ public class MusicSampleCodebook {
 
    int getHuffmanRoot() {
       int var1;
-      for(var1 = 0; this.field1307[var1] >= 0; var1 = MusicSample.getBit() != 0?this.field1307[var1]:var1 + 1) {
+      for(var1 = 0; this.huffmanRoot[var1] >= 0; var1 = MusicSample.getBit() != 0?this.huffmanRoot[var1]:var1 + 1) {
          ;
       }
 
-      return ~this.field1307[var1];
+      return ~this.huffmanRoot[var1];
    }
 
    float[] method2307() {

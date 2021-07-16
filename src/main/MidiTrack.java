@@ -1638,6 +1638,10 @@ public class MidiTrack extends Node {
         return midi;
     }
 
+    public void setMidi(byte[] midiBytes) {
+        midi = midiBytes;
+    }
+
     /**
      * The method to return encoded MIDI data.
      * @return returns the encoded MIDI file.

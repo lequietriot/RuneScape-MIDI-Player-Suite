@@ -168,7 +168,7 @@ public class MusicSampleFloor {
          }
 
          var3 = ranges[this.multiplier - 1];
-         int var4 = ByteBufferUtils.method634(var3 - 1);
+         int var4 = ByteBufferUtils.iLog(var3 - 1);
          lowNeighbor[0] = MusicSample.getBits(var4);
          lowNeighbor[1] = MusicSample.getBits(var4);
          int var5 = 2;

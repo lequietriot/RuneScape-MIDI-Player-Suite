@@ -1,11 +1,12 @@
 package main;
 
 import com.sun.media.sound.AudioSynthesizer;
-import com.sun.media.sound.SoftSynthesizer;
 
 import javax.sound.midi.*;
-import java.io.File;
-import java.io.IOException;
+import javax.sound.sampled.*;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MidiLoader {
 
@@ -13,45 +14,131 @@ public class MidiLoader {
     Sequencer sequencer;
 
     Sequencer[] sequencers;
-    Synthesizer[] synthesizers;
+    AudioSynthesizer[] audioSynthesizers;
+    SourceDataLine[] sourceDataLines;
+
+    ByteArrayOutputStream byteArrayOutputStream;
 
     int trackCount;
     long pausedPosition;
 
-    public void load(Soundbank soundbank, File midi) throws InvalidMidiDataException, IOException, MidiUnavailableException {
+    public synchronized void load(Soundbank soundbank, File midi) throws InvalidMidiDataException, IOException, MidiUnavailableException, LineUnavailableException {
 
         sequence = MidiSystem.getSequence(midi);
         trackCount = sequence.getTracks().length;
 
         sequencers = new Sequencer[trackCount];
+        audioSynthesizers = new AudioSynthesizer[trackCount];
+        sourceDataLines = new SourceDataLine[trackCount];
+        byteArrayOutputStream = new ByteArrayOutputStream();
 
         for (int index = 0; index < sequencers.length; index++) {
             sequencers[index] = MidiSystem.getSequencer(false);
             sequencers[index].open();
         }
 
-        synthesizers = new Synthesizer[trackCount];
+        for (int track = 0; track < audioSynthesizers.length; track++) {
 
-        for (int index = 0; index < synthesizers.length; index++) {
-            synthesizers[index] = MidiSystem.getSynthesizer();
-            synthesizers[index].open();
-            synthesizers[index].unloadAllInstruments(synthesizers[index].getDefaultSoundbank());
-            synthesizers[index].loadAllInstruments(soundbank);
+            audioSynthesizers[track] = getAudioSynthesizer();
 
-            sequencers[index].getTransmitter().setReceiver(synthesizers[index].getReceiver());
+            if (audioSynthesizers[track] == null) {
+                System.out.println("No synth was found!");
+            }
+
+            Map<String, Object> info = new HashMap<>();
+            info.put("resamplerType", "sinc");
+            info.put("max polyphony", "256");
+            info.put("reverb", "false");
+            info.put("light reverb", "true");
+
+            AudioFormat audioFormat = new AudioFormat(44100, 16, 2, true, false);
+            sourceDataLines[track] = AudioSystem.getSourceDataLine(audioFormat);
+            audioSynthesizers[track].open(sourceDataLines[track], info);
+            sourceDataLines[track].start();
+
+            /**
+            for (int e = 0; e < sequence.getTracks()[track].size(); e++) {
+                MidiEvent midiEvent = sequence.getTracks()[track].get(e);
+                MidiMessage midiMessage = midiEvent.getMessage();
+                if (midiMessage instanceof ShortMessage) {
+                    ShortMessage shortMessage = (ShortMessage) midiMessage;
+
+                    if (shortMessage.getCommand() == ShortMessage.CONTROL_CHANGE) {
+                        int bankSelect = -1;
+                        boolean usingBankSelect = false;
+                        if (shortMessage.getData1() == 32) {
+                            bankSelect = shortMessage.getData2();
+                            shortMessage.setMessage(shortMessage.getCommand(), shortMessage.getChannel(), shortMessage.getData1(), 0);
+                            ShortMessage bankMSBMessage = new ShortMessage(shortMessage.getCommand(), shortMessage.getChannel(), 0, bankSelect);
+                            sequence.getTracks()[track].add(new MidiEvent(bankMSBMessage, 0));
+                            sequence.getTracks()[track].add(new MidiEvent(bankMSBMessage, 3));
+                            usingBankSelect = true;
+                        }
+
+                        if (shortMessage.getData1() == 0 && usingBankSelect) {
+                            shortMessage.setMessage(shortMessage.getCommand(), shortMessage.getChannel(), shortMessage.getData1(), bankSelect);
+                        }
+
+                        else {
+                            break;
+                        }
+                    }
+                }
+            }
+             **/
+
+            if (soundbank != null) {
+                Soundbank defaultSoundbank = audioSynthesizers[track].getDefaultSoundbank();
+                if (defaultSoundbank != null) {
+                    audioSynthesizers[track].unloadAllInstruments(defaultSoundbank);
+                    audioSynthesizers[track].loadAllInstruments(soundbank);
+                }
+            }
+
+            MidiChannel[] channels = audioSynthesizers[track].getChannels();
+
+            for (int i = 0; i < channels.length; i++) {
+                channels[i].controlChange(91, -1);
+            }
+
+            sequencers[track].getTransmitter().setReceiver(audioSynthesizers[track].getReceiver());
         }
     }
 
-    public void play() throws InvalidMidiDataException {
+    private synchronized AudioSynthesizer getAudioSynthesizer() throws MidiUnavailableException {
+
+        Synthesizer synthesizer = MidiSystem.getSynthesizer();
+
+        if (synthesizer instanceof AudioSynthesizer) {
+            return (AudioSynthesizer) synthesizer;
+        }
+
+        MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+
+        for (int i = 0; i < infos.length; i++) {
+            MidiDevice dev = MidiSystem.getMidiDevice(infos[i]);
+
+            if (dev instanceof AudioSynthesizer)
+                return (AudioSynthesizer) dev;
+        }
+        return null;
+    }
+
+    public synchronized void play() throws InvalidMidiDataException, IOException, InterruptedException {
 
         for (int track = 0; track < trackCount; track++) {
             sequencers[track].setSequence(sequence);
             sequencers[track].setTrackSolo(track, true);
+        }
+
+        Thread.sleep(1);
+
+        for (int track = 0; track < trackCount; track++) {
             sequencers[track].start();
         }
     }
 
-    public void pause() {
+    public synchronized void pause() {
 
         for (int track = 0; track < trackCount; track++) {
             pausedPosition = sequencers[track].getMicrosecondPosition();
@@ -59,7 +146,7 @@ public class MidiLoader {
         }
     }
 
-    public void resume() throws InvalidMidiDataException {
+    public synchronized void resume() throws InvalidMidiDataException {
 
         for (int track = 0; track < trackCount; track++) {
 
@@ -74,45 +161,28 @@ public class MidiLoader {
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
 
         for (int track = 0; track < trackCount; track++) {
             sequencers[track].stop();
         }
     }
 
-    public boolean isSequencerRunning() {
+    public synchronized boolean isSequencerRunning() {
         return sequencers[0].isRunning();
     }
 
-    public long getSequencePosition() {
+    public synchronized long getSequencePosition() {
         return sequencers[0].getMicrosecondPosition();
     }
 
-    public void setLoop(long loopStart, long loopEnd, int loopCount) throws InvalidMidiDataException {
+    public synchronized void setLoop(long loopStart, long loopEnd, int loopCount) throws InvalidMidiDataException {
 
         for (int track = 0; track < trackCount; track++) {
             sequencers[track].setSequence(sequence);
             sequencers[track].setLoopStartPoint(loopStart);
             sequencers[track].setLoopEndPoint(loopEnd);
             sequencers[track].setLoopCount(loopCount);
-        }
-    }
-
-    public void setMusicTrack(Sequence sequence, boolean loop) {
-
-    }
-
-    public void loadMusicTrack(Soundbank soundbank) {
-
-    }
-
-    public void setReverbOff() throws MidiUnavailableException {
-        for (Synthesizer synthesizer : synthesizers) {
-            if (synthesizer instanceof SoftSynthesizer) {
-                AudioSynthesizer audioSynthesizer = (AudioSynthesizer) synthesizer;
-
-            }
         }
     }
 }

@@ -12,7 +12,7 @@ public class MakeDLS {
 
     public void initDLS() {
         dlsSoundbank = new DLSSoundbank();
-        dlsSoundbank.setName("RuneScape DLS");
+        dlsSoundbank.setName("RuneScape.dls");
         dlsSoundbank.setMajor(1);
         dlsSoundbank.setMinor(0);
     }

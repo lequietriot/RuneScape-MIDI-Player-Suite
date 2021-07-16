@@ -93,6 +93,7 @@ public class SoundBankCache {
         } else if(this.musicSampleIndex.getArchive(var1).getFiles().length == 1) {
             return this.getMusicSample0(var1, 0, var2);
         } else {
+            System.out.println("ERROR with " + var1);
             throw new RuntimeException();
         }
     }

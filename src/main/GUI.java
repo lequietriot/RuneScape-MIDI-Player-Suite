@@ -4,6 +4,7 @@ import com.sun.media.sound.SF2Soundbank;
 import main.utils.ByteArrayNode;
 import org.displee.CacheLibrary;
 import org.displee.cache.index.Index;
+import org.displee.cache.index.archive.Archive;
 
 import javax.sound.midi.*;
 import javax.sound.sampled.*;
@@ -27,12 +28,11 @@ import java.util.List;
 public class GUI {
 
 	private static File midiFile;
+	private static CacheLibrary cacheLibrary;
 	private File soundFontFile;
 	private static File[] midiFiles;
 
 	private final MidiLoader midiLoader = new MidiLoader();
-
-    private static CacheLibrary cacheLibrary;
 
 	private String defaultSoundfontPath;
 
@@ -65,7 +65,7 @@ public class GUI {
 
 	private JFileChooser chooseMID;
 	private JFileChooser chooseSf2;
-    private JFileChooser chooseCache;
+	private JFileChooser chooseCache;
 	private JFileChooser saveRepatchedMIDI;
 
 	private JButton startButton;
@@ -86,7 +86,7 @@ public class GUI {
 	private JTextPane volumeInfo;
 	private JTextPane sampleRateInfo;
 	private JTextPane engineInfo;
-	private int volume = 256;
+	private int volume = 255;
 
 	private boolean loopMode = false;
 	private boolean shuffleMode = false;
@@ -96,6 +96,11 @@ public class GUI {
 	private MidiDevice externalDevice;
 	private Transmitter transmitter;
 	private Receiver receiver;
+	
+	private int chPosition;
+	private int bankLSB;
+	private int drumChannel;
+	private boolean customBank;
 
 	GUI() throws IOException, ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
 
@@ -130,6 +135,7 @@ public class GUI {
 			fileMenu.add("Load SoundFont File").addActionListener(new SF2Loader());
 			fileMenu.add("Load RuneScape Cache").addActionListener(new CacheLoader());
 			fileMenu.add("Render MIDI to Audio File").addActionListener(new RenderMIDIProcess());
+			fileMenu.add("Test MIDI Stream").addActionListener(new TestStreamPlayer());
 
 			preferencesMenu = new JMenu();
 			preferencesMenu.setText("Preferences");
@@ -145,7 +151,9 @@ public class GUI {
 			utilityMenu.setSize(100, 20);
 			utilityMenu.setVisible(true);
 
+			utilityMenu.add("Encode Data - Sound Bank Samples...").addActionListener(new SoundBankEncoder());
 			utilityMenu.add("Encode Data - MIDI Music...").addActionListener(new MidiEncoder());
+			utilityMenu.add("Copy Cache").addActionListener(new CacheCopy());
 			utilityMenu.add("Create Sound Bank Patch").addActionListener(new PatchCreator());
 			utilityMenu.add("Generate Sound - MIDI Note...").addActionListener(new MidiNoteGenerator());
 			//utilityMenu.add("Generate Random Music").addActionListener(new RandomMidiGenerator());
@@ -154,7 +162,7 @@ public class GUI {
 			utilityMenu.add("Dump Data - MIDI Music...").addActionListener(new MidiDumper());
 			utilityMenu.add("Dump Data - MIDI and SoundFont").addActionListener(new MidiAndSoundFontDumper());
 			utilityMenu.add("Dump Data - Sound Effects...").addActionListener(new SfxDumper());
-            utilityMenu.add("Dump Data - Sound Bank Samples...").addActionListener(new MusicSampleDumper());
+			utilityMenu.add("Dump Data - Sound Bank Samples...").addActionListener(new MusicSampleDumper());
 			utilityMenu.add("Dump Data - Sound Bank Patch...").addActionListener(new SoundBankPatchDumper());
 
 			utilityMenu.add("Dump Data - RS3 Sound Effects...").addActionListener(new StreamSoundEffectDumper());
@@ -190,15 +198,13 @@ public class GUI {
 			jMenuBar.add(playlistMenu);
 
 			System.out.println("Application loaded successfully!");
-		}
-
-		finally {
+		} finally {
 
 			Path midiFolderFile = Paths.get("./DefaultMidiPath.txt/");
 			Path sf2PrefFile = Paths.get("./DefaultSoundfontPath.txt/");
-            Path cachePrefFile = Paths.get("./DefaultCachePath.txt/");
+			Path cachePrefFile = Paths.get("./DefaultCachePath.txt/");
 
-            if (midiFolderFile.toFile().exists()) {
+			if (midiFolderFile.toFile().exists()) {
 				List<String> midiString = Files.readAllLines(midiFolderFile);
 				for (int i = 0; i < midiString.size(); i++) {
 					String midiPath = midiString.get(i);
@@ -211,26 +217,24 @@ public class GUI {
 				List<String> prefString = Files.readAllLines(sf2PrefFile);
 
 				for (int s = 0; s < prefString.size(); s++) {
-				String pathString = prefString.get(s);
-				System.out.println("Automatically set Soundfont to " + prefString);
-				soundFontFile = new File(pathString);
+					String pathString = prefString.get(s);
+					System.out.println("Automatically set Soundfont to " + prefString);
+					soundFontFile = new File(pathString);
 
-				if (!soundFontFile.exists()) {
-					frame.add(new PopupMenu("The default SoundFont is either not set or was moved!"));
+					if (!soundFontFile.exists()) {
+						frame.add(new PopupMenu("The default SoundFont is either not set or was moved!"));
+					}
 				}
 			}
-		}
 			if (cachePrefFile.toFile().exists()) {
-                List<String> cachePrefString = Files.readAllLines(cachePrefFile);
+				List<String> cachePrefString = Files.readAllLines(cachePrefFile);
 
-                for (int s = 0; s < cachePrefString.size(); s++) {
-                    String pathString = cachePrefString.get(s);
-                    System.out.println("Automatically set Cache path to " + pathString);
-                    cacheLibrary = new CacheLibrary(pathString);
-                }
-            }
-
-			else if (!sf2PrefFile.toFile().exists()) {
+				for (int s = 0; s < cachePrefString.size(); s++) {
+					String pathString = cachePrefString.get(s);
+					System.out.println("Automatically set Cache path to " + pathString);
+					cacheLibrary = new CacheLibrary(pathString);
+				}
+			} else if (!sf2PrefFile.toFile().exists()) {
 				FileOutputStream fos = new FileOutputStream("./DefaultSoundfontPath.txt/");
 				DataOutputStream dos = new DataOutputStream(fos);
 				dos.write(0);
@@ -240,6 +244,14 @@ public class GUI {
 
 			init(buttonsPanel);
 		}
+	}
+
+	public static CacheLibrary getCacheLibrary() {
+		return cacheLibrary;
+	}
+
+	public static void setCacheLibrary(CacheLibrary cacheLibrary) {
+		GUI.cacheLibrary = cacheLibrary;
 	}
 
 	private void init(JPanel buttonsPanel) {
@@ -304,8 +316,7 @@ public class GUI {
 
 		if (loopMode) {
 			loopButton.setText("Loop Mode: On");
-		}
-		else {
+		} else {
 			loopButton.setText("Loop Mode: Off");
 		}
 
@@ -315,8 +326,7 @@ public class GUI {
 
 		if (shuffleMode) {
 			shuffleButton.setText("Shuffle Mode: On");
-		}
-		else {
+		} else {
 			shuffleButton.setText("Shuffle Mode: Off");
 		}
 
@@ -357,7 +367,7 @@ public class GUI {
 
 		volumeInfo.setBackground(Color.LIGHT_GRAY);
 		volumeInfo.setSelectedTextColor(Color.BLACK);
-		volumeInfo.setText("SoundBank Volume is: " + volume + " (" + ((volume / 256) * 100) + "%) |");
+		volumeInfo.setText("SoundBank Volume is: " + volume + " (" + ((volume / 255) * 100) + "%) |");
 		volumeInfo.setEnabled(true);
 		volumeInfo.setEditable(false);
 		volumeInfo.setVisible(true);
@@ -584,9 +594,7 @@ public class GUI {
 				} catch (InvalidMidiDataException | IOException e1) {
 					e1.printStackTrace();
 				}
-			}
-
-			else {
+			} else {
 				totalTime = sequence.getMicrosecondLength() / 1000000;
 				songSlider.setMinimum(0);
 				songSlider.setMaximum((int) totalTime);
@@ -640,7 +648,6 @@ public class GUI {
 
 			try {
 				midiLoader.load(MidiSystem.getSoundbank(soundFontFile), midiFile);
-				midiLoader.setReverbOff();
 
 				if (loopMode) {
 					setLoop(MidiSystem.getSequence(midiFile));
@@ -648,85 +655,83 @@ public class GUI {
 
 				if (pausedTime != 0) {
 					midiLoader.resume();
-				}
-
-				else {
+				} else {
 					midiLoader.play();
 				}
-			} catch (InvalidMidiDataException | IOException | MidiUnavailableException invalidMidiDataException) {
+			} catch (InvalidMidiDataException | IOException | MidiUnavailableException | LineUnavailableException | InterruptedException invalidMidiDataException) {
 				invalidMidiDataException.printStackTrace();
 			}
 
 			/**
 
-			startButton.setEnabled(true);
+			 startButton.setEnabled(true);
 
-			try {
+			 try {
 
-				sequence = MidiSystem.getSequence(midiFile);
+			 sequence = MidiSystem.getSequence(midiFile);
 
-				sequencer = MidiSystem.getSequencer(false);
-				sequencer.open();
+			 sequencer = MidiSystem.getSequencer(false);
+			 sequencer.open();
 
-				synthesizer = MidiSystem.getSynthesizer();
-				synthesizer.open();
+			 synthesizer = MidiSystem.getSynthesizer();
+			 synthesizer.open();
 
-				if (!synthesizer.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile))) {
-					synthesizer.unloadAllInstruments(synthesizer.getDefaultSoundbank());
-					synthesizer.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
-				}
+			 if (!synthesizer.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile))) {
+			 synthesizer.unloadAllInstruments(synthesizer.getDefaultSoundbank());
+			 synthesizer.loadAllInstruments(MidiSystem.getSoundbank(soundsetFile));
+			 }
 
-				MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
+			 MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
 
-				for (MidiDevice.Info info : infos) {
-					if (info.getName().contains("FluidSynth")) {
-						if (!MidiSystem.getMidiDevice(info).isOpen()) {
-							MidiSystem.getMidiDevice(info).open();
-							System.out.println("Using FluidSynth!");
-						}
+			 for (MidiDevice.Info info : infos) {
+			 if (info.getName().contains("FluidSynth")) {
+			 if (!MidiSystem.getMidiDevice(info).isOpen()) {
+			 MidiSystem.getMidiDevice(info).open();
+			 System.out.println("Using FluidSynth!");
+			 }
 
-						//sequencer.getTransmitter().setReceiver(MidiSystem.getMidiDevice(info).getReceiver());
-					}
-					else {
-						sequencer.getTransmitter().setReceiver(synthesizer.getReceiver());
-					}
-				}
+			 //sequencer.getTransmitter().setReceiver(MidiSystem.getMidiDevice(info).getReceiver());
+			 }
+			 else {
+			 sequencer.getTransmitter().setReceiver(synthesizer.getReceiver());
+			 }
+			 }
 
-				sequencer.setSequence(sequence);
+			 sequencer.setSequence(sequence);
 
-				if (loopMode) {
-					setLoop();
-				}
+			 if (loopMode) {
+			 setLoop();
+			 }
 
-				if (pausedTime == 0) {
+			 if (pausedTime == 0) {
 
-					sequencer.start();
+			 sequencer.start();
 
-					if (sequencer.isRunning()) {
-						startButton.setEnabled(false);
-						pauseButton.setEnabled(true);
-					}
-				}
+			 if (sequencer.isRunning()) {
+			 startButton.setEnabled(false);
+			 pauseButton.setEnabled(true);
+			 }
+			 }
 
-				else {
+			 else {
 
-					sequencer.setMicrosecondPosition(pausedTime);
-					sequencer.start();
+			 sequencer.setMicrosecondPosition(pausedTime);
+			 sequencer.start();
 
-					if (sequencer.isRunning()) {
-						startButton.setEnabled(false);
-						pauseButton.setEnabled(true);
-					}
-				}
+			 if (sequencer.isRunning()) {
+			 startButton.setEnabled(false);
+			 pauseButton.setEnabled(true);
+			 }
+			 }
 
-				if (sequencer.isRunning()) {
-					Timer timer = new Timer(0, new TimerListener());
-					timer.start();
-				}
-			} catch (MidiUnavailableException | InvalidMidiDataException | IOException e1) {
-				e1.printStackTrace();
-			}
-			**/
+			 if (sequencer.isRunning()) {
+			 Timer timer = new Timer(0, new TimerListener());
+			 timer.start();
+			 }
+			 } catch (MidiUnavailableException | InvalidMidiDataException | IOException e1) {
+			 e1.printStackTrace();
+			 }
+			 **/
 		}
 
 		void setLoop(Sequence midiSequence) {
@@ -761,9 +766,7 @@ public class GUI {
 									loopEnd = (int) midiEvent.getTick();
 									System.out.println("loopEnd = " + midiEvent.getTick());
 									break;
-								}
-
-								else {
+								} else {
 
 									if (loopEnd == 0) {
 										loopStart = 0;
@@ -791,114 +794,112 @@ public class GUI {
 
 					MidiMessage midiMessage = midiEvent.getMessage();
 
-						if (midiMessage instanceof ShortMessage) {
+					if (midiMessage instanceof ShortMessage) {
 
-							ShortMessage sm = (ShortMessage) midiMessage;
+						ShortMessage sm = (ShortMessage) midiMessage;
 
-							if (sm.getChannel() < 16) {
-								getBankLSB(sm);
+						if (sm.getChannel() < 16) {
+							getBankLSB(sm);
 
-								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
-									chPosition++;
-									if (chPosition == 9) {
-										chPosition = 10;
-									}
-								}
-
-								if (customBank == false) {
-
-									if (sm.getChannel() == 9) {
-										bankLSB = 1;
-									}
-
-									if (sm.getChannel() != 9) {
-										bankLSB = 0;
-									}
+							if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
+								chPosition++;
+								if (chPosition == 9) {
+									chPosition = 10;
 								}
 							}
 
-							if (bankLSB == 1) {
+							if (customBank == false) {
 
-								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								if (sm.getChannel() == 9) {
+									bankLSB = 1;
 								}
 
-								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.NOTE_ON) {
-									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								if (sm.getChannel() != 9) {
+									bankLSB = 0;
 								}
 							}
+						}
 
-							else if (bankLSB != 1) {
+						if (bankLSB == 1) {
 
-								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+								sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+								sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+								sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.NOTE_ON) {
-									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.NOTE_ON) {
+								sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+								sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+								sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+								sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+								sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+								sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+							}
+						} else if (bankLSB != 1) {
+
+							if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+								sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+								sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+								sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.NOTE_ON) {
+								sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+								sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+								sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+								sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+								sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+								sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 							}
 						}
 					}
 				}
-				return MidiFixerOSRS.returnFixedMIDI(sequence, false, customBank);
 			}
+			return MidiFixerOSRS.returnFixedMIDI(sequence, false, customBank);
+		}
 
 		public Sequence adjustForPlayHD(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
@@ -908,126 +909,124 @@ public class GUI {
 
 					MidiMessage midiMessage = midiEvent.getMessage();
 
-						if (midiMessage instanceof ShortMessage) {
+					if (midiMessage instanceof ShortMessage) {
 
-							ShortMessage sm = (ShortMessage) midiMessage;
+						ShortMessage sm = (ShortMessage) midiMessage;
 
-							if (sm.getChannel() < 16) {
-								getBankLSB(sm);
+						if (sm.getChannel() < 16) {
+							getBankLSB(sm);
 
-								if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
-									chPosition++;
-									if (chPosition == 9) {
-										chPosition = 10;
-									}
-								}
-
-								if (customBank == false) {
-
-									if (sm.getChannel() == 9) {
-										bankLSB = 1;
-									}
-
-									if (sm.getChannel() != 9) {
-										bankLSB = 0;
-									}
+							if (i == 0 & chPosition != chPosition + 1 & bankLSB != 1) {
+								chPosition++;
+								if (chPosition == 9) {
+									chPosition = 10;
 								}
 							}
 
-							if (bankLSB == 1) {
+							if (customBank == false) {
 
-								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+								if (sm.getChannel() == 9) {
+									bankLSB = 1;
 								}
 
-								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-									sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.NOTE_ON) {
-									sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-									sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-									sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-									sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
-								}
-
-								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-									sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+								if (sm.getChannel() != 9) {
+									bankLSB = 0;
 								}
 							}
+						}
 
-							else if (bankLSB != 1) {
+						if (bankLSB == 1) {
 
-								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+								sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+								sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.NOTE_OFF) {
-									sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+								sm.setMessage(ShortMessage.NOTE_OFF, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.NOTE_ON) {
-									sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.NOTE_ON) {
+								sm.setMessage(ShortMessage.NOTE_ON, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
-									sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+								sm.setMessage(ShortMessage.PROGRAM_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
-									sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+								sm.setMessage(ShortMessage.CONTROL_CHANGE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.PITCH_BEND) {
-									sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+								sm.setMessage(ShortMessage.PITCH_BEND, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
-									sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+								sm.setMessage(ShortMessage.CHANNEL_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+							}
 
-								if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
-									sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
-								}
+							if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+								sm.setMessage(ShortMessage.POLY_PRESSURE, drumChannel, sm.getData1(), sm.getData2());
+							}
+						} else if (bankLSB != 1) {
+
+							if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+								sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+								sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.NOTE_OFF) {
+								sm.setMessage(ShortMessage.NOTE_OFF, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.NOTE_ON) {
+								sm.setMessage(ShortMessage.NOTE_ON, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.PROGRAM_CHANGE) {
+								sm.setMessage(ShortMessage.PROGRAM_CHANGE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+								sm.setMessage(ShortMessage.CONTROL_CHANGE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.PITCH_BEND) {
+								sm.setMessage(ShortMessage.PITCH_BEND, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.CHANNEL_PRESSURE) {
+								sm.setMessage(ShortMessage.CHANNEL_PRESSURE, chPosition, sm.getData1(), sm.getData2());
+							}
+
+							if (sm.getCommand() == ShortMessage.POLY_PRESSURE) {
+								sm.setMessage(ShortMessage.POLY_PRESSURE, chPosition, sm.getData1(), sm.getData2());
 							}
 						}
 					}
 				}
-				return MidiFixerRSHD.returnFixedMIDI(sequence, false, customBank);
 			}
+			return MidiFixerRSHD.returnFixedMIDI(sequence, false, customBank);
+		}
 
 		public void getBankLSB(ShortMessage sm) {
 
-				if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
+			if (sm.getCommand() == ShortMessage.CONTROL_CHANGE) {
 
-					if (sm.getData1() == 32) {
-						bankLSB = sm.getData2();
-						customBank = true;
-					}
+				if (sm.getData1() == 32) {
+					bankLSB = sm.getData2();
+					customBank = true;
 				}
 			}
 		}
+	}
 
 	public class PauseButtonListener implements ActionListener {
 
@@ -1084,8 +1083,7 @@ public class GUI {
 
 			if (loopMode) {
 				loopButton.setText("Loop Mode: On");
-			}
-			else {
+			} else {
 				loopButton.setText("Loop Mode: Off");
 			}
 		}
@@ -1106,9 +1104,7 @@ public class GUI {
 		public void actionPerformed(ActionEvent e) {
 			if (fixAttemptOS.isEnabled()) {
 				fixAttemptingOS = true;
-			}
-
-			else if (!fixAttemptOS.isEnabled()) {
+			} else if (!fixAttemptOS.isEnabled()) {
 				fixAttemptingOS = false;
 			}
 		}
@@ -1120,9 +1116,7 @@ public class GUI {
 		public void actionPerformed(ActionEvent e) {
 			if (fixAttemptOS.isEnabled()) {
 				fixAttemptingHD = true;
-			}
-
-			else if (!fixAttemptOS.isEnabled()) {
+			} else if (!fixAttemptOS.isEnabled()) {
 				fixAttemptingHD = false;
 			}
 		}
@@ -1130,42 +1124,34 @@ public class GUI {
 
 	public class RenderMIDIProcess implements ActionListener {
 
-		int bankLSB;
-
-		int drumChannel = 9;
-		int chPosition = -1;
-
-		boolean customBank;
-
 		@Override
 		public void actionPerformed(ActionEvent e) {
+
 			Soundbank soundbank;
+
 			try {
 				soundbank = MidiSystem.getSoundbank(soundFontFile);
 				sequence = MidiSystem.getSequence(midiFile);
+				int trackCount = sequence.getTracks().length;
 
-				if (fixAttemptingOS == false) {
-					Midi2WavRender.render(soundbank, sequence, new File("./Rendered.wav/"));
+				System.out.println("Track Count = " + sequence.getTracks().length);
+
+				Midi2WavRender.render(soundbank, sequence, new File("./Tracks/" + midiFile.getName().replace(".mid", "").trim() + ".wav/"));
+				/**
+				for (int track = 0; track < trackCount; track++) {
+
+					Midi2WavRender.renderSoloToFile(soundbank, sequence, track, new File("./Tracks/Track " + track + ".wav/"));
+					System.out.println("Rendered track #" + track);
 				}
-
-				else if (fixAttemptingOS == true) {
-					Midi2WavRender.render(soundbank, adjustForRenderOS(sequence), new File("./Rendered.wav/"));
-				}
-
-				if (fixAttemptingHD == false) {
-					Midi2WavRender.render(soundbank, sequence, new File("./Rendered.wav/"));
-				}
-
-				else if (fixAttemptingHD == true) {
-					Midi2WavRender.render(soundbank, adjustForRenderHD(sequence), new File("./Rendered.wav/"));
-				}
-
-				System.out.println("Successfully rendered MIDI to Audio!");
+				 **/
 
 			} catch (InvalidMidiDataException | IOException e1) {
 				e1.printStackTrace();
 			}
+
+			System.out.println("Successfully rendered MIDI to Audio!");
 		}
+	}
 
 		public Sequence adjustForRenderOS(Sequence sequence) throws InvalidMidiDataException, IOException {
 			for (Track track : sequence.getTracks()) {
@@ -1411,7 +1397,6 @@ public class GUI {
 					}
 				}
 			}
-		}
 
 	public class FixButtonListenerOSRS implements ActionListener {
 
@@ -2009,7 +1994,7 @@ public class GUI {
 
 	private class MidiEncoder implements ActionListener {
 
-		int songArchiveID = 2;
+		int songArchiveID = 0;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -2020,9 +2005,11 @@ public class GUI {
 					File encodedMidi = MidiTrack.encode(sequence);
 					byte[] encodedData = Files.readAllBytes(Paths.get(encodedMidi.getPath()));
 
+					int name = cacheLibrary.getIndex(6).getArchive(songArchiveID).getName();
+
 					cacheLibrary.getIndex(6).getArchive(songArchiveID).removeFile(0);
 					cacheLibrary.getIndex(6).addArchive(songArchiveID).addFile(encodedData);
-					cacheLibrary.getIndex(6).getArchive(songArchiveID).getFile(0).setName(0);
+					cacheLibrary.getIndex(6).getArchive(songArchiveID).getFile(0).setName(name);
 					cacheLibrary.getIndex(6).update();
 
 					System.out.println("MIDI file successfully encoded and packed to ID " + songArchiveID + "!");
@@ -2235,7 +2222,13 @@ public class GUI {
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 						AudioBuffer audioBuffer = soundBankCache.getMusicSample(idInt, null);
 						AudioInputStream audioInputStream;
-						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(audioBuffer.sampleRate, 8, 1, true, false), audioBuffer.samples.length);
+						byte[] audioData = new byte[audioBuffer.samples.length * 2];
+
+						for (int frame = 0; frame < audioBuffer.samples.length; frame++) {
+							audioData[frame * 2] = audioBuffer.samples[frame];
+							audioData[frame * 2 + 1] = audioBuffer.samples[frame];
+						}
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), new AudioFormat(audioBuffer.sampleRate, 16, 1, true, false), audioBuffer.samples.length);
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
@@ -2248,7 +2241,13 @@ public class GUI {
 						ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 						AudioBuffer audioBuffer = soundBankCache.getMusicSample(idInt, null);
 						AudioInputStream audioInputStream;
-						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(audioBuffer.sampleRate, 8, 1, true, false), audioBuffer.samples.length);
+						byte[] audioData = new byte[audioBuffer.samples.length * 2];
+
+						for (int frame = 0; frame < audioBuffer.samples.length; frame++) {
+							audioData[frame * 2] = audioBuffer.samples[frame];
+							audioData[frame * 2 + 1] = audioBuffer.samples[frame];
+						}
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), new AudioFormat(audioBuffer.sampleRate, 16, 1, true, false), audioBuffer.samples.length);
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
@@ -2280,7 +2279,13 @@ public class GUI {
 							continue;
 						}
 						AudioInputStream audioInputStream;
-						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(audioBuffer.sampleRate, 8, 1, true, false), audioBuffer.samples.length);
+						byte[] audioData = new byte[audioBuffer.samples.length * 2];
+
+						for (int frame = 0; frame < audioBuffer.samples.length; frame++) {
+							audioData[frame * 2] = audioBuffer.samples[frame];
+							audioData[frame * 2 + 1] = audioBuffer.samples[frame];
+						}
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), new AudioFormat(audioBuffer.sampleRate, 16, 1, true, false), audioBuffer.samples.length);
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
@@ -2293,7 +2298,13 @@ public class GUI {
 							continue;
 						}
 						AudioInputStream audioInputStream;
-						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioBuffer.samples), new AudioFormat(audioBuffer.sampleRate, 8, 1, true, false), audioBuffer.samples.length);
+						byte[] audioData = new byte[audioBuffer.samples.length * 2];
+
+						for (int frame = 0; frame < audioBuffer.samples.length; frame++) {
+							audioData[frame * 2] = audioBuffer.samples[frame];
+							audioData[frame * 2 + 1] = audioBuffer.samples[frame];
+						}
+						audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), new AudioFormat(audioBuffer.sampleRate, 16, 1, true, false), audioBuffer.samples.length);
 						AudioSystem.write(audioInputStream, AudioFileFormat.Type.AU, byteArrayOutputStream);
 						dos.write(byteArrayOutputStream.toByteArray());
 						System.out.println("Wrote sound bank sample data to WAVE file!");
@@ -2682,6 +2693,8 @@ public class GUI {
 
 	private class TestButtonListener implements ActionListener {
 
+		private MidiPcmStream midiPcmStream;
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
@@ -2946,10 +2959,38 @@ public class GUI {
 					while (midiPcmStream.active) {
 						soundPlayer.fill(soundPlayer.samples, 256);
 						soundPlayer.write();
-
+						/**
 						for (MusicPatchNode musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.first(); musicPatchNode != null; musicPatchNode = (MusicPatchNode) midiPcmStream.patchStream.queue.next()) {
-
+							System.out.println();
+							System.out.println("track no " + musicPatchNode.currentTrack);
+							System.out.println("note key " + musicPatchNode.currentNotePitch);
+							System.out.println("pan val " + musicPatchNode.currentPanValue);
+							System.out.println("volume level " + musicPatchNode.maxVolumeLevel);
+							System.out.println("loop mode " + musicPatchNode.loopVariable);
+							System.out.println("freq corr " + musicPatchNode.notePitchAdjustment);
+							System.out.println("decay " + musicPatchNode.musicPatchInfo.volumeEnvelopeDecay);
+							System.out.println("release " + musicPatchNode.musicPatchInfo.volumeEnvelopeSustain);
+							System.out.println("lfo delay " + musicPatchNode.musicPatchInfo.vibratoLFODelay);
+							System.out.println("lfo freq " + musicPatchNode.musicPatchInfo.vibratoLFOFrequency);
+							System.out.println("lfo pitch " + musicPatchNode.musicPatchInfo.vibratoLFOPitch);
+							System.out.println("sustain " + musicPatchNode.musicPatchInfo.volumeEnvelopeRelease);
+							System.out.println("field2394 " + musicPatchNode.musicPatchInfo.field2394);
+							System.out.println("field2398 " + Arrays.toString(musicPatchNode.musicPatchInfo.field2398));
+							System.out.println("field2402 " + Arrays.toString(musicPatchNode.musicPatchInfo.field2402));
+							System.out.println("field2448 " + musicPatchNode.field2448);
+							System.out.println("field2449 " + musicPatchNode.field2449);
+							System.out.println("field2450 " + musicPatchNode.field2450);
+							System.out.println("field2453 " + musicPatchNode.field2453);
+							System.out.println("field2454 " + musicPatchNode.field2454);
+							System.out.println("field2455 " + musicPatchNode.field2455);
+							System.out.println("field2456 " + musicPatchNode.field2456);
+							System.out.println("field2457 " + musicPatchNode.field2457);
+							System.out.println("field2458 " + musicPatchNode.field2458);
+							System.out.println("field2461 " + musicPatchNode.field2461);
+							System.out.println("field2462 " + musicPatchNode.field2462);
+							System.out.println();
 						}
+						 **/
 
 						if (midiPcmStream.midiFile.isDone()) {
 							break;
@@ -3123,10 +3164,6 @@ public class GUI {
 
 			try {
 
-				//File output = new File("./0.dat/");
-				//FileOutputStream fileOutputStream = new FileOutputStream(output);
-				//DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
-
 				Index soundEffectIndex = cacheLibrary.getIndex(4);
 				Index soundBankIndex = cacheLibrary.getIndex(14);
 				Index musicPatchIndex = cacheLibrary.getIndex(15);
@@ -3137,16 +3174,9 @@ public class GUI {
 
 				midiPcmStream = new MidiPcmStream();
 
-				//MidiTrack midiTrack = new MidiTrack();
-				//midiTrack.midi = Files.readAllBytes(Paths.get(midiFile.toURI()));
-				//sequencer.setSequence(MidiSystem.getSequence(midiFile));
-				//sequencer.start();
-
 				midiPcmStream.init(9, 128);
-				//midiPcmStream.setMusicTrack(midiTrack, loopMode);
 				midiPcmStream.setPcmStreamVolume(volume);
-				//midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-				midiPcmStream.loadTestSoundBankCompletely();
+				midiPcmStream.loadMusicPatches(musicPatchIndex, soundBankCache);
 
 				customReceiver = new CustomReceiver(midiPcmStream);
 
@@ -3154,12 +3184,8 @@ public class GUI {
 
 				for (MidiDevice.Info info : infos) {
 					MidiDevice midiDevice = MidiSystem.getMidiDevice(info);
-					if (!midiDevice.isOpen()) {
+					if (midiDevice != null) {
 						midiDevice.open();
-					}
-
-					else {
-						midiDevice.close();
 					}
 
 					if (midiDevice.getDeviceInfo().getName().contains("Bus")) {
@@ -3186,21 +3212,9 @@ public class GUI {
 
 				Thread runThread = new Thread(() -> {
 
-					while (soundPlayer.stream != null) {
-
-						soundPlayer.samples = new int[512];
-						soundPlayer.capacity = 1024;
-						soundPlayer.capacity2 = 1024;
-
-						if (customReceiver.midiData != null) {
-							soundPlayer.fill(soundPlayer.samples, 256);
-							soundPlayer.write();
-						}
-
-						else {
-							soundPlayer.fill(soundPlayer.samples, 256);
-							soundPlayer.write();
-						}
+					while (true) {
+						soundPlayer.fill(soundPlayer.samples, 256);
+						soundPlayer.write();
 					}
 				});
 
@@ -3325,7 +3339,7 @@ public class GUI {
 
 			String volumeInput = volumeTextField.getText();
 			volume = Integer.parseInt(volumeInput);
-			volumeInfo.setText("Sound Bank Volume is: " + volume + " (" + (volume / 256.00) * 100.00 + "%)");
+			volumeInfo.setText("Sound Bank Volume is: " + volume + " (" + (volume / 255.00) * 100.00 + "%)");
 
 			if (midiPcmStream != null) {
 				midiPcmStream.setPcmStreamVolume(volume);
@@ -3429,8 +3443,9 @@ public class GUI {
 						}
 					} else {
 
-						int index = midiSeqFile.getName().lastIndexOf(" - ");
-						String name = midiSeqFile.getName().substring(index).replace(".mid", "").replace(" - ", "").trim();
+						//int index = midiSeqFile.getName().lastIndexOf(" - ");
+						String name = midiSeqFile.getName();
+						//String name = midiSeqFile.getName().substring(index).replace(".mid", "").replace(" - ", "").trim();
 
 						File outFile = new File(midiAudioDirectory + "/" + name + ".wav/");
 						FileOutputStream fos;
@@ -3474,57 +3489,56 @@ public class GUI {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			Index musicIndex = cacheLibrary.getIndex(6);
-
-			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
-
-			try {
-
-				midiPcmStream = new MidiPcmStream();
-				Path path = Paths.get(midiFile.toURI());
-				PcmPlayer.pcmPlayer_stereo = true;
-
-				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
-
-				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-				MidiTrack.midi = Files.readAllBytes(path);
-				MidiTrack.loadMidiTrackInfo();
-
-				midiPcmStream.init(9, 128);
-				midiPcmStream.setMusicTrack(midiTrack, loopMode);
-				midiPcmStream.setPcmStreamVolume(volume);
-				//midiPcmStream.loadCustomSoundBank(midiTrack);
+			Thread songThread = new Thread(() -> {
 
 				try {
-					//midiPcmStream.loadCreateSoundFontBanks(MidiSystem.getSoundbank(soundsetFile));
-					midiPcmStream.loadSoundFontBank(midiTrack, MidiSystem.getSoundbank(soundFontFile));
-				} catch (InvalidMidiDataException invalidMidiDataException) {
-					invalidMidiDataException.printStackTrace();
-				}
 
-				SoundPlayer soundPlayer = new SoundPlayer();
-				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[512];
-				soundPlayer.capacity = 16384;
-				soundPlayer.init();
-				soundPlayer.open(soundPlayer.capacity);
+					SoundPlayer soundPlayer = initMidiStream(midiFile);
 
-				Thread songThread = new Thread(() -> {
 					while (midiPcmStream.active) {
-						soundPlayer.fill(soundPlayer.samples, 256);
-						soundPlayer.writeCustom(); //write
+						playSound(soundPlayer);
 
-						if (midiPcmStream.midiFile.isDone()) {
-							break;
+						if (shuffleMode && midiPcmStream.midiFile.isDone()) {
+							soundPlayer = initMidiStream(midiFiles[(int) (Math.random() * midiFiles.length)]);
 						}
 					}
-				});
+				} catch (IOException | InvalidMidiDataException exception) {
+					exception.printStackTrace();
+				}
+			});
+			songThread.start();
+		}
 
-				songThread.start();
+		private SoundPlayer initMidiStream(File midi) throws IOException, InvalidMidiDataException {
 
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
-			}
+			songSliderInfo.setText("Song loaded: " + midi.getName());
+
+			midiPcmStream = new MidiPcmStream();
+			Path path = Paths.get(midi.toURI());
+			PcmPlayer.pcmPlayer_stereo = true;
+
+			MidiTrack midiTrack = new MidiTrack();
+			MidiTrack.midi = Files.readAllBytes(path);
+			MidiTrack.loadMidiTrackInfo();
+
+			midiPcmStream.init(9, 128);
+			midiPcmStream.setMusicTrack(midiTrack, loopMode);
+			midiPcmStream.setPcmStreamVolume(volume);
+			midiPcmStream.loadSoundFontBank(midiTrack, MidiSystem.getSoundbank(soundFontFile));
+
+			SoundPlayer soundPlayer = new SoundPlayer();
+			soundPlayer.setStream(midiPcmStream);
+			soundPlayer.samples = new int[512];
+			soundPlayer.capacity = 16384;
+			soundPlayer.init();
+			soundPlayer.open(soundPlayer.capacity);
+
+			return soundPlayer;
+		}
+
+		private void playSound(SoundPlayer soundPlayer) {
+			soundPlayer.fill(soundPlayer.samples, 256);
+			soundPlayer.write();
 		}
 	}
 
@@ -3578,7 +3592,7 @@ public class GUI {
 									bufferedWriter.write('\n');
 									bufferedWriter.write(PatchBanks.SAMPLE_NAME + getSampleOffsetID(musicPatch, index));
 
-									int rootKey = ((musicPatch.pitchOffset[index]));// / 256) + 128);
+									int rootKey = musicPatch.pitchOffset[index];
 
 									/**
 									 if (rootKey > 0) {
@@ -3605,7 +3619,7 @@ public class GUI {
 									bufferedWriter.newLine();
 									bufferedWriter.write(PatchBanks.PARAMETER_1 + musicPatch.musicPatchNode2[index].volumeEnvelopeDecay);
 									bufferedWriter.newLine();
-									bufferedWriter.write(PatchBanks.PARAMETER_2 + musicPatch.musicPatchNode2[index].volumeEnvelopeRelease);
+									bufferedWriter.write(PatchBanks.PARAMETER_2 + musicPatch.musicPatchNode2[index].volumeEnvelopeSustain);
 									bufferedWriter.newLine();
 									bufferedWriter.write(PatchBanks.PARAMETER_3 + musicPatch.musicPatchNode2[index].vibratoLFODelay);
 									bufferedWriter.newLine();
@@ -3613,7 +3627,7 @@ public class GUI {
 									bufferedWriter.newLine();
 									bufferedWriter.write(PatchBanks.PARAMETER_5 + musicPatch.musicPatchNode2[index].vibratoLFOPitch);
 									bufferedWriter.newLine();
-									bufferedWriter.write(PatchBanks.PARAMETER_6 + musicPatch.musicPatchNode2[index].volumeEnvelopeSustain);
+									bufferedWriter.write(PatchBanks.PARAMETER_6 + musicPatch.musicPatchNode2[index].volumeEnvelopeRelease);
 									bufferedWriter.newLine();
 									bufferedWriter.write(PatchBanks.PARAMETER_7 + musicPatch.musicPatchNode2[index].field2394);
 									bufferedWriter.newLine();
@@ -3634,12 +3648,8 @@ public class GUI {
 				}
 			//}
 
-			MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
-			try {
-				writeCustom();
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
-			}
+			//MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
+			//writeCustom(musicPatchIndex);
 
 			/**
 			for (int index = 0; index < 4000; index++) {
@@ -3665,16 +3675,15 @@ public class GUI {
 			//makeSoundFont.saveSoundBank();
 		}
 
-		private void writeCustom() throws IOException {
+		private void writeCustom(Index musicPatchIndex) throws IOException {
 
 			SF2Soundbank sf2Soundbank = new SF2Soundbank(soundFontFile);
 
 			for (int patchID = 0; patchID < 4000; patchID++) {
 				//sf2Soundbank = new SF2Soundbank(new File("./SoundFonts/" + patchID + ".sf2/"));
 				//if (new File("./SoundFonts/" + patchID + ".sf2/").exists()) {
-					Path path = Paths.get(MusicPatch.localCustomSoundBank + "/" + PatchBanks.SOUNDBANK_VERSION + "/Patches/" + patchID + ".dat/");
-					if (path.toFile().exists()) {
-						MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(path));
+					if (musicPatchIndex.getArchive(patchID) != null) {
+						MusicPatch musicPatch = new MusicPatch(musicPatchIndex.getArchive(patchID).getFile(0).getData());
 						musicPatch.writeTextPatch(sf2Soundbank, patchID);
 					}
 				}
@@ -3792,7 +3801,7 @@ public class GUI {
 
 				SoundPlayer soundPlayer = new SoundPlayer();
 				soundPlayer.setStream(midiPcmStream);
-				soundPlayer.samples = new int[512];
+				soundPlayer.samples = new int[1024];
 				soundPlayer.capacity = 16384;
 				soundPlayer.init();
 				soundPlayer.open(soundPlayer.capacity);
@@ -3881,8 +3890,6 @@ public class GUI {
 
 				if (midiFiles != null) {
 
-					MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
-
 					for (File midiSeqFile : midiFiles) {
 						writeMidiAudio(midiSeqFile);
 					}
@@ -3913,13 +3920,10 @@ public class GUI {
 					MidiTrack.midi = Files.readAllBytes(path);
 					MidiTrack.loadMidiTrackInfo();
 
-					Soundbank soundBank = MidiSystem.getSoundbank(soundFontFile);
-
 					midiPcmStream.init(9, 128);
 					midiPcmStream.setMusicTrack(midiTrack, loopMode);
 					midiPcmStream.setPcmStreamVolume(volume);
-					//midiPcmStream.loadMusicTrack(midiTrack, musicPatchIndex, soundBankCache, 0);
-					midiPcmStream.loadSoundFontBank(midiTrack, MidiSystem.getSoundbank(soundFontFile));
+					midiPcmStream.loadAllSoundFontBankPatches(MidiSystem.getSoundbank(soundFontFile));
 
 					SoundPlayer soundPlayer = new SoundPlayer();
 					soundPlayer.setStream(midiPcmStream);
@@ -4000,10 +4004,14 @@ public class GUI {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				File patchFile = new File("./Patch.dat/");
-				FileOutputStream fileOutputStream = new FileOutputStream(patchFile);
-				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
-				dataOutputStream.write(0);
+
+				Index musicPatchIndex = cacheLibrary.getIndex(15);
+				int patchID = 0;
+
+				MusicPatch musicPatch = new MusicPatch(Files.readAllBytes(Paths.get("./Raw Data/Test.dat/")));
+
+				//System.out.println("Unsigned = " + Arrays.toString(Buffer.writeUnsignedVarInt(4)));
+				//System.out.println("Signed = " + Arrays.toString(Buffer.writeSignedVarInt(4)));
 
 			} catch (IOException error) {
 				error.printStackTrace();
@@ -4053,14 +4061,14 @@ public class GUI {
 				makeSoundFont.makeSoundFont(new MusicPatch(musicPatchIndex.getArchive((int) tableIndex.key).getFile(0).getData()), soundBankCache, (int) tableIndex.key);
 			}
 
+			makeSoundFont.saveSoundBank(songID);
+
 			try {
-				DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File("./SoundFonts/" + songID + ".mid")));
+				DataOutputStream dos = new DataOutputStream(new FileOutputStream("./SoundFonts/" + songID + ".mid"));
 				dos.write(midiTrack.getMidi());
 			} catch (IOException ioException) {
 				ioException.printStackTrace();
 			}
-
-			makeSoundFont.saveSoundBank(songID);
 		}
 	}
 
@@ -4081,12 +4089,12 @@ public class GUI {
 
 	private class CacheSoundBankTester implements ActionListener {
 
+		CustomReceiver customReceiver;
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
 				try {
-
-					CustomReceiver customReceiver;
 
 					Index soundEffectIndex = cacheLibrary.getIndex(4);
 					Index soundBankIndex = cacheLibrary.getIndex(14);
@@ -4140,7 +4148,7 @@ public class GUI {
 
 					Thread runThread = new Thread(() -> {
 
-						while (soundPlayer.stream != null) {
+						while (soundPlayer != null) {
 
 							soundPlayer.samples = new int[512];
 							soundPlayer.capacity = 1024;
@@ -4163,4 +4171,179 @@ public class GUI {
 				}
 			}
 		}
+
+	private class RandomMidiGenerator implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				RSMidiGenerator rsMidiGenerator = new RSMidiGenerator();
+			} catch (InvalidMidiDataException | IOException invalidMidiDataException) {
+				invalidMidiDataException.printStackTrace();
+			}
+		}
 	}
+
+	private class TempoConverter implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			try {
+
+				selectMidiFolder(frame);
+
+			} catch (IOException | InvalidMidiDataException ioException) {
+				ioException.printStackTrace();
+			}
+		}
+
+		private void adjustTempos(File[] midis) throws InvalidMidiDataException, IOException {
+
+			for (File file : midis) {
+				if (file.getName().contains("mid")) {
+					Sequence midiSeq = MidiSystem.getSequence(file);
+					for (Track track : midiSeq.getTracks()) {
+						for (int event = 0; event < track.size(); event++) {
+							MidiEvent midiEvent = track.get(event);
+							MidiMessage midiMessage = midiEvent.getMessage();
+							if (midiMessage instanceof MetaMessage) {
+								MetaMessage metaMessage = (MetaMessage) midiMessage;
+								if (metaMessage.getType() == 81) {
+									track.remove(midiEvent);
+								}
+							}
+						}
+						track.add(createSetTempoEvent(0, 100));
+					}
+
+					MidiSystem.write(midiSeq, 1, file);
+					System.out.println(file.getName());
+				}
+			}
+		}
+
+		public MidiEvent createSetTempoEvent(long tick, long tempo) {
+
+			long tempoShift = 60000000 / tempo;
+
+			MetaMessage metaMessage = new MetaMessage();
+
+			byte[] array = new byte[] {0, 0, 0};
+
+			for (int index = 0; index < 3; index++) {
+				int shift = (3 - 1 - index) * 8;
+				array[index] = (byte) (tempoShift >> shift);
+			}
+
+			try {
+				metaMessage.setMessage(81, array, 3);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			return new MidiEvent(metaMessage, tick);
+		}
+
+		private void selectMidiFolder(JFrame frame) throws IOException, InvalidMidiDataException {
+			JFileChooser chooseMidiFolder = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
+			chooseMidiFolder.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooseMidiFolder.setSize(400, 200);
+			chooseMidiFolder.setDialogTitle("Please choose a folder containing MIDI files.");
+			chooseMidiFolder.setVisible(true);
+			frame.add(chooseMidiFolder);
+			int returnValue = chooseMidiFolder.showOpenDialog(null);
+
+			if (returnValue == JFileChooser.APPROVE_OPTION) {
+				File path = new File(chooseMidiFolder.getSelectedFile().getPath());
+				adjustTempos(path.listFiles());
+			}
+		}
+	}
+
+public class TestStreamPlayer implements ActionListener {
+
+	byte[] stream;
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		Soundbank soundbank;
+		try {
+			soundbank = MidiSystem.getSoundbank(soundFontFile);
+			sequence = MidiSystem.getSequence(midiFile);
+			System.out.println("Track Count = " + sequence.getTracks().length);
+			Midi2WavRender.render(soundbank, sequence, stream);
+
+			if (stream != null) {
+				try {
+					playStream();
+				} catch (LineUnavailableException lineUnavailableException) {
+					lineUnavailableException.printStackTrace();
+				}
+			}
+
+		} catch (InvalidMidiDataException | IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	private void playStream() throws LineUnavailableException {
+		AudioFormat audioFormat = new AudioFormat(44100, 16, 2, true, false);
+		Clip clip = AudioSystem.getClip();
+		FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+		gainControl.setValue(gainControl.getValue() - 10.0f);
+		clip.open(audioFormat, stream, 0, stream.length);
+		clip.loop(Clip.LOOP_CONTINUOUSLY);
+		clip.start();
+		System.out.println("Playing...");
+	}
+}
+
+	private class SoundBankEncoder implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			File file = new File("./samples/Sound.dat/");
+			FileOutputStream fileOutputStream;
+
+			try {
+
+				fileOutputStream = new FileOutputStream(file);
+				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./samples/Sample.au/"));
+				Index soundEffectIndex = cacheLibrary.getIndex(4);
+				Index sampleIndex = cacheLibrary.getIndex(14);
+				SoundEffect soundEffect = SoundEffect.readSoundEffect(soundEffectIndex, 0, 0);
+				//MusicSample musicSample = new MusicSample(audioInputStream, dataOutputStream, 0, sampleIndex, soundEffect);
+
+				sampleIndex.getArchive(1).removeFile(0);
+				sampleIndex.addArchive(1).addFile(Files.readAllBytes(Paths.get("./samples/Sample.flac/")));
+				sampleIndex.getArchive(1).getFile(0).setName(0);
+				sampleIndex.update();
+
+			} catch (IOException | UnsupportedAudioFileException fileNotFoundException) {
+				fileNotFoundException.printStackTrace();
+			}
+		}
+	}
+
+	private class CacheCopy implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				CacheLibrary gameCache = new CacheLibrary(System.getProperty("user.home") + "/jagexcache/oldschool/LIVE/");
+				Archive[] archives = gameCache.getIndex(6).copyArchives();
+
+				Index musicIndex = cacheLibrary.getIndex(6);
+				musicIndex.addArchives(archives, true);
+
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+
+		}
+	}
+}
