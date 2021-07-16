@@ -3,14 +3,7 @@ package main;
 import main.utils.ByteBufferUtils;
 import main.utils.Node;
 import org.displee.cache.index.Index;
-import org.gagravarr.ogg.OggPacketReader;
-import org.gagravarr.vorbis.VorbisFile;
 
-import javax.sound.sampled.AudioInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -55,11 +48,6 @@ public class MusicSample extends Node {
       this.read(var1);
    }
 
-   MusicSample(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, int loopStart, Index sampleIndex, SoundEffect soundEffect) {
-      firstFileExists(sampleIndex);
-      this.encode(audioInputStream, dataOutputStream, soundEffect, loopStart);
-   }
-
    void read(byte[] var1) {
       ByteBuffer buffer = ByteBuffer.wrap(var1);
       this.sampleRate = buffer.getInt();
@@ -88,42 +76,6 @@ public class MusicSample extends Node {
          this.packets[packet] = packetData;
          System.out.println("Packet " + packet + " - " + size);
          System.out.println(Arrays.toString(packetData));
-      }
-   }
-
-   private void encode(AudioInputStream audioInputStream, DataOutputStream dataOutputStream, SoundEffect soundEffect, int loopStart) {
-      try {
-         this.sampleRate = (int) audioInputStream.getFormat().getSampleRate();
-         this.sampleCount = audioInputStream.available();
-         this.start = loopStart;
-         this.end = this.sampleCount;
-
-         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-         VorbisFile vorbisFile = new VorbisFile(new File("./samples/Sample.ogg/"));
-         dataOutputStream.writeInt(vorbisFile.getInfo().getSampleRate());
-         dataOutputStream.writeInt(sampleCount);
-         dataOutputStream.writeInt(0);
-         dataOutputStream.writeInt(0);
-
-         int packetCount;
-         OggPacketReader oggPacketReader = vorbisFile.getOggFile().getPacketReader();
-         for (packetCount = 0; packetCount < 10000; packetCount++) {
-            byte[] data = oggPacketReader.getNextPacket().getData();
-            if (data != null) {
-               byteArrayOutputStream.write(data.length);
-               byteArrayOutputStream.write(data);
-            }
-            else {
-               break;
-            }
-         }
-
-         dataOutputStream.writeInt(packetCount);
-         dataOutputStream.write(byteArrayOutputStream.toByteArray());
-
-      } catch (IOException e) {
-         e.printStackTrace();
       }
    }
 
