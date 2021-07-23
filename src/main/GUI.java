@@ -4,7 +4,6 @@ import com.sun.media.sound.SF2Soundbank;
 import main.utils.ByteArrayNode;
 import org.displee.CacheLibrary;
 import org.displee.cache.index.Index;
-import org.displee.cache.index.archive.Archive;
 
 import javax.sound.midi.*;
 import javax.sound.sampled.*;
@@ -2007,9 +2006,8 @@ public class GUI {
 
 					int name = cacheLibrary.getIndex(6).getArchive(songArchiveID).getName();
 
-					cacheLibrary.getIndex(6).getArchive(songArchiveID).removeFile(0);
+					cacheLibrary.getIndex(6).removeArchive(songArchiveID);
 					cacheLibrary.getIndex(6).addArchive(songArchiveID).addFile(encodedData);
-					cacheLibrary.getIndex(6).getArchive(songArchiveID).getFile(0).setName(name);
 					cacheLibrary.getIndex(6).update();
 
 					System.out.println("MIDI file successfully encoded and packed to ID " + songArchiveID + "!");
@@ -2770,6 +2768,11 @@ public class GUI {
 
 		private SoundPlayer initMidiStream(File midi) throws IOException {
 
+			Index index4 = cacheLibrary.getIndex(4);
+			Index index14 = cacheLibrary.getIndex(14);
+			Index index15 = cacheLibrary.getIndex(15);
+			SoundBankCache soundBankCache = new SoundBankCache(index4, index14);
+
 			songSliderInfo.setText("Song loaded: " + midi.getName());
 
 			midiPcmStream = new MidiPcmStream();
@@ -2783,7 +2786,8 @@ public class GUI {
 			midiPcmStream.init(9, 128);
 			midiPcmStream.setMusicTrack(midiTrack, loopMode);
 			midiPcmStream.setPcmStreamVolume(volume);
-			midiPcmStream.loadTestSoundBankCompletely();
+			//midiPcmStream.loadTestSoundBankCompletely();
+			midiPcmStream.loadMusicPatches(index15, soundBankCache);
 
 			SoundPlayer soundPlayer = new SoundPlayer();
 			soundPlayer.setStream(midiPcmStream);
@@ -3011,13 +3015,27 @@ public class GUI {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
+			Index miscIndex = cacheLibrary.getIndex(3);
 			Index soundEffectIndex = cacheLibrary.getIndex(4);
 			Index musicTrackIndex = cacheLibrary.getIndex(6);
+			Index modelsIndex = cacheLibrary.getIndex(7);
+			Index texturesIndex = cacheLibrary.getIndex(9);
 			Index fanfareTrackIndex = cacheLibrary.getIndex(11);
 			Index soundBankIndex = cacheLibrary.getIndex(14);
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
+			for (int i = 0; i < miscIndex.getArchives().length; i++) {
+				try {
+					if (miscIndex.getArchive(i) != null) {
+						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 3/" + i + ".dat/"));
+						fileOutputStream.write(miscIndex.getArchive(i).getFile(0).getData());
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
 
+			/**
 			for (int i = 0; i < soundEffectIndex.getArchives().length; i++) {
 				try {
 					if (soundEffectIndex.getArchive(i) != null) {
@@ -3034,6 +3052,16 @@ public class GUI {
 					if (musicTrackIndex.getArchive(i) != null) {
 						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 6/" + i + ".xm/"));
 						fileOutputStream.write(musicTrackIndex.getArchive(i).getFile(0).getData());
+					}
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+			for (int i = 0; i < modelsIndex.getArchives().length; i++) {
+				try {
+					if (modelsIndex.getArchive(i) != null) {
+						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 7/" + i + ".dat/"));
+						fileOutputStream.write(modelsIndex.getArchive(i).getFile(0).getData());
 					}
 				} catch (IOException ex) {
 					ex.printStackTrace();
@@ -3075,6 +3103,8 @@ public class GUI {
 					ex.printStackTrace();
 				}
 			}
+
+			 **/
 		}
 	}
 
@@ -3087,6 +3117,7 @@ public class GUI {
 			Index soundBankIndex = cacheLibrary.getIndex(14);
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
+			/**
 			for (int i = 0; i < 100000; i++) {
 				Path path = Paths.get("./Raw Data/Index 4/" + i + ".dat/");
 				try {
@@ -3108,7 +3139,9 @@ public class GUI {
 					ex.printStackTrace();
 				}
 			}
+			 **/
 
+			soundBankIndex.reset();
 			for (int i = 0; i < 100000; i++) {
 				Path path = Paths.get("./Raw Data/Index 14/" + i + ".dat/");
 				try {
@@ -3131,6 +3164,7 @@ public class GUI {
 				}
 			}
 
+			musicPatchIndex.reset();
 			for (int i = 0; i < 100000; i++) {
 				Path path = Paths.get("./Raw Data/Index 15/" + i + ".dat/");
 				try {
@@ -3649,7 +3683,11 @@ public class GUI {
 			//}
 
 			//MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
-			//writeCustom(musicPatchIndex);
+			try {
+				writeCustom(musicPatchIndex);
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
 
 			/**
 			for (int index = 0; index < 4000; index++) {
@@ -4305,26 +4343,26 @@ public class TestStreamPlayer implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			File file = new File("./samples/Sound.dat/");
+			//File file = new File("./samples/Sound.dat/");
 			FileOutputStream fileOutputStream;
 
 			try {
 
-				fileOutputStream = new FileOutputStream(file);
-				DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
-				AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./samples/Sample.au/"));
+				//fileOutputStream = new FileOutputStream(file);
+				//DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+				//AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./samples/Sample.au/"));
 				Index soundEffectIndex = cacheLibrary.getIndex(4);
 				Index sampleIndex = cacheLibrary.getIndex(14);
 				SoundEffect soundEffect = SoundEffect.readSoundEffect(soundEffectIndex, 0, 0);
-				//MusicSample musicSample = new MusicSample(audioInputStream, dataOutputStream, 0, sampleIndex, soundEffect);
+				//MusicSample musicSample = new MusicSample(null);
 
 				sampleIndex.getArchive(1).removeFile(0);
-				sampleIndex.addArchive(1).addFile(Files.readAllBytes(Paths.get("./samples/Sample.flac/")));
+				sampleIndex.addArchive(1).addFile(Files.readAllBytes(Paths.get("./samples/Test.ogg/")));
 				sampleIndex.getArchive(1).getFile(0).setName(0);
 				sampleIndex.update();
 
-			} catch (IOException | UnsupportedAudioFileException fileNotFoundException) {
-				fileNotFoundException.printStackTrace();
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
 			}
 		}
 	}
@@ -4335,10 +4373,22 @@ public class TestStreamPlayer implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			try {
 				CacheLibrary gameCache = new CacheLibrary(System.getProperty("user.home") + "/jagexcache/oldschool/LIVE/");
-				Archive[] archives = gameCache.getIndex(6).copyArchives();
 
+				Index configIndex = cacheLibrary.getIndex(2);
 				Index musicIndex = cacheLibrary.getIndex(6);
-				musicIndex.addArchives(archives, true);
+				musicIndex.reset();
+
+				for (int index = 0; index < gameCache.getIndex(6).getArchives().length; index++) {
+					musicIndex.addArchive(index).addFile(gameCache.getIndex(6).getArchive(index).getFile(0).getData());
+					musicIndex.update();
+				}
+
+				for (int archive = 0; archive < gameCache.getIndex(2).getArchives().length; archive++) {
+					if (configIndex.getArchive(archive) != null) {
+						configIndex.addArchive(archive).addFile(gameCache.getIndex(2).getArchive(archive).getFile(0));
+						configIndex.update();
+					}
+				}
 
 			} catch (IOException ioException) {
 				ioException.printStackTrace();
