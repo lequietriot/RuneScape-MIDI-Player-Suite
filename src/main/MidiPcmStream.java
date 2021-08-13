@@ -108,11 +108,15 @@ public class MidiPcmStream extends PcmStream {
             MusicPatch musicPatch = (MusicPatch)this.musicPatches.get(patchID);
             if (musicPatch == null) {
                 musicPatch = MusicPatch.getMusicPatch(idx15, patchID, 0);
-                this.musicPatches.put(musicPatch, patchID);
+                if (musicPatch != null) {
+                    this.musicPatches.put(musicPatch, patchID);
+                }
             }
 
-            if (!musicPatch.loadPatchSamples(soundBank, tableIndex.byteArray, sampleRateArray)) {
-                patchLoading = false;
+            if (musicPatch != null) {
+                if (!musicPatch.loadPatchSamples(soundBank, tableIndex.byteArray, sampleRateArray)) {
+                    patchLoading = false;
+                }
             }
         }
 
@@ -1112,7 +1116,7 @@ public class MidiPcmStream extends PcmStream {
         }
     }
 
-    public void loadTestSoundBankCompletely() {
+    public void loadTestSoundBankLeftChannel() {
 
         for (int patchID = 0; patchID < 4000; patchID++) {
 
@@ -1120,7 +1124,63 @@ public class MidiPcmStream extends PcmStream {
 
             if (musicPatch == null) {
                 musicPatch = PatchBanks.makeCustomMusicPatch(patchID);
-                Path patchPath = Paths.get(PatchBanks.CUSTOM_SOUND_PATH + "/Info/" + patchID + ".txt/");
+                Path patchPath = Paths.get(PatchBanks.CUSTOM_SOUND_PATH + "/Info/" + patchID + "_L.txt/");
+
+                if (!patchPath.toFile().exists()) {
+                    continue;
+                }
+
+                try {
+
+                    List<String> list = Files.readAllLines(patchPath);
+
+                    for (int index = 0; index < list.size(); index++) {
+
+                        if (list.get(index).contains(PatchBanks.PATCH_NAME)) {
+                            System.out.println("Instrument Loading: " + list.get(index).replace(PatchBanks.PATCH_NAME, ""));
+                        }
+
+                        if (list.get(index).contains(PatchBanks.SAMPLE_NAME)) {
+
+                            String[] patchInfoList = new String[9];
+
+                            for (int infoIndex = 0; infoIndex < 9; infoIndex++) {
+                                patchInfoList[infoIndex] = list.get(index);
+                                index++;
+                            }
+
+                            musicPatch.loadCustomPatch(patchInfoList);
+
+                            if (list.get(index).contains(PatchBanks.PARAMETER_1)) {
+
+                                String[] patchParameterList = new String[9];
+
+                                for (int parameter = 0; parameter < 9; parameter++) {
+                                    patchParameterList[parameter] = list.get(index);
+                                    index++;
+                                }
+
+                                musicPatch.setParameters(patchParameterList);
+                            }
+                        }
+                    }
+                } catch (IOException | UnsupportedAudioFileException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+            this.musicPatches.put(musicPatch, patchID);
+        }
+    }
+
+    public void loadTestSoundBankRightChannel() {
+
+        for (int patchID = 0; patchID < 4000; patchID++) {
+
+            MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+
+            if (musicPatch == null) {
+                musicPatch = PatchBanks.makeCustomMusicPatch(patchID);
+                Path patchPath = Paths.get(PatchBanks.CUSTOM_SOUND_PATH + "/Info/" + patchID + "_R.txt/");
 
                 if (!patchPath.toFile().exists()) {
                     continue;
@@ -1183,6 +1243,34 @@ public class MidiPcmStream extends PcmStream {
                 if (musicPatch.loadPatchSamples(soundBankCache, null, null)) {
                     System.out.println("Loaded Patch " + patchID);
                 }
+            }
+        }
+    }
+
+    public void loadStereoSoundbank(Soundbank soundbank, Index musicPatchIndex, MidiTrack midiTrack, boolean leftChannel) throws IOException, UnsupportedAudioFileException, InvalidMidiDataException {
+        midiTrack.clear();
+        midiTrack.loadMidiTrackInfo();
+        for (ByteArrayNode tableIndex = (ByteArrayNode) midiTrack.table.first(); tableIndex != null; tableIndex = (ByteArrayNode) midiTrack.table.next()) {
+            int patchID = (int) tableIndex.key;
+            System.out.println(patchID);
+            MusicPatch musicPatch = (MusicPatch) this.musicPatches.get(patchID);
+            if (musicPatch == null) {
+                if (musicPatchIndex.getArchive(patchID) != null) {
+                    musicPatch = MusicPatch.getMusicPatch(musicPatchIndex, patchID, 0);
+                    this.musicPatches.put(musicPatch, patchID);
+                }
+            }
+
+            if (musicPatch != null) {
+                SF2Soundbank sf2Soundbank = (SF2Soundbank) soundbank;
+                musicPatch.loadSoundBankSoundFont(patchID, sf2Soundbank, leftChannel);
+                /**
+                 File soundBankFile = new File(PatchBanks.CUSTOM_SOUND_PATH + "/" + patchID + ".sf2/");
+                 if (soundBankFile.exists()) {
+                 SF2Soundbank sf2Soundbank = (SF2Soundbank) MidiSystem.getSoundbank(soundBankFile);
+                 musicPatch.loadSoundBankSoundFont(patchID, sf2Soundbank, leftChannel);
+                 }
+                 **/
             }
         }
     }

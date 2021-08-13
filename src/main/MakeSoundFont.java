@@ -61,8 +61,8 @@ public class MakeSoundFont {
             pitchCorrection = (short) (pitchCorrection - 256);
         }
 
-        sf2LayerRegion.putShort(SF2Region.GENERATOR_OVERRIDINGROOTKEY, pitchOffset);
-        sf2LayerRegion.putShort(SF2Region.GENERATOR_FINETUNE, pitchCorrection);
+        //sf2LayerRegion.putShort(SF2Region.GENERATOR_OVERRIDINGROOTKEY, pitchOffset);
+        //sf2LayerRegion.putShort(SF2Region.GENERATOR_FINETUNE, pitchCorrection);
         sf2LayerRegion.putInteger(SF2Region.GENERATOR_SAMPLEMODES, musicPatch.loopMode[note] * -1);
         sf2LayerRegion.putInteger(SF2Region.GENERATOR_PAN, (short) ((musicPatch.panOffset[note] - 64)));
         sf2LayerRegion.putInteger(SF2Region.GENERATOR_INITIALATTENUATION, (short) ((musicPatch.volumeOffset[note] + musicPatch.baseVelocity)));
@@ -391,8 +391,8 @@ public class MakeSoundFont {
 
                         for (int index = noteIndex; index < 128; index++) {
                             if (musicPatch.sampleOffset[index] == var5) {
-                                noteRange[0] = (byte) nextNoteRange;
-                                noteRange[1] = (byte) nextNoteRange;
+                                noteRange[0] = (byte) index;
+                                noteRange[1] = (byte) index;
                                 if (nextNoteRange < 128) {
                                     addSamplesToBank(musicPatch, sf2Sample, archiveID, noteRange, nextNoteRange);
                                 }
@@ -440,8 +440,8 @@ public class MakeSoundFont {
 
                         for (int index = noteIndex; index < 128; index++) {
                             if (musicPatch.sampleOffset[index] == var5) {
-                                noteRange[0] = (byte) nextNoteRange;
-                                noteRange[1] = (byte) nextNoteRange;
+                                noteRange[0] = (byte) index;
+                                noteRange[1] = (byte) index;
                                 if (nextNoteRange < 128) {
                                     addSamplesToBank(musicPatch, sf2Sample, archiveID, noteRange, nextNoteRange);
                                 }
@@ -477,5 +477,17 @@ public class MakeSoundFont {
 
     public void makeSoundFont(MusicPatch musicPatch, SoundBankCache soundBankCache, int archiveID) {
         addSamples(musicPatch, soundBankCache, archiveID);
+    }
+
+    public void splitSoundBank(SF2Soundbank soundFontBank) throws IOException {
+        int patchID = 0;
+        for (SF2Instrument sf2Instrument : soundFontBank.getInstruments()) {
+            patchID = sf2Instrument.getPatch().getProgram() + sf2Instrument.getPatch().getBank();
+            if (soundFontBank.getInstrument(sf2Instrument.getPatch()) != sf2Instrument) {
+                soundFontBank.removeInstrument(sf2Instrument);
+            }
+        }
+        sf2Soundbank.addResource(sf2Instrument);
+        sf2Soundbank.save("./SoundFonts/" + patchID + ".sf2/");
     }
 }

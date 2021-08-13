@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="vorbis-java-core-0.8">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libs/vorbis-java-core-0.8.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

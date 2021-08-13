@@ -47,12 +47,12 @@ public class MidiLoader {
 
             Map<String, Object> info = new HashMap<>();
             info.put("resamplerType", "sinc");
-            info.put("max polyphony", "128");
+            info.put("max polyphony", "256");
             info.put("chorus", "false");
             info.put("reverb", "false");
-            info.put("auto gain control", "true");
-            info.put("large mode", "true");
-            info.put("light reverb", "true");
+            info.put("auto gain control", "false");
+            info.put("large mode", "false");
+            info.put("light reverb", "false");
 
             AudioFormat audioFormat = new AudioFormat(44100, 16, 2, true, false);
             sourceDataLines[track] = AudioSystem.getSourceDataLine(audioFormat);

@@ -18,6 +18,7 @@ Setup instructions (Official SoundBank):
 - Displee (https://github.com/Displee): for the amazing cache library!
 - Vincent (from Rune-Server): for figuring out the MIDI Encoder.
 - The RuneScape Team: for being an inspiration in making this happen.
+- Gagravarr (https://github.com/Gagravarr): for the vorbis-java libraries.
 
 # Features
 - Can dump any MIDI from the RuneScape cache if loaded from the File tab.
@@ -35,7 +36,8 @@ Setup instructions (Official SoundBank):
 - Can dump all raw soundbank-related data.
 - Can pack all raw soundbank-related data.
 Yes, go ahead and experiment with the soundbank dumping and packing, you can mix old with new or vice versa!
+- Can encode ogg vorbis files to the RuneScape Format, supports metadata comment tags for setting info such as Sample Rate, Sample Sizes, Loop Start and End positions.
 
 # To do list (Ideas)
-- Sound Encoding tools (Sound Effects, Sound Bank...)
+- Sound Encoding tools (Sound Effects)
 - Automatic soundfont creating from cache (Being worked on)

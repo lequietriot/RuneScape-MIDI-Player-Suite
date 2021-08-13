@@ -15,7 +15,7 @@ public class PatchBanks {
     public static String PATCH_NAME = "Instrument Name = ";
     public static String SAMPLE_NAME = "Sample = ";
     public static String SAMPLE_ROOT_KEY = "Root Key = ";
-    public static String KEY_LOW_RANGE = "Lower Key Range = ";
+    public static String SAMPLE_KEY_INDEX = "Sample Key = ";
     public static String KEY_HIGH_RANGE = "Upper Key Range = ";
     public static String MASTER_VOLUME = "Patch Volume = ";
     public static String LOOP_START = "Sample Loop Start = ";

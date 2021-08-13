@@ -4,6 +4,7 @@ import com.sun.media.sound.SF2Soundbank;
 import main.utils.ByteArrayNode;
 import org.displee.CacheLibrary;
 import org.displee.cache.index.Index;
+import org.gagravarr.vorbis.VorbisFile;
 
 import javax.sound.midi.*;
 import javax.sound.sampled.*;
@@ -23,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class GUI {
 
@@ -170,6 +172,7 @@ public class GUI {
 			utilityMenu.add("Fix MIDI File (HD Version)").addActionListener(new FixButtonListenerRSHD());
 
 			utilityMenu.add("Convert Data - Sound Bank to SoundFont").addActionListener(new SoundFontCreator());
+			utilityMenu.add("Convert Data - SoundFont Splitter...").addActionListener(new SoundFontSplitter());
 			utilityMenu.add("Convert Data - DLS Export...").addActionListener(new DLSCreator());
 
 			utilityMenu.add("Dump Raw Soundbank").addActionListener(new SoundDumper());
@@ -183,6 +186,7 @@ public class GUI {
 			utilityMenu.add("Batch Convert with custom SoundBank").addActionListener(new CustomBatchConverter());
 			utilityMenu.add("Test SoundBank - Live").addActionListener(new TestSoundBankTester());
 			utilityMenu.add("Cache SoundBank - Live").addActionListener(new CacheSoundBankTester());
+			utilityMenu.add("Batch Rename").addActionListener(new BatchRename());
 
 			playlistMenu = new JMenu();
 			playlistMenu.setText("Playlist");
@@ -1993,7 +1997,7 @@ public class GUI {
 
 	private class MidiEncoder implements ActionListener {
 
-		int songArchiveID = 0;
+		int songArchiveID = 16;
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -2005,9 +2009,11 @@ public class GUI {
 					byte[] encodedData = Files.readAllBytes(Paths.get(encodedMidi.getPath()));
 
 					int name = cacheLibrary.getIndex(6).getArchive(songArchiveID).getName();
+					System.out.println(name);
 
 					cacheLibrary.getIndex(6).removeArchive(songArchiveID);
 					cacheLibrary.getIndex(6).addArchive(songArchiveID).addFile(encodedData);
+					cacheLibrary.getIndex(6).getArchive(songArchiveID).setName(-1);
 					cacheLibrary.getIndex(6).update();
 
 					System.out.println("MIDI file successfully encoded and packed to ID " + songArchiveID + "!");
@@ -2609,53 +2615,6 @@ public class GUI {
 			Index musicIndex = cacheLibrary.getIndex(6);
 			Index patchIndex = cacheLibrary.getIndex(15);
 
-			int bank = 0;
-			int program = 60;
-
-			for (int notePitch = 0; notePitch < 128; notePitch++) {
-
-				SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
-
-				ByteBuffer byteBuffer = ByteBuffer.wrap(musicIndex.getArchive(0).getFile(0).getData());
-				ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-				Sequence midiSeq;
-				try {
-					midiSeq = new Sequence(Sequence.PPQ, 960);
-					ShortMessage programChangeMsg = new ShortMessage();
-					ShortMessage noteOnMessage = new ShortMessage();
-					ShortMessage noteOffMessage = new ShortMessage();
-					ShortMessage bankMSBMessage = new ShortMessage();
-					ShortMessage bankLSBMessage = new ShortMessage();
-
-					programChangeMsg.setMessage(ShortMessage.PROGRAM_CHANGE, 0, program, 0);
-					bankMSBMessage.setMessage(ShortMessage.CONTROL_CHANGE, 0, 0, 0);
-					bankLSBMessage.setMessage(ShortMessage.CONTROL_CHANGE, 0, 32, bank);
-					noteOnMessage.setMessage(ShortMessage.NOTE_ON, 0, notePitch, 127);
-					noteOffMessage.setMessage(ShortMessage.NOTE_OFF, 0, notePitch, 127);
-
-					midiSeq.createTrack().add(new MidiEvent(programChangeMsg, 2));
-					midiSeq.getTracks()[0].add(new MidiEvent(bankLSBMessage, 1));
-					midiSeq.getTracks()[0].add(new MidiEvent(bankMSBMessage, 0));
-					midiSeq.getTracks()[0].add(new MidiEvent(noteOnMessage, 3));
-					midiSeq.getTracks()[0].add(new MidiEvent(noteOffMessage, 9003));
-					midiSeq.getTracks()[0].add(new MidiEvent(programChangeMsg, 20000));
-					MidiSystem.write(midiSeq, 1, byteArrayOutputStream);
-
-				} catch (InvalidMidiDataException | IOException ex) {
-					ex.printStackTrace();
-				}
-
-				MidiTrack midiTrack = MidiTrack.getMidiTrackData(byteBuffer);
-				MidiTrack.midi = byteArrayOutputStream.toByteArray();
-				MidiTrack.loadMidiTrackInfo();
-
-				MidiPcmStream midiPcmStream = new MidiPcmStream();
-				midiPcmStream.init(9, 128);
-				midiPcmStream.setMusicTrack(midiTrack, false);
-				midiPcmStream.loadMusicTrack(midiTrack, patchIndex, soundBankCache, 0);
-			}
-
 			SoundBankCache soundBankCache = new SoundBankCache(cacheLibrary.getIndex(4), cacheLibrary.getIndex(14));
 
 			for (int archive = 0; archive < 4000; archive++) {
@@ -2691,8 +2650,6 @@ public class GUI {
 
 	private class TestButtonListener implements ActionListener {
 
-		private MidiPcmStream midiPcmStream;
-
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
@@ -2700,26 +2657,90 @@ public class GUI {
 
 				try {
 
-					SoundPlayer soundPlayer = initMidiStream(midiFile);
+					SoundPlayer[] soundPlayers = initStereoMidiStream(midiFile);
 
-					while (midiPcmStream.active) {
-						//writeSound(soundPlayer);
-						playSound(soundPlayer);
+					while (soundPlayers[0].stream.active) {
+						//writeStereoSound(soundPlayers);
+						playStereoSourceSounds(soundPlayers);
 
-						if (shuffleMode && midiPcmStream.midiFile.isDone()) {
-							soundPlayer = initMidiStream(midiFiles[(int) (Math.random() * midiFiles.length)]);
+						if (((MidiPcmStream)soundPlayers[0].stream).midiFile.isDone()) {
+							writeStereoSoundToFile(soundPlayers);
+							break;
+						}
+
+						if (shuffleMode && ((MidiPcmStream)soundPlayers[0].stream).midiFile.isDone()) {
+							soundPlayers = initStereoMidiStream(midiFiles[(int) (Math.random() * midiFiles.length)]);
 						}
 					}
-				} catch (IOException exception) {
+				} catch (IOException | InvalidMidiDataException | UnsupportedAudioFileException exception) {
 					exception.printStackTrace();
 				}
 			});
 			songThread.start();
 		}
 
-		private void playSound(SoundPlayer soundPlayer) {
+		private void playStereoSourceSounds(SoundPlayer[] soundPlayers) {
+			for (SoundPlayer soundPlayer : soundPlayers) {
+				soundPlayer.fill(soundPlayer.samples, 256);
+				soundPlayer.write();
+			}
+		}
+
+		private void playMonoSourceSound(SoundPlayer soundPlayer) {
 			soundPlayer.fill(soundPlayer.samples, 256);
 			soundPlayer.write();
+		}
+
+		private void writeStereoSound(SoundPlayer[] soundPlayers) {
+			for (SoundPlayer soundPlayer : soundPlayers) {
+				soundPlayer.fill(soundPlayer.samples, 256);
+				soundPlayer.writeToBuffer();
+			}
+		}
+
+		private void writeStereoSoundToFile(SoundPlayer[] soundPlayers) {
+			byte[] audioL = soundPlayers[0].byteArrayOutputStream.toByteArray();
+			byte[] audioR = soundPlayers[1].byteArrayOutputStream.toByteArray();
+			byte[] audioBytes = new byte[audioL.length];
+
+			for (int index = 0; index < audioBytes.length; index += 4) {
+				audioBytes[index] = audioL[index];
+				audioBytes[index + 1] = audioL[index + 1];
+				audioBytes[index + 2] = audioR[index + 2];
+				audioBytes[index + 3] = audioR[index + 3];
+			}
+
+			File midiAudioDirectory = new File("./MIDI Audio/");
+
+			if (midiAudioDirectory.mkdirs()) {
+
+				File outFile = new File(midiAudioDirectory + "/" + midiFile.getName().replace(".mid", "") + ".wav/");
+				FileOutputStream fos;
+
+				try {
+
+					fos = new FileOutputStream(outFile);
+					AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+					AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(audioBytes), format, audioBytes.length);
+					AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			} else {
+
+				File outFile = new File(midiAudioDirectory + "/" + midiFile.getName().replace(".mid", "") + ".wav/");
+				FileOutputStream fos;
+
+				try {
+					fos = new FileOutputStream(outFile);
+					AudioFormat format = new AudioFormat(PcmPlayer.pcmPlayer_sampleRate, 16, 2, true, false);
+					AudioInputStream ais = new AudioInputStream(new ByteArrayInputStream(audioBytes), format, audioBytes.length);
+					AudioSystem.write(ais, AudioFileFormat.Type.WAVE, fos);
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+			System.out.println("Done rendering!");
 		}
 
 		private void writeSound(SoundPlayer soundPlayer) {
@@ -2727,7 +2748,7 @@ public class GUI {
 			soundPlayer.fill(soundPlayer.samples, 256);
 			soundPlayer.writeToBuffer();
 
-			if (midiPcmStream.midiFile.isDone()) {
+			if (((MidiPcmStream)soundPlayer.stream).midiFile.isDone()) {
 
 				byte[] data = soundPlayer.byteArrayOutputStream.toByteArray();
 
@@ -2761,12 +2782,12 @@ public class GUI {
 						ex.printStackTrace();
 					}
 				}
-
-				midiPcmStream.active = false;
 			}
 		}
 
-		private SoundPlayer initMidiStream(File midi) throws IOException {
+		private SoundPlayer[] initStereoMidiStream(File midi) throws IOException, InvalidMidiDataException, UnsupportedAudioFileException {
+
+			PcmPlayer.pcmPlayer_stereo = true;
 
 			Index index4 = cacheLibrary.getIndex(4);
 			Index index14 = cacheLibrary.getIndex(14);
@@ -2775,7 +2796,59 @@ public class GUI {
 
 			songSliderInfo.setText("Song loaded: " + midi.getName());
 
-			midiPcmStream = new MidiPcmStream();
+			MidiPcmStream midiPcmStreamL = new MidiPcmStream();
+			Path path = Paths.get(midi.toURI());
+
+			//LEFT
+			MidiTrack midiTrackL = new MidiTrack();
+			MidiTrack.midi = Files.readAllBytes(path);
+			MidiTrack.loadMidiTrackInfo();
+
+			midiPcmStreamL.init(9, 128);
+			midiPcmStreamL.setMusicTrack(midiTrackL, loopMode);
+			midiPcmStreamL.setPcmStreamVolume(volume);
+			midiPcmStreamL.loadStereoSoundbank(MidiSystem.getSoundbank(soundFontFile), index15, midiTrackL, true);
+
+			SoundPlayer soundPlayerL = new SoundPlayer();
+			soundPlayerL.setStream(midiPcmStreamL);
+			soundPlayerL.samples = new int[512];
+			soundPlayerL.capacity = 16384;
+			soundPlayerL.init();
+			soundPlayerL.open(soundPlayerL.capacity);
+
+			//RIGHT
+			MidiPcmStream midiPcmStreamR = new MidiPcmStream();
+			Path pathR = Paths.get(midi.toURI());
+
+			MidiTrack midiTrackR = new MidiTrack();
+			MidiTrack.midi = Files.readAllBytes(pathR);
+			MidiTrack.loadMidiTrackInfo();
+
+			midiPcmStreamR.init(9, 128);
+			midiPcmStreamR.setMusicTrack(midiTrackR, loopMode);
+			midiPcmStreamR.setPcmStreamVolume(volume);
+			midiPcmStreamR.loadStereoSoundbank(MidiSystem.getSoundbank(soundFontFile), index15, midiTrackR, false);
+
+			SoundPlayer soundPlayerR = new SoundPlayer();
+			soundPlayerR.setStream(midiPcmStreamR);
+			soundPlayerR.samples = new int[512];
+			soundPlayerR.capacity = 16384;
+			soundPlayerR.init();
+			soundPlayerR.open(soundPlayerR.capacity);
+
+			return new SoundPlayer[]{soundPlayerL, soundPlayerR};
+		}
+
+		private SoundPlayer initMonoMidiStream(File midi) throws IOException {
+
+			Index index4 = cacheLibrary.getIndex(4);
+			Index index14 = cacheLibrary.getIndex(14);
+			Index index15 = cacheLibrary.getIndex(15);
+			SoundBankCache soundBankCache = new SoundBankCache(index4, index14);
+
+			songSliderInfo.setText("Song loaded: " + midi.getName());
+
+			MidiPcmStream midiPcmStreamL = new MidiPcmStream();
 			Path path = Paths.get(midi.toURI());
 			PcmPlayer.pcmPlayer_stereo = true;
 
@@ -2783,14 +2856,14 @@ public class GUI {
 			MidiTrack.midi = Files.readAllBytes(path);
 			MidiTrack.loadMidiTrackInfo();
 
-			midiPcmStream.init(9, 128);
-			midiPcmStream.setMusicTrack(midiTrack, loopMode);
-			midiPcmStream.setPcmStreamVolume(volume);
+			midiPcmStreamL.init(9, 128);
+			midiPcmStreamL.setMusicTrack(midiTrack, loopMode);
+			midiPcmStreamL.setPcmStreamVolume(volume);
 			//midiPcmStream.loadTestSoundBankCompletely();
-			midiPcmStream.loadMusicPatches(index15, soundBankCache);
+			midiPcmStreamL.loadMusicPatches(index15, soundBankCache);
 
 			SoundPlayer soundPlayer = new SoundPlayer();
-			soundPlayer.setStream(midiPcmStream);
+			soundPlayer.setStream(midiPcmStreamL);
 			soundPlayer.samples = new int[512];
 			soundPlayer.capacity = 16384;
 			soundPlayer.init();
@@ -3024,18 +3097,6 @@ public class GUI {
 			Index soundBankIndex = cacheLibrary.getIndex(14);
 			Index musicPatchIndex = cacheLibrary.getIndex(15);
 
-			for (int i = 0; i < miscIndex.getArchives().length; i++) {
-				try {
-					if (miscIndex.getArchive(i) != null) {
-						FileOutputStream fileOutputStream = new FileOutputStream(new File("./Raw Data/Index 3/" + i + ".dat/"));
-						fileOutputStream.write(miscIndex.getArchive(i).getFile(0).getData());
-					}
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-			}
-
-			/**
 			for (int i = 0; i < soundEffectIndex.getArchives().length; i++) {
 				try {
 					if (soundEffectIndex.getArchive(i) != null) {
@@ -3057,6 +3118,7 @@ public class GUI {
 					ex.printStackTrace();
 				}
 			}
+			/**
 			for (int i = 0; i < modelsIndex.getArchives().length; i++) {
 				try {
 					if (modelsIndex.getArchive(i) != null) {
@@ -3067,6 +3129,7 @@ public class GUI {
 					ex.printStackTrace();
 				}
 			}
+			 **/
 
 			for (int i = 0; i < fanfareTrackIndex.getArchives().length; i++) {
 				try {
@@ -3103,8 +3166,6 @@ public class GUI {
 					ex.printStackTrace();
 				}
 			}
-
-			 **/
 		}
 	}
 
@@ -3616,37 +3677,31 @@ public class GUI {
 							FileOutputStream patchFileOut = new FileOutputStream(patchText);
 							BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(patchFileOut), 160);
 
-							bufferedWriter.write(PatchBanks.PATCH_NAME + id);
-							bufferedWriter.newLine();
+							//bufferedWriter.write(PatchBanks.PATCH_NAME + id);
+							//bufferedWriter.newLine();
 
 							for (int index = 0; index < 128; index++) {
 
 								if (musicPatch.musicPatchNode2[index] != null) {
 
-									bufferedWriter.write('\n');
+									//bufferedWriter.write('\n');
 									bufferedWriter.write(PatchBanks.SAMPLE_NAME + getSampleOffsetID(musicPatch, index));
 
 									int rootKey = musicPatch.pitchOffset[index];
 
-									/**
-									 if (rootKey > 0) {
-									 rootKey = rootKey * -1;
-									 }
-									 **/
-
 									bufferedWriter.newLine();
 									bufferedWriter.write(PatchBanks.SAMPLE_ROOT_KEY + rootKey);
 									bufferedWriter.newLine();
-									bufferedWriter.write(PatchBanks.KEY_LOW_RANGE + index);
+									bufferedWriter.write(PatchBanks.SAMPLE_KEY_INDEX + index);
 									bufferedWriter.newLine();
-									bufferedWriter.write(PatchBanks.KEY_HIGH_RANGE + index);
-									bufferedWriter.newLine();
+									//bufferedWriter.write(PatchBanks.KEY_HIGH_RANGE + index);
+									//bufferedWriter.newLine();
 									bufferedWriter.write(PatchBanks.MASTER_VOLUME + musicPatch.baseVelocity);
 									bufferedWriter.newLine();
-									bufferedWriter.write(PatchBanks.LOOP_START + getLoopStart(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
-									bufferedWriter.newLine();
-									bufferedWriter.write(PatchBanks.LOOP_END + getLoopEnd(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
-									bufferedWriter.newLine();
+									//bufferedWriter.write(PatchBanks.LOOP_START + getLoopStart(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
+									//bufferedWriter.newLine();
+									//bufferedWriter.write(PatchBanks.LOOP_END + getLoopEnd(soundBankCache, getSampleOffsetID(musicPatch, index), isSfx(musicPatch, index)));
+									//bufferedWriter.newLine();
 									bufferedWriter.write(PatchBanks.SAMPLE_VOLUME + musicPatch.volumeOffset[index]);
 									bufferedWriter.newLine();
 									bufferedWriter.write(PatchBanks.SAMPLE_PAN + musicPatch.panOffset[index]);
@@ -3683,11 +3738,7 @@ public class GUI {
 			//}
 
 			//MusicPatch.localCustomSoundBank = new File("./Sounds/Custom Sound Bank/");
-			try {
-				writeCustom(musicPatchIndex);
-			} catch (IOException ioException) {
-				ioException.printStackTrace();
-			}
+			//writeCustom(musicPatchIndex);
 
 			/**
 			for (int index = 0; index < 4000; index++) {
@@ -4184,25 +4235,19 @@ public class GUI {
 					soundPlayer.init();
 					soundPlayer.open(soundPlayer.capacity);
 
-					Thread runThread = new Thread(() -> {
+					while (customReceiver != null) {
 
-						while (soundPlayer != null) {
+						soundPlayer.samples = new int[512];
+						soundPlayer.capacity = 1024;
+						soundPlayer.capacity2 = 1024;
 
-							soundPlayer.samples = new int[512];
-							soundPlayer.capacity = 1024;
-							soundPlayer.capacity2 = 1024;
-
-							if (customReceiver.midiData != null) {
-								soundPlayer.fill(soundPlayer.samples, 256);
-								soundPlayer.write();
-							} else {
-								soundPlayer.fill(soundPlayer.samples, 256);
-								soundPlayer.write();
-							}
+						if (customReceiver.midiData != null) {
+							soundPlayer.fill(soundPlayer.samples, 256);
+							soundPlayer.write();
+						} else {
+							soundPlayer.fill(soundPlayer.samples, 256);
 						}
-					});
-
-					runThread.start();
+					}
 
 				} catch (MidiUnavailableException midiUnavailableException) {
 					midiUnavailableException.printStackTrace();
@@ -4340,30 +4385,57 @@ public class TestStreamPlayer implements ActionListener {
 
 	private class SoundBankEncoder implements ActionListener {
 
+		JTextField loopStartField;
+		JTextField loopEndField;
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 
-			//File file = new File("./samples/Sound.dat/");
-			FileOutputStream fileOutputStream;
-
 			try {
-
-				//fileOutputStream = new FileOutputStream(file);
-				//DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
-				//AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./samples/Sample.au/"));
-				Index soundEffectIndex = cacheLibrary.getIndex(4);
-				Index sampleIndex = cacheLibrary.getIndex(14);
-				SoundEffect soundEffect = SoundEffect.readSoundEffect(soundEffectIndex, 0, 0);
-				//MusicSample musicSample = new MusicSample(null);
-
-				sampleIndex.getArchive(1).removeFile(0);
-				sampleIndex.addArchive(1).addFile(Files.readAllBytes(Paths.get("./samples/Test.ogg/")));
-				sampleIndex.getArchive(1).getFile(0).setName(0);
-				sampleIndex.update();
-
+				File oggFile = loadOGGFile(frame);
+				VorbisFile vorbisFile = new VorbisFile(Objects.requireNonNull(oggFile));
+				int archiveID = Integer.parseInt(oggFile.getName().replace(".ogg", "").trim());
+				encodeFile(vorbisFile, archiveID);
 			} catch (IOException ioException) {
 				ioException.printStackTrace();
 			}
+		}
+
+		private void encodeFile(VorbisFile vorbisFile, int archiveID) throws IOException {
+
+			Index sampleIndex = cacheLibrary.getIndex(14);
+			MusicSample musicSample = new MusicSample(vorbisFile, archiveID);
+
+			sampleIndex.getArchive(0).removeFile(0);
+			sampleIndex.getArchive(0).addFile(Files.readAllBytes(Paths.get("./0.dat/")));
+			sampleIndex.getArchive(0).getFile(0).setName(0);
+
+			if (sampleIndex.getArchive(archiveID) != null) {
+				sampleIndex.getArchive(archiveID).removeFile(0);
+			}
+			sampleIndex.addArchive(archiveID).addFile(Files.readAllBytes(Paths.get("./" + archiveID + ".dat/")));
+			sampleIndex.getArchive(archiveID).getFile(0).setName(0);
+			sampleIndex.update();
+		}
+
+		private File loadOGGFile(JFrame frame) throws IOException {
+			JFileChooser chooseOGG = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
+			chooseOGG.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			chooseOGG.setSize(400, 200);
+			chooseOGG.setDialogTitle("Please choose a valid OGG Vorbis File.");
+			chooseOGG.setVisible(true);
+			frame.add(chooseOGG);
+			frame.pack();
+			int returnValue = chooseOGG.showOpenDialog(null);
+			if (returnValue == JFileChooser.APPROVE_OPTION) {
+				if (chooseOGG.getSelectedFile().getName().contains(".ogg")) {
+					return chooseOGG.getSelectedFile();
+				}
+				else {
+					loadOGGFile(frame);
+				}
+			}
+			return null;
 		}
 	}
 
@@ -4374,26 +4446,48 @@ public class TestStreamPlayer implements ActionListener {
 			try {
 				CacheLibrary gameCache = new CacheLibrary(System.getProperty("user.home") + "/jagexcache/oldschool/LIVE/");
 
-				Index configIndex = cacheLibrary.getIndex(2);
 				Index musicIndex = cacheLibrary.getIndex(6);
-				musicIndex.reset();
-
-				for (int index = 0; index < gameCache.getIndex(6).getArchives().length; index++) {
-					musicIndex.addArchive(index).addFile(gameCache.getIndex(6).getArchive(index).getFile(0).getData());
-					musicIndex.update();
-				}
-
-				for (int archive = 0; archive < gameCache.getIndex(2).getArchives().length; archive++) {
-					if (configIndex.getArchive(archive) != null) {
-						configIndex.addArchive(archive).addFile(gameCache.getIndex(2).getArchive(archive).getFile(0));
-						configIndex.update();
-					}
-				}
+				musicIndex.addArchives(gameCache.getIndex(6).copyArchives(), true, false);
+				musicIndex.update();
 
 			} catch (IOException ioException) {
 				ioException.printStackTrace();
 			}
 
+		}
+	}
+
+	private class SoundFontSplitter implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				MakeSoundFont soundFontSplitter = new MakeSoundFont();
+				soundFontSplitter.initSoundFont();
+				soundFontSplitter.splitSoundBank((SF2Soundbank) MidiSystem.getSoundbank(soundFontFile));
+			} catch (InvalidMidiDataException | IOException invalidMidiDataException) {
+				invalidMidiDataException.printStackTrace();
+			}
+		}
+	}
+
+	private class BatchRename implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			for (File midi : midiFiles) {
+				if (midi != null) {
+					if (midi.getName().contains(" - ")) {
+						int index = midi.getName().lastIndexOf(" - ");
+						String name = midi.getName().substring(index).replace(".mid", "").replace(" - ", "").trim();
+						try {
+							MidiSystem.write(MidiSystem.getSequence(midi), 1, new File(System.getProperty("user.home") + "/Renamed/" + name + ".mid/"));
+						} catch (IOException | InvalidMidiDataException ex) {
+							ex.printStackTrace();
+						}
+					}
+				}
+			}
 		}
 	}
 }

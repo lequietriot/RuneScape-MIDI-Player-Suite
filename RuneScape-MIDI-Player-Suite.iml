@@ -8,5 +8,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Displee-RS-Cache-Library" level="project" />
+    <orderEntry type="library" name="vorbis-java-core-0.8" level="project" />
   </component>
 </module>
